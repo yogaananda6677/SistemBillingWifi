@@ -260,6 +260,7 @@ public function store(Request $request)
     // ======================== //
     // 6. UPDATE SETORAN        //
     // ======================== //
+
     public function update(Request $request, $id_setoran)
     {
         $request->validate([
@@ -277,19 +278,14 @@ public function store(Request $request)
         $tahun = (int) $request->input('tahun');
         $bulan = (int) $request->input('bulan');
 
-        // Update nominal, catatan, DAN periode (tahun/bulan)
-        $tanggalBaru = now()
-            ->setYear($tahun)
-            ->setMonth($bulan)
-            ->setDay(1);
-
         DB::table('setoran')
             ->where('id_setoran', $id_setoran)
             ->update([
-                'nominal'        => $request->nominal,
-                'catatan'        => $request->catatan,
-                'tanggal_setoran'=> $tanggalBaru,
-                'updated_at'     => now(),
+                'nominal'    => $request->nominal,
+                'catatan'    => $request->catatan,
+                'tahun'      => $tahun,   // periode kewajiban
+                'bulan'      => $bulan,   // periode kewajiban
+                'updated_at' => now(),
             ]);
 
         return redirect()

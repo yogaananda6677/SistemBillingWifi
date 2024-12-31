@@ -33,67 +33,32 @@
         <div class="px-3" style="margin-top: -35px; position: relative; z-index: 20;">
 
             {{-- FILTER WILAYAH --}}
-            <div class="mb-3">
-                <div class="bg-white rounded-4 shadow-sm p-3 border border-light">
-                    <form method="GET" action="{{ route('seles2.setoran.index') }}" class="row g-2 align-items-center">
-                        <div class="col-8">
-                            <label class="tiny text-muted mb-1">Wilayah</label>
-                            <select name="area_id"
-                                    class="form-select form-select-sm rounded-pill bg-light border-0 fw-bold text-secondary">
-                                <option value="">Semua Wilayah</option>
-                                @foreach ($areas as $area)
-                                    <option value="{{ $area->id_area }}"
-                                        {{ (string)$selectedAreaId === (string)$area->id_area ? 'selected' : '' }}>
-                                        {{ $area->nama_area }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-4 d-flex align-items-end">
-                            <button type="submit"
-                                    class="btn btn-amber btn-sm w-100 rounded-pill fw-bold text-white shadow-sm">
-                                <i class="bi bi-funnel"></i> Filter
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<div class="mb-3">
+    <div class="bg-white rounded-4 shadow-sm p-3 border border-light">
+        <form method="GET" action="{{ route('seles2.setoran.index') }}" class="row g-2 align-items-center">
+            <div class="col-8">
+                <label class="tiny text-muted mb-1">Wilayah</label>
+                <select name="area_id"
+                        class="form-select form-select-sm rounded-pill bg-light border-0 fw-bold text-secondary">
+                    <option value="">Semua Wilayah</option>
+                    @foreach ($areas as $area)
+                        <option value="{{ $area->id_area }}"
+                            {{ (string)$selectedAreaId === (string)$area->id_area ? 'selected' : '' }}>
+                            {{ $area->nama_area }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
-
-            {{-- RINGKASAN GLOBAL --}}
-            <div class="mb-3">
-                <div class="bg-white rounded-4 shadow-sm p-3 border border-light">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="small text-muted fw-bold text-uppercase">Total Wajib Setor</span>
-                        <span class="fw-bold text-dark">Rp {{ number_format($totalWajib, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="small text-muted fw-bold text-uppercase">Total Sudah Disetor</span>
-                        <span class="fw-bold text-success">Rp {{ number_format($totalSetoran, 0, ',', '.') }}</span>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top border-light">
-                        @if ($isKurangSetor)
-                            {{-- Masih kurang setor --}}
-                            <span class="small text-muted fw-bold text-uppercase">Saldo Belum Disetor</span>
-                            <span class="fw-bold text-warning-dark">
-                                Rp {{ number_format($nominalSaldo, 0, ',', '.') }}
-                            </span>
-                        @elseif ($isLebihSetor)
-                            {{-- Sudah lebih setor --}}
-                            <span class="small text-muted fw-bold text-uppercase">Lebih Setor</span>
-                            <span class="fw-bold text-success">
-                                Rp {{ number_format($nominalSaldo, 0, ',', '.') }}
-                            </span>
-                        @else
-                            {{-- Pas --}}
-                            <span class="small text-muted fw-bold text-uppercase">Posisi Setoran</span>
-                            <span class="fw-bold text-muted">
-                                Rp 0
-                            </span>
-                        @endif
-                    </div>
-                </div>
+            <div class="col-4 d-flex align-items-end">
+                <button type="submit"
+                        class="btn **btn-admin-yellow** btn-sm w-100 rounded-pill fw-bold **text-dark** shadow-sm">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
             </div>
+        </form>
+    </div>
+</div>
+
 
             @if ($setorans->isEmpty())
                 <div class="bg-white rounded-4 shadow-sm p-5 text-center border border-light">
@@ -110,6 +75,11 @@
                             $tanggal = $st->tanggal_setoran
                                 ? Carbon::parse($st->tanggal_setoran)->translatedFormat('d F Y, H:i')
                                 : '-';
+
+                            // Bulan/tahun alokasi setoran (dari kolom st.tahun & st.bulan)
+                            $periodeSetoran = ($st->tahun && $st->bulan)
+                                ? Carbon::create($st->tahun, $st->bulan, 1)->translatedFormat('F Y')
+                                : null;
                         @endphp
 
                         {{-- CARD SETORAN --}}
@@ -132,6 +102,13 @@
                                                 <i class="bi bi-geo-alt me-1"></i>
                                                 {{ $st->nama_area ?? 'Tanpa Wilayah' }}
                                             </div>
+
+                                            @if($periodeSetoran)
+                                                <div class="badge bg-warning bg-opacity-10 text-warning-dark border border-warning border-opacity-25 fw-normal">
+                                                    <i class="bi bi-calendar2-month me-1"></i>
+                                                    Untuk bulan {{ $periodeSetoran }}
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="text-end">

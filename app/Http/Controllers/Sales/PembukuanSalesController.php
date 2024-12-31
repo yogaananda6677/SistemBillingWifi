@@ -112,19 +112,22 @@ class PembukuanSalesController extends Controller
                 ->get();
 
             // 4) Setoran area ini bulan ini
-            $setoranList = DB::table('setoran as st')
-                ->select(
-                    'st.id_setoran',
-                    'st.tanggal_setoran',
-                    'st.nominal',
-                    'st.catatan'
-                )
-                ->where('st.id_sales', $salesId)
-                ->where('st.id_area', $area->id_area)  // ← kalau tabel tidak punya id_area, hapus baris ini
-                ->whereYear('st.tanggal_setoran', $tahun)
-                ->whereMonth('st.tanggal_setoran', $bulan)
-                ->orderBy('st.tanggal_setoran', 'desc')
-                ->get();
+$setoranList = DB::table('setoran as st')
+    ->select(
+        'st.id_setoran',
+        'st.tanggal_setoran',
+        'st.nominal',
+        'st.catatan',
+        'st.tahun',
+        'st.bulan'
+    )
+    ->where('st.id_sales', $salesId)
+    ->where('st.id_area', $area->id_area)
+    ->where('st.tahun', $tahun)
+    ->where('st.bulan', $bulan)
+    ->orderBy('st.tanggal_setoran', 'desc')
+    ->get();
+
 // =========================
 // HITUNG TOTALAN PER AREA (per bulan + ledger lintas bulan)
 // =========================

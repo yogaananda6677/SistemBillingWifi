@@ -126,19 +126,18 @@ class DashboardSalesController extends Controller
         // ============== HARI INI ==============
         // Pembayaran hari ini
         $pembayaranHariIni = DB::table('pembayaran as p')
-            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
             ->when($salesId, function ($q) use ($salesId) {
-                $q->where('pl.id_sales', $salesId);
+                $q->where('p.id_sales', $salesId);   // ⬅️ GANTI DI SINI
             })
             ->whereDate('p.tanggal_bayar', $now->toDateString())
             ->sum('p.nominal');
 
+
         // Komisi hari ini
         $komisiHariIni = DB::table('transaksi_komisi as tk')
             ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
-            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
             ->when($salesId, function ($q) use ($salesId) {
-                $q->where('pl.id_sales', $salesId);
+                $q->where('tk.id_sales', $salesId);   // ⬅️ GANTI DI SINI
             })
             ->whereDate('p.tanggal_bayar', $now->toDateString())
             ->sum('tk.nominal_komisi');
@@ -166,24 +165,24 @@ class DashboardSalesController extends Controller
         // ============== BULAN INI ==============
         // Pembayaran bulan ini
         $pembayaranBulanIni = DB::table('pembayaran as p')
-            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
             ->when($salesId, function ($q) use ($salesId) {
-                $q->where('pl.id_sales', $salesId);
+                $q->where('p.id_sales', $salesId);   // ⬅️ GANTI DI SINI
             })
             ->whereYear('p.tanggal_bayar', $now->year)
             ->whereMonth('p.tanggal_bayar', $now->month)
             ->sum('p.nominal');
 
+
         // Komisi bulan ini
         $komisiBulanIni = DB::table('transaksi_komisi as tk')
             ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
-            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
             ->when($salesId, function ($q) use ($salesId) {
-                $q->where('pl.id_sales', $salesId);
+                $q->where('tk.id_sales', $salesId);   // ⬅️ atau p.id_sales
             })
             ->whereYear('p.tanggal_bayar', $now->year)
             ->whereMonth('p.tanggal_bayar', $now->month)
             ->sum('tk.nominal_komisi');
+
 
         // Pengeluaran bulan ini
         $pengeluaranBulanIni = DB::table('pengeluaran as pg')

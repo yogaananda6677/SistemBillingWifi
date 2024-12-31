@@ -116,40 +116,31 @@
                         @endforeach
                     </select>
                 </div>
+<div class="col-md-3 col-6">
+    {{-- Tombol Tampilkan Rincian (Warna Yellow - Aksi Utama) --}}
+    <button type="submit" class="btn btn-admin-yellow w-100">
+        <i class="bi bi-search me-1"></i> Tampilkan Rincian
+    </button>
+</div>
 
-                    <div class="col-md-3 col-6">
-                        <button type="submit" class="btn btn-primary btn-sm w-100">
-                            Tampilkan Rincian
-                        </button>
-                    </div>
-                    <div class="col-md-3 col-6 text-md-end">
-    <div class="btn-group w-100">
+<div class="col-md-3 col-6 text-md-end">
+    {{-- Grup tombol Ekspor Laporan (Sejajar/Horizontal) --}}
+    <div class="btn-group w-100" role="group">
+        
+        {{-- Tombol 1: Pelanggan (Warna Yellow - Tema Utama) --}}
         <button type="button"
-                class="btn btn-success btn-sm"
+                class="btn **btn-admin-yellow btn-sm**"
                 onclick="exportLaporan('excel')">
-            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+            <i class="bi bi-file-earmark-excel"></i>Data Pelanggan
         </button>
-        <!-- <a href="{{ route('laporan.exportRekapKeuangan', [
-        'tahun' => $selectedYear,
-        'bulan' => $selectedMonth,
-    ]) }}"
-   class="btn btn-outline-secondary btn-sm"
-   target="_blank">
-    Export Rekap Pengeluaran & Setoran
-</a> -->
 
-<a href="{{ route('laporan.exportRekapHarianBulanan', ['tahun' => $selectedYear]) }}"
-   class="btn btn-outline-secondary btn-sm"
-   target="_blank">
-    Export Rekap Harian / Bulanan
-</a>
-
-
-        <button type="button"
-                class="btn btn-danger btn-sm"
-                onclick="exportLaporan('pdf')">
-            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-        </button>
+        {{-- Tombol 2: Rekap (Warna Hijau - Warna Sekunder yang Jelas) --}}
+        <a href="{{ route('laporan.exportRekapHarianBulanan', ['tahun' => $selectedYear]) }}"
+           class="btn **btn-success btn-sm**"
+           target="_blank">
+           <i class="bi bi-calendar-range"></i> Data Harian
+        </a>
+        
     </div>
 </div>
 
@@ -435,7 +426,3 @@
     }
 </script>
 @endpush
-
-@endpush
-
-@endsection

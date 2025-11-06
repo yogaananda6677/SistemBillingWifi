@@ -26,6 +26,10 @@
                     -
                 @endif
             </td>
+            <td>
+    {{ optional($p->area)->nama_area ?? '-' }}
+</td>
+
 
             {{-- Tanggal pengajuan --}}
             <td>
@@ -40,6 +44,8 @@
             <td>Rp. {{ number_format($p->nominal, 0, ',', '.') }}</td>
 
             {{-- Bukti --}}
+            {{-- Wilayah --}}
+
             <td>
 @if($p->bukti_file)
     <a href="{{ route('admin.pengajuan.bukti', $p->id_pengeluaran) }}"

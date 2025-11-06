@@ -12,8 +12,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                @if($row->detail_pembayaran->isEmpty())
-                    <p class="text-muted mb-0">Tidak ada pembayaran pada periode ini.</p>
+                @php
+                    $detailPembayaran = $row->detail_pembayaran ?? collect();
+                    $totalPendapatan  = $row->pendapatan ?? 0;
+                @endphp
+
+                @if($detailPembayaran->isEmpty())
+                    @if($totalPendapatan > 0)
+                        <p class="text-muted mb-0">
+                            Detail transaksi tidak tersedia. Total pendapatan pada periode ini:
+                            <strong>Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</strong>
+                        </p>
+                    @else
+                        <p class="text-muted mb-0">Tidak ada pembayaran pada periode ini.</p>
+                    @endif
                 @else
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle">
@@ -26,7 +38,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($row->detail_pembayaran as $item)
+                                @foreach($detailPembayaran as $item)
                                     <tr>
                                         <td>{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') : '-' }}</td>
                                         <td>{{ $item->no_pembayaran }}</td>
@@ -41,7 +53,7 @@
                                 <tr class="fw-bold">
                                     <td colspan="3" class="text-end">Total</td>
                                     <td class="text-end">
-                                        Rp {{ number_format($row->pendapatan, 0, ',', '.') }}
+                                        Rp {{ number_format($detailPembayaran->sum('nominal'), 0, ',', '.') }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -63,8 +75,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                @if($row->detail_komisi->isEmpty())
-                    <p class="text-muted mb-0">Tidak ada komisi pada periode ini.</p>
+                @php
+                    $detailKomisi  = $row->detail_komisi ?? collect();
+                    $totalKomisi   = $row->total_komisi ?? 0;
+                @endphp
+
+                @if($detailKomisi->isEmpty())
+                    @if($totalKomisi > 0)
+                        <p class="text-muted mb-0">
+                            Detail komisi per transaksi tidak tersedia. Total komisi pada periode ini:
+                            <strong>Rp {{ number_format($totalKomisi, 0, ',', '.') }}</strong>
+                        </p>
+                    @else
+                        <p class="text-muted mb-0">Tidak ada komisi pada periode ini.</p>
+                    @endif
                 @else
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle">
@@ -78,7 +102,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($row->detail_komisi as $item)
+                                @foreach($detailKomisi as $item)
                                     <tr>
                                         <td>{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') : '-' }}</td>
                                         <td>{{ $item->no_pembayaran }}</td>
@@ -94,7 +118,7 @@
                                 <tr class="fw-bold">
                                     <td colspan="4" class="text-end">Total Komisi</td>
                                     <td class="text-end">
-                                        Rp {{ number_format($row->total_komisi, 0, ',', '.') }}
+                                        Rp {{ number_format($detailKomisi->sum('nominal_komisi'), 0, ',', '.') }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -115,8 +139,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                @if($row->detail_pengeluaran->isEmpty())
-                    <p class="text-muted mb-0">Tidak ada pengeluaran approved pada periode ini.</p>
+                @php
+                    $detailPengeluaran = $row->detail_pengeluaran ?? collect();
+                    $totalPengeluaran  = $row->total_pengeluaran ?? 0;
+                @endphp
+
+                @if($detailPengeluaran->isEmpty())
+                    @if($totalPengeluaran > 0)
+                        <p class="text-muted mb-0">
+                            Detail pengeluaran per transaksi tidak tersedia. Total pengeluaran approved periode ini:
+                            <strong>Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</strong>
+                        </p>
+                    @else
+                        <p class="text-muted mb-0">Tidak ada pengeluaran approved pada periode ini.</p>
+                    @endif
                 @else
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle">
@@ -129,7 +165,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($row->detail_pengeluaran as $item)
+                                @foreach($detailPengeluaran as $item)
                                     <tr>
                                         <td>{{ $item->tanggal_approve ? Carbon::parse($item->tanggal_approve)->format('d/m/Y H:i') : '-' }}</td>
                                         <td>{{ $item->nama_pengeluaran }}</td>
@@ -144,7 +180,7 @@
                                 <tr class="fw-bold">
                                     <td colspan="3" class="text-end">Total Pengeluaran</td>
                                     <td class="text-end">
-                                        Rp {{ number_format($row->total_pengeluaran, 0, ',', '.') }}
+                                        Rp {{ number_format($detailPengeluaran->sum('nominal'), 0, ',', '.') }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -155,7 +191,6 @@
         </div>
     </div>
 </div>
-
 {{-- SETORAN --}}
 <div class="modal fade" id="setoranModal-{{ $key }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -165,9 +200,25 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                @if($row->detail_setoran->isEmpty())
-                    <p class="text-muted mb-0">Belum ada setoran pada periode ini.</p>
+                @php
+                    $detailSetoran      = $row->detail_setoran ?? collect();
+                    // ini yang kamu pakai di kolom "Setoran" tabel utama
+                    $totalDialokBulanIni = $row->total_setoran ?? 0;
+                    // ini total nominal setorannya (apa adanya)
+                    $totalNominalSetor   = $detailSetoran->sum('nominal');
+                @endphp
+
+                @if($detailSetoran->isEmpty())
+                    <p class="text-muted mb-0">
+                        Belum ada setoran pada periode ini.
+                    </p>
                 @else
+                    <p class="small mb-2 text-muted">
+                        Kolom <strong>Nominal</strong> = jumlah uang yang disetor pada tanggal tersebut.  
+                        Baris <strong>"Total dialokasikan ke bulan ini"</strong> di bawah
+                        mengikuti perhitungan akumulasi (menutup kekurangan bulan-bulan sebelumnya).
+                    </p>
+
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle">
                             <thead class="table-light">
@@ -179,22 +230,34 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($row->detail_setoran as $item)
+                                @foreach($detailSetoran as $item)
                                     <tr>
-                                        <td>{{ $item->tanggal_setoran ? Carbon::parse($item->tanggal_setoran)->format('d/m/Y H:i') : '-' }}</td>
+                                        <td>
+                                            {{ $item->tanggal_setoran
+                                                ? \Carbon\Carbon::parse($item->tanggal_setoran)->format('d/m/Y H:i')
+                                                : '-' }}
+                                        </td>
                                         <td>{{ $item->nama_admin ?? '-' }}</td>
                                         <td>{{ $item->catatan ?? '-' }}</td>
                                         <td class="text-end">
-                                            Rp {{ number_format($item->nominal, 0, ',', '.') }}
+                                            Rp {{ number_format($item->nominal ?? 0, 0, ',', '.') }}
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                             <tfoot>
                                 <tr class="fw-bold">
-                                    <td colspan="3" class="text-end">Total Setoran</td>
+                                    <td colspan="3" class="text-end">Total nominal setoran ini</td>
                                     <td class="text-end">
-                                        Rp {{ number_format($row->total_setoran, 0, ',', '.') }}
+                                        Rp {{ number_format($totalNominalSetor, 0, ',', '.') }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end small">
+                                        Total yang <strong>dialokasikan ke bulan ini</strong>
+                                    </td>
+                                    <td class="text-end small fw-bold">
+                                        Rp {{ number_format($totalDialokBulanIni, 0, ',', '.') }}
                                     </td>
                                 </tr>
                             </tfoot>
@@ -205,4 +268,6 @@
         </div>
     </div>
 </div>
+
 @endif
+

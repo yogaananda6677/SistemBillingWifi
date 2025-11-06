@@ -73,6 +73,7 @@
                         <tr>
                             <th style="width:48px">No</th>
                             <th>Nama Sales</th>
+                            <th>Wilayah</th>
                             <th>Tanggal</th>
                             <th>Pengeluaran</th>
                             <th>Nominal</th>

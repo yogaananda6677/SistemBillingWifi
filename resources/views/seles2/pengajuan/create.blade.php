@@ -66,6 +66,24 @@
                                 required>
                         </div>
                     </div>
+                    {{-- WILAYAH --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Wilayah <span class="text-danger">*</span></label>
+                        <select name="id_area"
+                                class="form-select form-select-sm form-control-custom @error('id_area') is-invalid @enderror">
+                            <option value="">-- Pilih Wilayah --</option>
+                            @foreach($areas as $area)
+                                <option value="{{ $area->id_area }}"
+                                    {{ old('id_area') == $area->id_area ? 'selected' : '' }}>
+                                    {{ $area->nama_area }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('id_area')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
 
                     {{-- CATATAN --}}
                     <div class="mb-3">

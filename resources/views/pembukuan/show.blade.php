@@ -1,4 +1,4 @@
-@extends('layouts.master') {{-- sesuaikan --}}
+<!-- @extends('layouts.master') {{-- sesuaikan --}}
 
 @section('title', 'Detail Pembukuan Sales')
 
@@ -299,4 +299,4 @@
     @endif
 
 </div>
-@endsection
+@endsection -->

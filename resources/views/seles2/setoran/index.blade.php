@@ -5,8 +5,11 @@
     @php
         use Carbon\Carbon;
 
-        $setorans = $setorans ?? collect();
-        $allocDetail = $allocDetail ?? [];
+        $setorans      = $setorans      ?? collect();
+        $allocDetail   = $allocDetail   ?? [];
+        $saldoGlobal   = $saldoGlobal   ?? 0;
+        $totalWajib    = $totalWajib    ?? 0;
+        $totalSetoran  = $totalSetoran  ?? 0;
     @endphp
 
     <div class="pelanggan-page">
@@ -21,6 +24,26 @@
 
         {{-- 2. CONTENT CONTAINER (Floating Up) --}}
         <div class="px-3" style="margin-top: -35px; position: relative; z-index: 20;">
+
+            {{-- OPTIONAL: RINGKASAN GLOBAL --}}
+            <div class="mb-3">
+                <div class="bg-white rounded-4 shadow-sm p-3 border border-light">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-muted fw-bold text-uppercase">Total Wajib Setor</span>
+                        <span class="fw-bold text-dark">Rp {{ number_format($totalWajib, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-muted fw-bold text-uppercase">Total Sudah Disetor</span>
+                        <span class="fw-bold text-success">Rp {{ number_format($totalSetoran, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top border-light">
+                        <span class="small text-muted fw-bold text-uppercase">Saldo Belum Disetor</span>
+                        <span class="fw-bold text-warning-dark">
+                            Rp {{ number_format($saldoGlobal, 0, ',', '.') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
 
             @if ($setorans->isEmpty())
                 <div class="bg-white rounded-4 shadow-sm p-5 text-center border border-light">
@@ -38,6 +61,13 @@
                                 ? Carbon::parse($st->tanggal_setoran)->translatedFormat('d F Y, H:i')
                                 : '-';
 
+                            // detail alokasi untuk setoran ini:
+                            // tiap elemen => [
+                            //   'periode'   => 'YYYY-MM',
+                            //   'nominal'   => int,
+                            //   'lebih'     => bool,
+                            //   'nama_area' => 'Bandung' (optional)
+                            // ]
                             $detail = $allocDetail[$st->id_setoran] ?? [];
                         @endphp
 
@@ -85,22 +115,35 @@
                                                         'Y-m-d',
                                                         $al['periode'] . '-01',
                                                     )->translatedFormat('F Y');
+
+                                                    $namaArea = $al['nama_area'] ?? ($al['area'] ?? null);
                                                 @endphp
-                                                <div
-                                                    class="d-flex justify-content-between align-items-center border-bottom border-white pb-1">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <span class="small fw-medium text-dark">{{ $periodeText }}</span>
-                                                        @if (!empty($al['lebih']))
-                                                            <span
-                                                                class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill"
-                                                                style="font-size: 0.6rem;">
-                                                                Kelebihan
+                                                <div class="border-bottom border-white pb-1">
+                                                    <div
+                                                        class="d-flex justify-content-between align-items-center mb-1">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="small fw-medium text-dark">
+                                                                {{ $periodeText }}
                                                             </span>
-                                                        @endif
+                                                            @if ($namaArea)
+                                                                <span
+                                                                    class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill"
+                                                                    style="font-size: 0.6rem;">
+                                                                    {{ $namaArea }}
+                                                                </span>
+                                                            @endif
+                                                            @if (!empty($al['lebih']))
+                                                                <span
+                                                                    class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill"
+                                                                    style="font-size: 0.6rem;">
+                                                                    Kelebihan
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                        <span class="small fw-bold text-secondary">
+                                                            Rp {{ number_format($al['nominal'], 0, ',', '.') }}
+                                                        </span>
                                                     </div>
-                                                    <span class="small fw-bold text-secondary">
-                                                        Rp {{ number_format($al['nominal'], 0, ',', '.') }}
-                                                    </span>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -119,9 +162,9 @@
                     <i class="bi bi-info-circle-fill text-amber fs-5"></i>
                     <div class="small text-muted">
                         <strong>Catatan Sistem:</strong><br>
-                        Setoran dialokasikan otomatis mulai dari kewajiban bulan tertua.
-                        Sisa uang setelah semua kewajiban tertutup akan dicatat sebagai
-                        <span class="text-info fw-bold">kelebihan</span> di bulan tersebut.
+                        Setoran dialokasikan otomatis mulai dari kewajiban bulan tertua
+                        di seluruh area yang Anda pegang. Sisa uang setelah semua kewajiban tertutup
+                        akan dicatat sebagai <span class="text-info fw-bold">kelebihan</span> pada bulan/area tersebut.
                     </div>
                 </div>
             </div>
@@ -166,12 +209,14 @@
             color: #d97706;
         }
 
-        /* Typography */
+        .text-warning-dark {
+            color: #b45309;
+        }
+
         .ls-1 {
             letter-spacing: 1px;
         }
 
-        /* Card Hover Effect */
         .card {
             transition: transform 0.2s;
         }

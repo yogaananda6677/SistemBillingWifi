@@ -1,7 +1,13 @@
 @extends('layouts.master')
-@section('title', 'Sales - Setoran')
+@section('title', 'Sales - Setoran per Wilayah')
 
 @section('content')
+@php
+    use Carbon\Carbon;
+    $selectedMonth = $selectedMonth ?? now()->month;
+    $selectedYear  = $selectedYear ?? now()->year;
+@endphp
+
 <style>
     .card-soft {
         border-radius: 18px;
@@ -18,10 +24,6 @@
     .btn-nalen:hover {
         background: #ffb000;
     }
-    .text-link-yellow {
-        color: #FFC400;
-        font-weight: 600;
-    }
 </style>
 
 <div class="container-fluid py-3">
@@ -32,6 +34,35 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+
+    {{-- FILTER BULAN / TAHUN --}}
+    <div class="mb-3">
+        <form method="GET" action="{{ route('admin.setoran.index') }}" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <select name="bulan" class="form-select form-select-sm">
+                    @foreach (range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ (int)$selectedMonth === $m ? 'selected' : '' }}>
+                            {{ Carbon::create()->month($m)->translatedFormat('F') }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
+                <select name="tahun" class="form-select form-select-sm">
+                    @foreach (range(now()->year - 2, now()->year + 1) as $y)
+                        <option value="{{ $y }}" {{ (int)$selectedYear === $y ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-nalen btn-sm">
+                    Filter
+                </button>
+            </div>
+        </form>
+    </div>
 
     <div class="card card-soft">
         <div class="card-body">
@@ -44,46 +75,45 @@
                             <i class="bi bi-search"></i>
                         </span>
                         <input type="text" class="form-control border-start-0"
-                               placeholder="Cari nama sales..."
-                               onkeyup="filterSales(this.value)">
+                               placeholder="Cari sales / wilayah..."
+                               onkeyup="filterRows(this.value)">
                     </div>
                 </div>
             </div>
 
-            {{-- Tabel sales --}}
+            {{-- Tabel --}}
             <div class="table-responsive">
-                <table class="table table-sm align-middle" id="tableSales">
+                <table class="table table-sm align-middle" id="tableSetoran">
                     <thead class="table-light">
                         <tr>
                             <th style="width:60px">No</th>
-                            <th>Nama Sales</th>
-                            <th class="text-end">Target Setor (Total)</th>
-                            <th class="text-end">Setor (Total)</th>
+                            <th>Sales</th>
+                            <th>Wilayah</th>
+                            <th class="text-end">Target Setor (bulan ini)</th>
+                            <th class="text-end">Setoran (bulan ini)</th>
                             <th class="text-end">Sisa / Kelebihan</th>
                             <th class="text-center" style="width:140px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($sales as $i => $s)
+                        @forelse($rows as $i => $r)
                             @php
-                                $isKelebihan = $s->sisa < 0;
-                                $jumlah = abs($s->sisa);
+                                $isKelebihan = $r->sisa < 0;
+                                $jumlah      = abs($r->sisa);
                             @endphp
                             <tr>
                                 <td>{{ sprintf('%03d', $i+1) }}</td>
-                                <td>{{ $s->nama_sales }}</td>
+                                <td>{{ $r->nama_sales }}</td>
+                                <td>{{ $r->nama_area }}</td>
 
-                                {{-- TARGET SETOR --}}
                                 <td class="text-end">
-                                    Rp {{ number_format($s->target_setor ?? 0, 0, ',', '.') }}
+                                    Rp {{ number_format($r->target_setor, 0, ',', '.') }}
                                 </td>
 
-                                {{-- TOTAL SETOR --}}
                                 <td class="text-end text-success">
-                                    Rp {{ number_format($s->total_setor, 0, ',', '.') }}
+                                    Rp {{ number_format($r->total_setoran, 0, ',', '.') }}
                                 </td>
 
-                                {{-- SISA / KELEBIHAN --}}
                                 <td class="text-end
                                     @if($jumlah == 0)
                                         text-muted
@@ -102,18 +132,22 @@
                                     @endif
                                 </td>
 
-                                {{-- AKSI --}}
                                 <td class="text-center">
-                                    <a href="{{ route('admin.setoran.riwayat', $s->id_sales) }}"
+                                    <a href="{{ route('admin.setoran.riwayat', [
+                                            'id_sales' => $r->id_sales,
+                                            'id_area'  => $r->id_area,
+                                            'tahun'    => $selectedYear,
+                                            'bulan'    => $selectedMonth,
+                                        ]) }}"
                                        class="btn btn-nalen btn-sm">
-                                        Riwayat & Tambah
+                                        Riwayat & Setor
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-3">
-                                    Belum ada data sales.
+                                <td colspan="7" class="text-center text-muted py-3">
+                                    Belum ada relasi sales-wilayah.
                                 </td>
                             </tr>
                         @endforelse
@@ -126,11 +160,12 @@
 </div>
 
 <script>
-    function filterSales(keyword) {
+    function filterRows(keyword) {
         keyword = keyword.toLowerCase();
-        document.querySelectorAll('#tableSales tbody tr').forEach(function (row) {
-            const nama = row.cells[1].innerText.toLowerCase();
-            row.style.display = nama.includes(keyword) ? '' : 'none';
+        document.querySelectorAll('#tableSetoran tbody tr').forEach(function (row) {
+            const sales  = row.cells[1].innerText.toLowerCase();
+            const area   = row.cells[2].innerText.toLowerCase();
+            row.style.display = (sales.includes(keyword) || area.includes(keyword)) ? '' : 'none';
         });
     }
 </script>

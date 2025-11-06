@@ -39,5 +39,10 @@ class Pengeluaran extends Model
             'user_id'     // di admins
         );
     }
+    public function area()
+{
+    return $this->belongsTo(\App\Models\Area::class, 'id_area', 'id_area');
+}
+
     
 }

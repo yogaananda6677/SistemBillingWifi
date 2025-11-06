@@ -10,85 +10,102 @@ class PengajuanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pengeluaran::with(['sales.user','admin','adminUser']);
+        // tambahkan 'area' di with()
+        $query = Pengeluaran::with(['sales.user', 'admin', 'adminUser', 'area']);
+
+        // filter status
         if ($request->filled('status')) {
             $query->where('status_approve', $request->status);
         }
 
-        // search: search by sales name, nama_pengeluaran, atau nominal
+        // search: sales name, nama_pengeluaran, atau nominal
         if ($request->filled('search')) {
             $s = $request->search;
-            $query->where(function($q) use ($s){
-                $q->whereHas('sales.user', function($q2) use ($s){
-                    $q2->where('name','like',"%{$s}%");
+            $query->where(function ($q) use ($s) {
+                $q->whereHas('sales.user', function ($q2) use ($s) {
+                    $q2->where('name', 'like', "%{$s}%");
                 })
-                ->orWhere('nama_pengeluaran','like',"%{$s}%")
-                ->orWhere('nominal','like',"%{$s}%");
+                ->orWhere('nama_pengeluaran', 'like', "%{$s}%")
+                ->orWhere('nominal', 'like', "%{$s}%");
             });
         }
 
-        // optional: filter by month name (received from frontend)
+        // filter bulan (nama bulan Indonesia dari frontend)
         if ($request->filled('month')) {
+            $bulanMap = [
+                'Januari'   => 1,
+                'Februari'  => 2,
+                'Maret'     => 3,
+                'April'     => 4,
+                'Mei'       => 5,
+                'Juni'      => 6,
+                'Juli'      => 7,
+                'Agustus'   => 8,
+                'September' => 9,
+                'Oktober'   => 10,
+                'November'  => 11,
+                'Desember'  => 12,
+            ];
 
-            try {
-                $monthName = $request->month;
-                $monthIndex = Carbon::createFromFormat('F', $monthName)->month; // if english names; if not, skip
-                $query->whereMonth('tanggal_pengajuan', $monthIndex);
-            } catch(\Exception $e) {
-                // safe fallback: ignore month if parse fails
+            $monthName = $request->month;
+            if (isset($bulanMap[$monthName])) {
+                $query->whereMonth('tanggal_pengajuan', $bulanMap[$monthName]);
             }
         }
 
-        $pengajuan = $query->orderBy('tanggal_pengajuan','desc')->paginate(10)->withQueryString();
+        $pengajuan = $query
+            ->orderBy('tanggal_pengajuan', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
-        // If AJAX requested, return JSON with rendered partial and pagination html
+        // response AJAX (dipakai script di blade)
         if ($request->ajax() || $request->wantsJson()) {
-            $html = view('pengeluaran.partials.table_rows', compact('pengajuan'))->render();
+            $html       = view('pengeluaran.partials.table_rows', compact('pengajuan'))->render();
             $pagination = $pengajuan->links()->toHtml();
 
             return response()->json([
-                'html' => $html,
+                'html'       => $html,
                 'pagination' => $pagination,
             ]);
         }
 
+        // pertama kali load halaman
         return view('pengeluaran.index', compact('pengajuan'));
     }
-public function updateStatus(Request $request, $id)
-{
-    $request->validate([
-        'status_approve' => 'required|in:pending,approved,rejected'
-    ]);
 
-    $data = Pengeluaran::findOrFail($id);
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status_approve' => 'required|in:pending,approved,rejected',
+        ]);
 
-    $data->status_approve = $request->status_approve;
-    $data->id_admin = auth()->user()->admin->id_admin;
-    $data->tanggal_approve = now();
-    $data->save();
+        $data = Pengeluaran::findOrFail($id);
 
-    return back()->with('success', 'Status berhasil diperbarui.');
-}
+        $data->status_approve  = $request->status_approve;
+        $data->id_admin        = auth()->user()->admin->id_admin ?? null;
+        $data->tanggal_approve = now();
+        $data->save();
 
-    // optional methods for approve/reject (if ingin nanti)
-
-public function showBukti(Pengeluaran $pengeluaran)
-{
-    // contoh cek role sales:
-    $sales = $this->getSales();
-    if ($pengeluaran->id_sales != $sales->id_sales) {
-        abort(403, 'Tidak boleh mengakses bukti pengajuan sales lain.');
+        return back()->with('success', 'Status berhasil diperbarui.');
     }
 
-    if (!$pengeluaran->bukti_file) {
-        abort(404, 'Bukti tidak ditemukan.');
-    }
+    public function showBukti(Pengeluaran $pengeluaran)
+    {
+        // INI VERSI ADMIN:
+        // tidak pakai getSales() lagi, cukup cek file ada atau tidak.
+        // Kalau mau, bisa tambahkan cek role admin:
+        // if (auth()->user()->role !== 'admin') abort(403);
 
-    $path = storage_path('app/public/' . $pengeluaran->bukti_file);
-    if (!file_exists($path)) {
-        abort(404, 'File bukti tidak ditemukan.');
-    }
+        if (!$pengeluaran->bukti_file) {
+            abort(404, 'Bukti tidak ditemukan.');
+        }
 
-    return response()->file($path);
-}
+        $path = storage_path('app/public/' . $pengeluaran->bukti_file);
+
+        if (!file_exists($path)) {
+            abort(404, 'File bukti tidak ditemukan.');
+        }
+
+        return response()->file($path);
+    }
 }

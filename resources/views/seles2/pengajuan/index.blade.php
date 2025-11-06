@@ -118,6 +118,12 @@
                                 <div class="fw-bold text-dark text-truncate pelanggan-nama">
                                     {{ $row->nama_pengeluaran }}
                                 </div>
+                                    <div class="text-muted small text-truncate" style="font-size: 0.7rem;">
+                                        Sales: {{ auth()->user()->name }}
+                                        @if(!empty($row->nama_area))
+                                            · {{ $row->nama_area }}
+                                        @endif
+                                    </div>
                                 <div class="text-muted small text-truncate" style="font-size: 0.7rem;">
                                     Sales: {{ auth()->user()->name }}
                                 </div>
@@ -172,16 +178,25 @@
                                         <span class="text-muted">Keperluan</span>
                                         <span class="fw-bold text-end text-dark">{{ $row->nama_pengeluaran }}</span>
                                     </div>
+
+                                    <div class="d-flex justify-content-between mb-2 small border-bottom pb-2">
+                                        <span class="text-muted">Wilayah</span>
+                                        <span class="text-end text-dark">{{ $row->nama_area ?? '-' }}</span>
+                                    </div>
+
                                     <div class="d-flex justify-content-between mb-2 small border-bottom pb-2">
                                         <span class="text-muted">Tanggal</span>
                                         <span class="text-end text-dark">{{ $tanggalPengajuan }}</span>
                                     </div>
+
                                     <div class="d-flex justify-content-between small">
                                         <span class="text-muted">Diajukan Oleh</span>
                                         <span class="text-end text-dark">{{ auth()->user()->name }}</span>
                                     </div>
+
                                 </div>
 
+                                
                                 {{-- Catatan (Jika ada) --}}
                                 @if ($row->catatan)
                                     <div class="mb-3">

@@ -82,16 +82,37 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/pengajuan', [PengajuanController::class, 'index'])
     ->name('admin.pengajuan.index');
 
-    Route::get('/pembukuan', [PembukuanController::class, 'index'])->name('pembukuan.index');
-    Route::get('/pembukuan/{sales}', [PembukuanController::class, 'show'])->name('pembukuan.show');
-    Route::get('/pembukuan/detail-data/{tipe}/{sales}', [PembukuanController::class, 'detailData']);
+// routes/web.php
+Route::get('/pembukuan', [\App\Http\Controllers\PembukuanController::class, 'index'])
+     ->name('pembukuan.index');
+Route::get('/pembukuan/{id}', [\App\Http\Controllers\PembukuanController::class, 'show'])
+     ->name('pembukuan.show');
+
+// List semua (sales, area)
+Route::get('/setoran-sales', [SetoranAdminController::class, 'index'])
+    ->name('admin.setoran.index');
+
+// Riwayat per sales-area
+Route::get('/setoran-sales/{id_sales}/{id_area}/riwayat', [SetoranAdminController::class, 'riwayat'])
+    ->name('admin.setoran.riwayat');
+
+// Simpan setoran
+Route::post('/setoran-sales/store', [SetoranAdminController::class, 'store'])
+    ->name('admin.setoran.store');
+
+// Edit setoran
+Route::get('/setoran-sales/{id_setoran}/edit', [SetoranAdminController::class, 'edit'])
+    ->name('admin.setoran.edit');
+
+// Update setoran
+Route::put('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'update'])
+    ->name('admin.setoran.update');
+
+// Hapus setoran
+Route::delete('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'destroy'])
+    ->name('admin.setoran.destroy');
 
 
-    Route::get('/setoran-sales', [SetoranAdminController::class, 'index'])
-        ->name('admin.setoran.index');
-
-    Route::post('/setoran-sales', [SetoranAdminController::class, 'store'])
-        ->name('admin.setoran.store');
 
     Route::get('/laporan', [LaporanController::class, 'index'])
         ->name('laporan.index');
@@ -131,17 +152,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 
-    Route::get('/setoran-sales', [SetoranAdminController::class, 'index'])
-    ->name('admin.setoran.index');
 
-Route::get('/setoran-sales/{id_sales}/riwayat', [SetoranAdminController::class, 'riwayat'])
-    ->name('admin.setoran.riwayat');
-
-Route::get('/setoran-sales/{id_sales}/tambah', [SetoranAdminController::class, 'create'])
-    ->name('admin.setoran.create');
-
-Route::post('/setoran-sales', [SetoranAdminController::class, 'store'])
-    ->name('admin.setoran.store');
 });
 
 // ===== SALES ROUTES =====

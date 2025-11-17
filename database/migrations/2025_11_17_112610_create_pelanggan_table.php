@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('pelanggan', function (Blueprint $table) {
             $table->id('id_pelanggan');
-            $table->foreignId('id_sales')->constrained('sales');
+            $table->unsignedBigInteger('id_sales')->nullable();
             $table->string('nama');
             $table->string('nik'); // fleksibel
             $table->text('alamat');
@@ -23,6 +23,8 @@ return new class extends Migration
             $table->date('tanggal_registrasi');
 
             $table->timestamps();
+
+            $table->foreign('id_sales')->references('id_sales')->on('sales')->onDelete('restrict');
         });
     }
 

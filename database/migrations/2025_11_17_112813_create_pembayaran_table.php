@@ -29,14 +29,12 @@ return new class extends Migration
 
             // Foreign Keys
             $table->foreign('id_pelanggan')
-                  ->references('id_pelanggan')->on('pelanggan')
-                  ->onDelete('set null');
-            $table->decimal('nominal', 15, 2);
+                ->references('id_pelanggan')->on('pelanggan')
+                ->onDelete('set null');
 
             $table->foreign('id_sales')
-                  ->references('id_sales')->on('sales')
-                  ->onDelete('set null');
-            $table->timestamps();
+                ->references('id_sales')->on('sales')
+                ->onDelete('set null');
         });
     }
 

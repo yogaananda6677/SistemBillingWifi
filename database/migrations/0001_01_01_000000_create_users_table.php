@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('no_hp');
             $table->string('email')->unique();
+            $table->string('role');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
@@ -35,6 +37,21 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+
+
+        Schema::create('admins', function (Blueprint $table) {
+            $table->id('id_admin');
+            $table->foreignId('user_id')->constrained('users');
+            $table->timestamps();
+        });
+
+        Schema::create('sales', function (Blueprint $table) {
+            $table->id('id_sales');
+            $table->foreignId('user_id')->constrained('users');
+            $table->decimal('komisi')->nullable();
+            $table->timestamps();
+        });
+
     }
 
     /**

@@ -38,10 +38,18 @@
             <span class="link-text">Pengaturan</span>
         </a>
 
-        <a href="#" class="sidebar-link text-danger mt-5">
+
+        <div class="sidebar-link text-danger mt-5 group-hover cursor-pointer">
             <i class="bi bi-box-arrow-left"></i>
-            <span class="link-text">Logout</span>
-        </a>
+            <button
+                data-bs-toggle="modal"
+                data-bs-target="#logoutModal"
+                class="logout-btn"
+                style="background:none; border:none; padding:0; margin:0; color:inherit; font:inherit; cursor:pointer;">
+                <span class="link-text">Logout</span>
+            </button>
+        </div>
+
     </div>
 </div>
 

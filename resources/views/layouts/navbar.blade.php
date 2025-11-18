@@ -3,13 +3,18 @@
 
     <!-- Logo di Navbar -->
     <div class="d-flex align-items-center gap-3">
-        <img src="/images/logo.png" style="width: 60px;">
+        <img src=" {{ asset('img/logo.webp') }} " style="width: 60px;">
         <span class="fw-semibold fs-5">Nalendra Payment</span>
     </div>
 
     <!-- Username + Toggle -->
+
     <div class="d-flex align-items-center gap-3">
-        <span class="fw-semibold">Annisa Tri.W</span>
+        @auth
+            <span class="fw-semibold"> {{ ucwords(Auth::user()->name)  }} </span>
+        @else
+            <a href="{{ route('login') }}">Login</a> | <a href="{{ route('register') }}">Register</a>
+        @endauth
 
         <button id="toggleSidebar" class="btn p-0">
             <i class="bi bi-list fs-3"></i>

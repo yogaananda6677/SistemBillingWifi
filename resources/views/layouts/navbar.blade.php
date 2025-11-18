@@ -1,26 +1,28 @@
-<nav class="navbar px-4 py-3 bg-white shadow-sm d-flex justify-content-between align-items-center"
-     style="position: sticky; top:0; z-index: 1000;">
+<nav class="navbar bg-white shadow-sm px-4 py-3 d-flex justify-content-between align-items-center"
+     style="position: sticky; top: 0; z-index: 1000;">
 
-    <!-- Logo di Navbar -->
+    <!-- Brand -->
     <div class="d-flex align-items-center gap-3">
-        <img src="/images/logo.png" style="width: 60px;">
-        <span class="fw-semibold fs-5">Nalendra Payment</span>
+        <img src="/img/logo.webp" alt="Logo" style="width: 48px; height: auto;">
+        <span class="fw-bold fs-5 text-dark">Nalendra</span>
     </div>
 
-    <!-- Username + Toggle -->
-    <div class="d-flex align-items-center gap-3">
-        <span class="fw-semibold">Annisa Tri.W</span>
+    <!-- Right Section -->
+    <div class="d-flex align-items-center gap-4">
+        <span class="fw-semibold text-dark">Admin Nalendra</span>
 
-        <button id="toggleSidebar" class="btn p-0">
-            <i class="bi bi-list fs-3"></i>
+        <button id="toggleSidebar" class="btn border-0 p-0 d-flex align-items-center">
+            <i class="bi bi-list fs-2 text-dark"></i>
         </button>
     </div>
 </nav>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const toggleBtn = document.getElementById("toggleSidebar");
     const sidebar = document.getElementById("sidebarContainer");
+
+    if (!toggleBtn || !sidebar) return;
 
     toggleBtn.addEventListener("click", () => {
         sidebar.classList.toggle("collapsed");

@@ -22,7 +22,7 @@
     <div class="d-flex">
 
         {{-- SIDEBAR --}}
-        @include('layouts.sidebar')
+    @include('layouts.sidebar')
 
         {{-- PAGE CONTENT --}}
         <div class="flex-grow-1 p-4">
@@ -32,6 +32,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+@include('modal.logout')
 
 </body>
 </html>

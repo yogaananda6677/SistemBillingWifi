@@ -3,13 +3,11 @@
 
     <div class="p-3">
 
-        <!-- Dashboard -->
         <a href="#" class="sidebar-link active">
             <i class="bi bi-grid"></i>
             <span class="link-text">Dashboard</span>
         </a>
 
-        <!-- Pelanggan -->
         <div class="sidebar-group">
 
             <a class="sidebar-link pelanggan-toggle" data-bs-toggle="collapse" data-bs-target="#menuPelanggan">
@@ -26,36 +24,42 @@
             </div>
         </div>
 
-        <!-- Sales -->
         <a href="#" class="sidebar-link">
             <i class="bi bi-cart"></i>
             <span class="link-text">Sales</span>
         </a>
 
-        <!-- Pembukuan -->
         <a href="#" class="sidebar-link">
             <i class="bi bi-journal-text"></i>
             <span class="link-text">Pembukuan</span>
         </a>
 
-        <!-- Pengaturan -->
         <a href="#" class="sidebar-link">
             <i class="bi bi-gear"></i>
             <span class="link-text">Pengaturan</span>
         </a>
 
-        <!-- Logout -->
         <a href="#" class="sidebar-link text-danger mt-5">
             <i class="bi bi-box-arrow-left"></i>
             <span class="link-text">Logout</span>
         </a>
+
+        <div class="sidebar-link text-danger mt-5 group-hover cursor-pointer">
+            <i class="bi bi-box-arrow-left"></i>
+            <button
+                data-bs-toggle="modal"
+                data-bs-target="#logoutModal"
+                class="logout-btn"
+                style="background:none; border:none; padding:0; margin:0; color:inherit; font:inherit; cursor:pointer;">
+                <span class="link-text">Logout</span>
+            </button>
+        </div>
 
     </div>
 </div>
 
 <style>
 
-    /* BASE STYLE */
     .sidebar-link {
         display: flex;
         align-items: center;
@@ -95,17 +99,14 @@
 
     .arrow-icon { transition: 0.3s; }
 
-    /* ROTATE ARROW WHEN OPEN */
     .pelanggan-toggle[aria-expanded="true"] .arrow-icon {
         transform: rotate(180deg);
     }
 
-    /* SIDEBAR COLLAPSE */
     .sidebar.collapsed {
         width: 70px !important;
     }
 
-    /* Hide text on collapse */
     .sidebar.collapsed .link-text {
         opacity: 0;
         width: 0;
@@ -113,13 +114,11 @@
         pointer-events: none;
     }
 
-    /* Hide submenu & arrow */
     .sidebar.collapsed #menuPelanggan,
     .sidebar.collapsed .arrow-icon {
         display: none !important;
     }
 
-    /* FIX ICON SIZE & ALIGNMENT WHEN COLLAPSED */
     .sidebar.collapsed .sidebar-link {
         justify-content: center;
         padding: 12px 0 !important;
@@ -127,7 +126,7 @@
     }
 
     .sidebar.collapsed .sidebar-link i {
-        font-size: 1.3rem;   /* ukuran stabil, nggak membesar */
+        font-size: 1.3rem;   
         margin: 0 auto;
         display: block;
     }

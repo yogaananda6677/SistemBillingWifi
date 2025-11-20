@@ -17,7 +17,7 @@ class Sales
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::user()->usertype== 'sales'){
+        if (Auth::user()->role== 'sales'){
             return $next($request);
         }
 

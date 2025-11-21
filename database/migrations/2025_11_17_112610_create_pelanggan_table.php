@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('pelanggan', function (Blueprint $table) {
             $table->id('id_pelanggan');
-            $table->unsignedBigInteger('id_area');
+            $table->unsignedBigInteger('id_sales')->nullable();
             $table->string('nama');
             $table->string('nik'); // fleksibel
             $table->text('alamat');
@@ -24,7 +24,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->foreign('id_area')->references('id_area')->on('area')->restrictOnDelete();
+            $table->foreign('id_sales')->references('id_sales')->on('sales')->onDelete('restrict');
         });
     }
 

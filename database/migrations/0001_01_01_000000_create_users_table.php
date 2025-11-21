@@ -51,6 +51,7 @@ return new class extends Migration
             $table->decimal('komisi')->nullable();
             $table->timestamps();
         });
+		
 
     }
 

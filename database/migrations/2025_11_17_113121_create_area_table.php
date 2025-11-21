@@ -13,18 +13,8 @@ return new class extends Migration
     {
         Schema::create('area', function (Blueprint $table) {
             $table->id('id_area');
-
-            // Relasi ke sales (nullable)
-            $table->unsignedBigInteger('id_sales')->nullable();
-
-            $table->string('nama_area');
-
+            $table->string('nama_area', 100);
             $table->timestamps();
-
-            // Foreign key (cara lama)
-            $table->foreign('id_sales')
-                  ->references('id_sales')->on('sales')
-                  ->onDelete('set null');
         });
     }
 

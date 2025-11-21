@@ -9,65 +9,32 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('no_hp');
-            $table->string('email')->unique();
-            $table->string('role');
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
+        Schema::table('sales', function (Blueprint $table) {
+            // Tambah kolom id_area jika belum ada
+            if (!Schema::hasColumn('sales', 'id_area')) {
+                $table->unsignedBigInteger('id_area')->after('id_sales');
+
+                // Foreign key ke tabel area
+                $table->foreign('id_area')
+                    ->references('id_area')
+                    ->on('area')
+                    ->onDelete('cascade');
+            }
         });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
-
-
-        Schema::create('admins', function (Blueprint $table) {
-            $table->id('id_admin');
-            $table->foreignId('user_id')->constrained('users');
-            $table->timestamps();
-        });
-
-        Schema::create('sales', function (Blueprint $table) {
-            $table->id('id_sales');
-            $table->unsignedBigInteger('id_area'); // area tempat sales bekerja
-            $table->foreign('id_area')->references('id_area')->on('area')->onDelete('cascade');
-
-            $table->foreignId('user_id')->constrained('users');
-            $table->decimal('komisi')->nullable();
-            $table->timestamps();
-        });
-
-
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('sales');
-        Schema::dropIfExists('admins');
-        Schema::dropIfExists('sessions');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('users');
+        Schema::table('sales', function (Blueprint $table) {
+            // Hapus foreign key
+            if (Schema::hasColumn('sales', 'id_area')) {
+                $table->dropForeign(['id_area']);
+                $table->dropColumn('id_area');
+            }
+        });
     }
+
 
 };

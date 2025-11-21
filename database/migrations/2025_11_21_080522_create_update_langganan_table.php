@@ -9,39 +9,36 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
-        Schema::create('langganan', function (Blueprint $table) {
-            $table->id('id_langganan');
-
-            $table->unsignedBigInteger('id_paket');
-            $table->unsignedBigInteger('id_pelanggan');
-
-            $table->date('tanggal_mulai');
-
-            // status langganan: aktif, isolir, nonaktif
-            $table->enum('status_langganan', ['aktif', 'isolir', 'nonaktif'])->default('aktif');
-
-            $table->timestamps();
-
-            $table->foreign('id_paket')
-                ->references('id_paket')
-                ->on('paket')
-                ->onDelete('restrict');
-
-            $table->foreign('id_pelanggan')
-                ->references('id_pelanggan')
-                ->on('pelanggan')
-                ->onDelete('restrict');
+        Schema::table('langganan', function (Blueprint $table) {
+            // Hapus kolom status lama
+            if (Schema::hasColumn('langganan', 'status_aktif')) {
+                $table->dropColumn('status_aktif');
+            }
         });
 
+        Schema::table('langganan', function (Blueprint $table) {
+            // Tambah kolom enum baru
+            $table->enum('status_langganan', ['aktif', 'isolir', 'nonaktif'])
+                ->default('aktif')
+                ->after('tanggal_mulai');
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('update_langganan');
+        schema::table('langganan', function (Blueprint $table) {
+            // Hapus enum baru
+            if (Schema::hasColumn('langganan', 'status_langganan')) {
+                $table->dropColumn('status_langganan');
+            }
+        });
+
+        Schema::table('langganan', function (Blueprint $table) {
+            // Kembalikan kolom lama
+            $table->string('status_aktif')->after('tanggal_mulai');
+        });
     }
+
 };

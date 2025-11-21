@@ -9,39 +9,33 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
-        Schema::create('pelanggan', function (Blueprint $table) {
-            $table->id('id_pelanggan');
-
-            $table->unsignedBigInteger('id_sales')->nullable();
-
-            $table->string('nama');
-            $table->string('nik'); 
-            $table->text('alamat');
-            $table->string('nomor_hp');
-            $table->string('ip_address');
-
-            // Status pelanggan hanya aktif / berhenti
-            $table->enum('status_pelanggan', ['aktif', 'berhenti'])->default('aktif');
-
-            $table->date('tanggal_registrasi');
-
-            $table->timestamps();
-
-            $table->foreign('id_sales')
-                ->references('id_sales')
-                ->on('sales')
-                ->onDelete('restrict');
+        Schema::table('pelanggan', function (Blueprint $table) {
+            // Hapus kolom enum lama
+            $table->dropColumn('status_pelanggan');
         });
 
+        Schema::table('pelanggan', function (Blueprint $table) {
+            // Buat enum baru
+            $table->enum('status_pelanggan', ['aktif', 'berhenti'])
+                ->default('aktif')
+                ->after('ip_address');
+        });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('update_pelanggan');
+        Schema::table('pelanggan', function (Blueprint $table) {
+            // Rollback: remove enum baru
+            $table->dropColumn('status_pelanggan');
+        });
+
+        Schema::table('pelanggan', function (Blueprint $table) {
+            // Rollback ke enum lama
+            $table->enum('status_pelanggan', ['baru', 'aktif', 'berhenti'])
+                ->after('ip_address');
+        });
     }
+
 };

@@ -6,23 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
-        Schema::create('area', function (Blueprint $table) {
-            $table->id('id_area');
-            $table->string('nama_area');
-            $table->timestamps();
+        Schema::table('area', function (Blueprint $table) {
+            // Hapus foreign key jika masih ada
+            if (Schema::hasColumn('area', 'id_sales')) {
+                $table->dropForeign(['id_sales']);
+                $table->dropColumn('id_sales');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::dropIfExists('update_area');
+        Schema::table('area', function (Blueprint $table) {
+            // Mengembalikan kolom id_sales jika rollback
+            $table->unsignedBigInteger('id_sales')->nullable();
+
+            $table->foreign('id_sales')
+                ->references('id_sales')->on('sales')
+                ->onDelete('set null');
+        });
     }
+
 };

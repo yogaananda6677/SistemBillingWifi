@@ -69,7 +69,7 @@
                     PPN
                 </a>
 
-                <a href="/pengaturan/area" class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
+                <a href="{{ route('area.index') }}" class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
                     Area
                 </a>
 

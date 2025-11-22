@@ -6,12 +6,6 @@
         <span class="fw-bold fs-5 text-dark">Nalendra</span>
     </div>
 
-    <div class="d-flex align-items-center gap-4">
-        <span class="fw-semibold text-dark">Admin Nalendra</span>
-        <img src=" {{ asset('img/logo.webp') }} " style="width: 60px;">
-        <span class="fw-semibold fs-5">Nalendra Payment</span>
-    </div>
-
     <div class="d-flex align-items-center gap-3">
         @auth
             <span class="fw-semibold"> {{ ucwords(Auth::user()->name)  }} </span>

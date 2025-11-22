@@ -16,6 +16,7 @@
 
 <body>
 
+    @include('layouts.flash-message')
     {{-- NAVBAR --}}
     @include('layouts.navbar')
 
@@ -33,6 +34,24 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 @include('modal.logout')
+@include('modal.delete')
+@include('modal.detail')
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    const deleteForm = document.getElementById('deleteForm');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const url = this.dataset.url;
+            deleteForm.action = url; // set action form
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        });
+    });
+});
+</script>
+@stack('scripts')
 </body>
 </html>

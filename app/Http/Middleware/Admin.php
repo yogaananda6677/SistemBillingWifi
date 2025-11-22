@@ -21,7 +21,7 @@ class Admin
 
         // Cek apakah role = admin
         if (Auth::user()->role !== 'admin') {
-            return abort(403, 'Unauthorized');
+                abort(403, 'Unauthorized');
         }
 
         return $next($request);

@@ -4,7 +4,7 @@
     <div class="p-3">
 
         <!-- DASHBOARD -->
-        <a href="/dashboard" class="sidebar-link {{ request()->is('dashboard') ? 'active' : '' }}">
+        <a href="{{ route('dashboard-admin') }}" class="sidebar-link {{ request()->is('dashboard') ? 'active' : '' }}">
             <i class="bi bi-grid"></i>
             <span class="link-text">Dashboard</span>
         </a>

@@ -60,6 +60,10 @@
             <input type="text" class="form-control" placeholder="Cari pelanggan...">
         </div>
 
+        <a href="{{ route('pelanggan.create') }}" class="btn btn-primary ">
+            Tambah Data
+        </a>
+
         <select class="filter-select">
             <option selected>Filter Wilayah</option>
             <option>Utara</option>
@@ -87,26 +91,36 @@
             </thead>
 
             <tbody>
-                @foreach ($pelanggan ?? [] as $i => $p)
+            @foreach ($pelanggan ?? [] as $i => $p)
                 <tr>
                     <td>{{ $i+1 }}</td>
                     <td>{{ $p->nama }}</td>
-                    <td>{{ $p->wilayah }}</td>
-                    <td>{{ $p->paket }}</td>
-                    <td>Rp {{ number_format($p->tagihan,0,',','.') }}</td>
-                    <td>{{ $p->koneksi }}</td>
+                    <td>{{ $p->area->nama_area ?? '-' }}</td>
                     <td>
-                        @if ($p->status == 'aktif')
+                        @foreach($p->langganan as $l)
+                            {{ $l->paket->nama_paket ?? '-' }} ({{ $l->paket->kecepatan ?? '-' }} Mbps)<br>
+                        @endforeach
+                    </td>
+                    <td>Rp {{ number_format($p->tagihan ?? 0,0,',','.') }}</td>
+                    <td>{{ $p->ip_address }}</td>
+                    <td>
+                        @if ($p->status_pelanggan == 'aktif')
                             <span class="badge bg-success">Aktif</span>
                         @else
                             <span class="badge bg-danger">Nonaktif</span>
                         @endif
                     </td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-primary">Detail</a>
+                        <a href="{{ route('pelanggan.edit', $p->id_pelanggan) }}" class="btn btn-sm btn-primary">Edit</a>
+                        <button  class="btn btn-sm btn-danger btn-delete" data-url="{{ route('pelanggan.destroy', $p->id_pelanggan) }}">
+                            Hapus
+                        </button>
+
+                        <a href="{{ route('pelanggan.show', $p->id_pelanggan) }}" class="btn btn-sm btn-info">Detail</a>
                     </td>
                 </tr>
-                @endforeach
+            @endforeach
+
             </tbody>
 
         </table>
@@ -116,3 +130,4 @@
 </div>
 
 @endsection
+

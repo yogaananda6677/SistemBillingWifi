@@ -1,30 +1,30 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PelangganController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-
-
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/dashboard', function () {
+// ===== ADMIN ROUTES =====
+Route::middleware(['auth','admin'])->group(function () {
+    // Dashboard admin
+    Route::get('/dashboard/admin', function(){
         return view('admin.dashboard');
-    })->name('dashboard');
+    })->name('dashboard-admin');
 
-     Route::view('/pelanggan', 'pelanggan.index')->name('pelanggan.index');
-     Route::get('/pelanggan/tambah', function () {
-        return view('pelanggan.create'); })->name('pelanggan.create');
-
-    Route::get('tampil-produk', [ProdukController::class, 'index'])->name('produk.index');
-    Route::get('create-produk', [ProdukController::class, 'create'])->name('produk.create');
-    Route::post('tampil-produk', [ProdukController::class, 'store'])->name('produk.store');
-    Route::get('produk/edit/{id}', [ProdukController::class, 'edit'])->name('produk.edit');
-    Route::post('produk/update/{id}', [ProdukController::class, 'update'])->name('produk.update');
-    Route::post('produk/delete/{id}', [ProdukController::class, 'destroy'])->name('produk.destroy');
-    Route::get('produk/export/excel', [ProdukController::class, 'excel'])->name('produk.excel');
-    Route::get('produk/export/pdf', [ProdukController::class, 'pdf'])->name('produk.pdf');
-    Route::get('produk/chart', [ProdukController::class, 'chart'])->name('produk.chart');
+    // Resource pelanggan untuk admin
+    Route::resource('pelanggan', PelangganController::class);
 });
 
+// ===== SALES ROUTES =====
+Route::middleware(['auth','sales'])->group(function () {
+    // Dashboard sales
+    Route::get('/dashboard/sales', function(){
+        return view('sales.dashboard');
+    })->name('dashboard-sales');
+
+    // Kalau sales juga butuh akses resource pelanggan, bisa diaktifkan
+    // Route::resource('pelanggan', PelangganController::class);
+});

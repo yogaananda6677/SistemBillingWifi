@@ -9,96 +9,99 @@
     </h5>
 
     <div class="card shadow-sm border-0 p-4" style="border-radius: 14px;">
-        <form>
+        <form action="{{ route('pelanggan.store') }}" method="POST">
+            @csrf
 
             <!-- NAMA -->
             <div class="mb-3">
                 <label class="fw-semibold">Nama</label>
-                <input type="text" class="form-control border-warning" placeholder="Kediri">
+                <input type="text" name="nama" class="form-control border-warning" placeholder="Nama Pelanggan" required>
             </div>
 
             <!-- TELEPON -->
             <div class="mb-3">
                 <label class="fw-semibold">No. Telepon</label>
-                <input type="text" class="form-control border-warning" placeholder="123456789012">
+                <input type="text" name="nomor_hp" class="form-control border-warning" placeholder="123456789012" required>
             </div>
 
             <!-- NIK -->
             <div class="mb-3">
                 <label class="fw-semibold">NIK</label>
-                <input type="text" class="form-control border-warning" placeholder="1234567890123456">
+                <input type="text" name="nik" class="form-control border-warning" placeholder="1234567890123456" required>
             </div>
 
             <!-- ALAMAT -->
             <div class="mb-3">
                 <label class="fw-semibold">Alamat</label>
-                <input type="text" class="form-control border-warning" placeholder="Kediri">
+                <input type="text" name="alamat" class="form-control border-warning" placeholder="Alamat Pelanggan" required>
             </div>
 
             <!-- IP ADDRESS -->
             <div class="mb-3">
                 <label class="fw-semibold">IP Address</label>
-                <input type="text" class="form-control border-warning" placeholder="192.168.192.100">
+                <input type="text" name="ip_address" class="form-control border-warning" placeholder="192.168.192.100" required>
             </div>
 
             <!-- TANGGAL REGISTRASI -->
             <div class="mb-3">
                 <label class="fw-semibold">Tanggal Registrasi</label>
-                <input type="date" class="form-control border-warning">
+                <input type="date" name="tanggal_registrasi" class="form-control border-warning" required>
             </div>
 
+            <!-- STATUS PELANGGAN -->
+            <div class="mb-3">
+                <label class="fw-semibold">Status Pelanggan</label>
+                <select name="status_pelanggan" class="form-select border-warning" required>
+                    <option value="" disabled selected>Pilih Status Pelanggan</option>
+                    @foreach (['baru', 'aktif', 'berhenti'] as $status)
+                        <option value="{{ $status }}" {{ old('status_pelanggan') == $status ? 'selected' : '' }}>
+                            {{ ucfirst($status) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
             <!-- PAKET LAYANAN -->
             <div class="mb-3">
                 <label class="fw-semibold">Paket Layanan</label>
-                <select class="form-select border-warning">
-                    <option>Pilih Paket Layanan</option>
-                    <option>Nalendra Home 3 - 15 Mbps</option>
+                <select name="id_paket" class="form-select border-warning" required>
+                    <option value="" disabled selected>Pilih Paket Layanan</option>
+                    @foreach ($dataPaket ?? [] as $paket)
+                        <option value="{{ $paket->id_paket }}">
+                            {{ $paket->nama_paket }} - {{ $paket->kecepatan }} Mbps
+                        </option>
+                    @endforeach
                 </select>
-            </div>
-
-            <!-- KECEPATAN -->
-            <div class="mb-3">
-                <label class="fw-semibold">Kecepatan</label>
-                <input type="text" class="form-control border-warning" placeholder="5 Mbps">
-            </div>
-
-            <!-- HARGA DASAR -->
-            <div class="mb-3">
-                <label class="fw-semibold">Harga Dasar</label>
-                <input type="text" class="form-control border-warning" placeholder="100.000">
-            </div>
-
-            <!-- PPN -->
-            <div class="mb-3">
-                <label class="fw-semibold">PPN</label>
-                <input type="text" class="form-control border-warning" placeholder="11.000">
-            </div>
-
-            <!-- TOTAL -->
-            <div class="mb-3">
-                <label class="fw-semibold">Harga Total</label>
-                <input type="text" class="form-control border-warning" placeholder="111.000">
             </div>
 
             <!-- AREA -->
             <div class="mb-3">
                 <label class="fw-semibold">Area</label>
-                <select class="form-select border-warning">
-                    <option>Pilih Area</option>
+                <select name="id_area" class="form-select border-warning" required>
+                    <option value="" disabled selected>Pilih Area</option>
+                    @foreach ($dataArea ?? [] as $area)
+                        <option value="{{ $area->id_area }}">
+                            {{ ucwords($area->nama_area) }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
             <!-- SALES -->
             <div class="mb-3">
                 <label class="fw-semibold">Sales</label>
-                <select class="form-select border-warning">
-                    <option>Pilih Sales</option>
+                <select name="id_sales" class="form-select border-warning" required>
+                    <option value="" disabled selected>Pilih Sales</option>
+                    @foreach ($dataSales ?? [] as $sales)
+                        <option value="{{ $sales->id_sales }}">
+                            {{ ucwords($sales->user->name ?? '-') }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
             <!-- BUTTONS -->
             <div class="d-flex justify-content-end mt-4 gap-3">
-                <a href="/pelanggan" class="btn btn-light px-4"
+                <a href="{{ route('pelanggan.index') }}" class="btn btn-light px-4"
                    style="border-radius: 30px; border:1px solid #ddd;">
                    Batal
                 </a>

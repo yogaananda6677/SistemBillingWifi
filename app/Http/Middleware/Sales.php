@@ -17,10 +17,15 @@ class Sales
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::user()->role== 'sales'){
-            return $next($request);
+        if (!Auth::check()) {
+            return redirect('/login');
         }
 
-        return redirect('/login');
+        // Cek apakah role = admin
+        if (Auth::user()->role !== 'sales') {
+                abort(403, 'Unauthorized');
+        }
+
+        return $next($request);
     }
 }

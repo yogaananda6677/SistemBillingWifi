@@ -15,13 +15,68 @@ class PelangganController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $dataSales = Sales::with('user')->get();
         $dataArea = Area::all();
         $dataPaket = Paket::all();
-        $pelanggan = Pelanggan::with('sales')->get();
-        return view('pelanggan.index', compact('pelanggan' , 'dataSales', 'dataArea', 'dataPaket'));
+
+        // Jika request AJAX, return data JSON untuk pagination
+        if ($request->ajax()) {
+            return $this->getPelangganData($request);
+        }
+
+        $pelanggan = Pelanggan::with(['area', 'sales.user', 'langganan.paket'])->paginate(10);
+        return view('pelanggan.index', compact('pelanggan', 'dataSales', 'dataArea', 'dataPaket'));
+    }
+
+    /**
+     * Get pelanggan data for AJAX requests
+     */
+    private function getPelangganData(Request $request)
+    {
+        $search = $request->get('search', '');
+        $area = $request->get('area', '');
+        $status = $request->get('status', '');
+
+        $query = Pelanggan::with(['area', 'sales.user', 'langganan.paket']);
+
+        // Filter pencarian
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nik', 'like', "%{$search}%")
+                  ->orWhere('ip_address', 'like', "%{$search}%")
+                  ->orWhere('nomor_hp', 'like', "%{$search}%")
+                  ->orWhereHas('area', function($q2) use ($search) {
+                      $q2->where('nama_area', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('langganan.paket', function($q3) use ($search) {
+                      $q3->where('nama_paket', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter wilayah
+        if (!empty($area)) {
+            $query->where('id_area', $area);
+        }
+
+        // Filter status
+        if (!empty($status)) {
+            $query->where('status_pelanggan', $status);
+        }
+
+        $pelanggan = $query->paginate(10);
+
+        $view = view('pelanggan.partials.table_rows', compact('pelanggan'))->render();
+        $pagination = $pelanggan->links()->toHtml();
+
+        return response()->json([
+            'html' => $view,
+            'pagination' => $pagination,
+            'total' => $pelanggan->total()
+        ]);
     }
 
     /**
@@ -30,8 +85,8 @@ class PelangganController extends Controller
     public function create()
     {
         $dataSales = Sales::with('user')->get();
-        $dataArea = Area::all(); // dropdown sales
-        $dataPaket = Paket::all(); // dropdown sales
+        $dataArea = Area::all();
+        $dataPaket = Paket::all();
         return view('pelanggan.create', compact('dataSales' , 'dataArea', 'dataPaket'));
     }
 
@@ -40,8 +95,6 @@ class PelangganController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
-
         $request->validate([
             'id_sales' => 'nullable|exists:sales,id_sales',
             'id_area' => 'nullable|exists:area,id_area',
@@ -67,11 +120,9 @@ class PelangganController extends Controller
                 'alamat'            => $request->alamat,
                 'nomor_hp'          => $request->nomor_hp,
                 'ip_address'        => $request->ip_address,
-                'status_pelanggan'  => $request->status_pelanggan, // default awal
+                'status_pelanggan'  => $request->status_pelanggan,
                 'tanggal_registrasi' => $request->tanggal_registrasi,
             ]);
-
-            // dd($pelanggan);
 
             // 2. Simpan langganan
             Langganan::create([
@@ -87,11 +138,9 @@ class PelangganController extends Controller
                 ->with('success', 'Pelanggan berhasil dibuat');
         } catch (\Exception $e) {
             DB::rollBack();
-            // dd($e->getMessage());
             return back()->with('error', 'Terjadi kesalahan!');
         }
     }
-
 
     /**
      * Display the specified resource.
@@ -102,15 +151,14 @@ class PelangganController extends Controller
         return view('pelanggan.show', compact('pelanggan'));
     }
 
-
     /**
      * Show the form for editing the specified resource.
      */
     public function edit($id)
     {
         $dataSales = Sales::with('user')->get();
-        $dataArea = Area::all(); // dropdown sales
-        $dataPaket = Paket::all(); // dropdown sales
+        $dataArea = Area::all();
+        $dataPaket = Paket::all();
         $pelanggan = Pelanggan::findOrFail($id);
         return view('pelanggan.edit', compact('pelanggan','dataSales', 'dataArea', 'dataPaket'));
     }
@@ -133,7 +181,6 @@ class PelangganController extends Controller
         ]);
 
         $pelanggan = Pelanggan::findOrFail($id);
-
         $pelanggan->update($request->all());
 
         return redirect()->route('pelanggan.index')
@@ -149,7 +196,9 @@ class PelangganController extends Controller
         $pelanggan->langganan()->delete();
         $pelanggan->delete();
 
-        return redirect()->route('pelanggan.index')
-            ->with('success', 'Pelanggan berhasil dihapus.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Pelanggan berhasil dihapus.'
+        ]);
     }
 }

@@ -16,6 +16,8 @@ Route::middleware(['auth','admin'])->group(function () {
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);
+
+    Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 });
 
 // ===== SALES ROUTES =====

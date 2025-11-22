@@ -43,9 +43,18 @@
             </div>
 
             <!-- TANGGAL REGISTRASI -->
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label class="fw-semibold">Tanggal Registrasi</label>
                 <input type="date" name="tanggal_registrasi" class="form-control border-warning" required>
+            </div> --}}
+
+
+            <div class="md-6 mb-3">
+                <label class="form-label fw-semibold">Tanggal Registrasi</label>
+                <input type="date" name="tanggal_registrasi" class="form-control border-warning" required>
+                @error('tanggal_registrasi')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
             </div>
 
             <!-- STATUS PELANGGAN -->

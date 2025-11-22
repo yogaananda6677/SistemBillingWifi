@@ -21,4 +21,25 @@ class Paket extends Model
     {
         return $this->hasMany(Pelanggan::class, 'id_paket');
     }
+
+
+    // public static function formatAngka($number)
+    // {
+    //     return number_format($number, 0, ',', '.');
+    // }
+
+    public static function hitungPPN($hargaDasar, $ppnNominal)
+    {
+        $hitung = ($ppnNominal / 100) * $hargaDasar;
+
+        return $hitung;
+    }
+
+    public static function hitungHargaTotal($hargaDasar, $ppnNominal)
+    {
+
+        $hitungTotal = $hargaDasar + $ppnNominal;
+        return $hitungTotal;
+    }
+
 }

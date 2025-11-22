@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PpnController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\PaketController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,6 +21,7 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::resource('pelanggan', PelangganController::class);
     Route::resource('pengaturan/ppn', PpnController::class);
     Route::resource('pengaturan/area', AreaController::class);
+    Route::resource('pengaturan/paket-layanan', PaketController::class);
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 });

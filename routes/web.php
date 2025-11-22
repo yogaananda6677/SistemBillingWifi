@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PelangganController;
+use App\Http\Controllers\PpnController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -16,6 +17,7 @@ Route::middleware(['auth','admin'])->group(function () {
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);
+    Route::resource('pengaturan/ppn', PpnController::class);
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 });

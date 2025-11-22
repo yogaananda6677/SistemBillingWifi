@@ -65,7 +65,7 @@
 
             <div class="collapse ps-4 {{ request()->is('pengaturan*') ? 'show' : '' }}" id="menuPengaturan">
 
-                <a href="/pengaturan/ppn" class="sidebar-sublink {{ request()->is('pengaturan/ppn') ? 'active-sub' : '' }}">
+                <a href="{{ route('ppn.index') }}" class="sidebar-sublink {{ request()->is('pengaturan/ppn') ? 'active-sub' : '' }}">
                     PPN
                 </a>
 

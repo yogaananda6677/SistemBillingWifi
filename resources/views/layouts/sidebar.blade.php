@@ -52,11 +52,33 @@
             <span class="link-text">Pembukuan</span>
         </a>
 
+
         <!-- PENGATURAN -->
-        <a href="/pengaturan" class="sidebar-link">
-            <i class="bi bi-gear"></i>
-            <span class="link-text">Pengaturan</span>
-        </a>
+        <div class="sidebar-group">
+
+            <a class="sidebar-link pengaturan-toggle {{ request()->is('pengaturan*') ? '' : '' }}"
+                data-bs-toggle="collapse" data-bs-target="#menuPengaturan">
+                <i class="bi bi-gear"></i>
+                <span class="link-text">Pengaturan</span>
+                <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
+            </a>
+
+            <div class="collapse ps-4 {{ request()->is('pengaturan*') ? 'show' : '' }}" id="menuPengaturan">
+
+                <a href="/pengaturan/ppn" class="sidebar-sublink {{ request()->is('pengaturan/ppn') ? 'active-sub' : '' }}">
+                    PPN
+                </a>
+
+                <a href="/pengaturan/area" class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
+                    Area
+                </a>
+
+                <a href="/pengaturan/paket-layanan" class="sidebar-sublink {{ request()->is('pengaturan/paket-layanan') ? 'active-sub' : '' }}">
+                    Paket Layanan
+                </a>
+
+            </div>
+        </div>
 
         <!-- LOGOUT -->
         <div class="sidebar-link text-danger mt-5 cursor-pointer"

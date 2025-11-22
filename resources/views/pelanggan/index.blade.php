@@ -205,7 +205,7 @@
             clearTimeout(timeout);
             timeout = setTimeout(function() {
                 loadData(1);
-            }, 800);
+            }, 200);
         });
 
         // Filter change

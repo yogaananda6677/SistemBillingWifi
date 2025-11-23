@@ -3,65 +3,61 @@
 @section('content')
 <div class="container-fluid p-4">
 
-    <h4 class="mb-4">Dashboard Tagihan Bulanan</h4>
+    <h4 class="fw-bold mb-4">Pengaturan Area</h4>
 
-    <div class="row g-2 mb-3">
-        <div class="col-md-4">
-            <input type="text" id="search" class="form-control" placeholder="Cari pelanggan atau paket...">
-        </div>
-        <div class="col-md-3">
-            <select id="status" class="form-select">
-                <option value="">Semua Status</option>
-                <option value="lunas">Lunas</option>
-                <option value="belum_lunas">Belum Lunas</option>
-            </select>
-        </div>
+    <!-- Tombol Tambah -->
+    <div class="mb-3 text-end">
+        <a href="{{ route('area.create') }}" class="btn btn-warning text-white">
+            <i class="bi bi-plus-circle me-2"></i> Tambah Area
+        </a>
     </div>
 
-    <div id="tagihan-table">
-        @include('tagihan.partials.table', ['dataTagihan' => $dataTagihan])
+    <!-- Tabel Area -->
+    <div class="card shadow-sm border-0 p-3">
+        <table class="table table-striped table-bordered">
+            <thead class="table-secondary">
+                <tr>
+                    <th>#</th>
+                    <th>Nama Area</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($dataArea ?? [] as $index => $area)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $area->nama_area }}</td>
+                    <td>
+                        <a href="{{ route('area.edit', $area->id_area) }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                data-url="{{ route('area.destroy', $area->id_area) }}">
+                            <i class="bi bi-trash"></i> Hapus
+                        </button>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 
 </div>
-@endsection
 
-@section('scripts')
+<!-- Script Modal Delete Universal -->
 <script>
-$(document).ready(function(){
+document.addEventListener('DOMContentLoaded', function () {
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    const deleteForm = document.getElementById('deleteForm');
 
-    function fetchTagihan(page = 1){
-        var search = $('#search').val();
-        var status = $('#status').val();
-
-        $.ajax({
-            url: "{{ route('tagihan.index') }}",
-            type: "GET",
-            data: {
-                search: search,
-                status: status,
-                page: page
-            },
-            success: function(data){
-                $('#tagihan-table').html(data);
-            }
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const url = this.dataset.url;
+            deleteForm.action = url; // set action form
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
         });
-    }
-
-    $('#search').on('keyup', function(){
-        fetchTagihan();
     });
-
-    $('#status').on('change', function(){
-        fetchTagihan();
-    });
-
-    // Pagination link click
-    $(document).on('click', '.pagination a', function(e){
-        e.preventDefault();
-        var page = $(this).attr('href').split('page=')[1];
-        fetchTagihan(page);
-    });
-
 });
 </script>
 @endsection

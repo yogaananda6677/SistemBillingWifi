@@ -21,6 +21,11 @@ class Langganan extends Model
         return $this->belongsTo(Pelanggan::class, 'id_pelanggan', 'id_pelanggan');
     }
 
+    public function tagihan()
+    {
+        return $this->hasMany(Tagihan::class, 'id_langganan', 'id_langganan');
+    }
+
     public function paket()
     {
         return $this->belongsTo(Paket::class, 'id_paket', 'id_paket');

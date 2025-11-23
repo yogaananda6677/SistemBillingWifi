@@ -26,7 +26,7 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::resource('pengaturan/ppn', PpnController::class);
     Route::resource('pengaturan/area', AreaController::class);
     Route::resource('pengaturan/paket-layanan', PaketController::class);
-    Route::resource('pelanggan/tagihan', TagihanController::class);
+    Route::resource('/tagihan', TagihanController::class);
 
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');

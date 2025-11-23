@@ -32,4 +32,8 @@ class Sales extends Model
     {
         return $this->hasMany(Pelanggan::class, 'id_sales');
     }
+        public function pengeluaran()
+    {
+        return $this->hasMany(Pengeluaran::class, 'id_sales');
+    }
 }

@@ -4,8 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PpnController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\PaketController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -22,6 +24,8 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::resource('pelanggan', PelangganController::class);
 
     Route::resource('sales/data-sales', SalesController::class);
+    Route::get('/sales/pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
+
     
 
     Route::resource('pengaturan/ppn', PpnController::class);

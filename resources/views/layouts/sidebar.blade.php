@@ -85,25 +85,37 @@
         </div>
 
         <div class="sidebar-group">
-            <a class="sidebar-link sales-toggle {{ request()->is('sales*') ? '' : '' }}"
-                data-bs-toggle="collapse" data-bs-target="#menuSales">
+            <a class="sidebar-link sales-toggle"
+                data-bs-toggle="collapse"
+                data-bs-target="#menuSales">
                 <i class="bi bi-cart"></i>
                 <span class="link-text">Sales</span>
                 <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
             </a>
 
-            <div class="collapse ps-4 {{ request()->is('sales*') ? 'show' : '' }}" id="menuSales">
-                <a href="/sales/data-sales" class="sidebar-sublink {{ request()->is('sales') ? 'active-sub' : '' }}">
+            <div class="collapse ps-4 {{ request()->is('sales/*') ? 'show' : '' }}" id="menuSales">
+
+                {{-- DATA SALES --}}
+                <a href="/sales/data-sales" 
+                class="sidebar-sublink {{ request()->is('sales/data-sales') ? 'active-sub' : '' }}">
                     Data Sales
                 </a>
-                <a href="/sales/laporan" class="sidebar-sublink">
+
+                {{-- SETORAN --}}
+                <a href="/sales/setoran"
+                class="sidebar-sublink {{ request()->is('sales/setoran') ? 'active-sub' : '' }}">
                     Setoran
                 </a>
-                <a href="/sales/laporan" class="sidebar-sublink">
-                    Pengajuan Pengeluran
+
+                {{-- PENGAJUAN PENGELUARAN --}}
+                <a href="/sales/pengajuan"
+                class="sidebar-sublink {{ request()->is('sales/pengajuan') ? 'active-sub' : '' }}">
+                    Pengajuan Pengeluaran
                 </a>
-                </div>
+
+            </div>
         </div>
+
 
         <!-- PEMBUKUAN -->
         <a href="/pembukuan" class="sidebar-link">

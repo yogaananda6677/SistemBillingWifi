@@ -145,126 +145,136 @@
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function() {
-        let timeout = null;
-        let currentPage = 1;
+$(document).ready(function() {
+    let timeout = null;
+    let currentPage = 1;
 
-        // Fungsi untuk memuat data via AJAX
-        function loadData(page = 1) {
-            currentPage = page;
+    // Fungsi untuk memuat data via AJAX
+    function loadData(page = 1) {
+        currentPage = page;
 
-            $('#loading-spinner').show();
-            $('#table-container').hide();
+        $('#loading-spinner').show();
+        $('#table-container').hide();
 
-            const search = $('#search-input').val();
-            const area = $('#area-filter').val();
-            const status = $('#status-filter').val();
+        const search = $('#search-input').val();
+        const area = $('#area-filter').val();
+        const status = $('#status-filter').val();
 
-            $.ajax({
-                url: '{{ route("pelanggan.index") }}',
-                type: 'GET',
-                data: {
-                    search: search,
-                    area: area,
-                    status: status,
-                    page: page,
-                    ajax: true
-                },
-                success: function(response) {
-                    $('#pelanggan-table-body').html(response.html);
-                    $('#pagination-wrapper').html(response.pagination);
-                    $('#table-container').show();
-                    $('#loading-spinner').hide();
+        $.ajax({
+            url: '{{ route("pelanggan.index") }}',
+            type: 'GET',
+            data: {
+                search: search,
+                area: area,
+                status: status,
+                page: page,
+                ajax: true
+            },
+            success: function(response) {
+                $('#pelanggan-table-body').html(response.html);
+                $('#pagination-wrapper').html(response.pagination);
+                $('#table-container').show();
+                $('#loading-spinner').hide();
 
-                    // Update URL tanpa reload page
-                    updateUrl(search, area, status, page);
-                },
-                error: function(xhr) {
-                    $('#loading-spinner').hide();
-                    $('#table-container').show();
-                    console.error('Error:', xhr);
-                    alert('Terjadi kesalahan saat memuat data');
-                }
-            });
-        }
-
-        // Update URL dengan parameter filter
-        function updateUrl(search, area, status, page) {
-            const params = new URLSearchParams();
-            if (search) params.set('search', search);
-            if (area) params.set('area', area);
-            if (status) params.set('status', status);
-            if (page > 1) params.set('page', page);
-
-            const newUrl = params.toString() ? '{{ route("pelanggan.index") }}?' + params.toString() : '{{ route("pelanggan.index") }}';
-            window.history.replaceState({}, '', newUrl);
-        }
-
-        // Real-time search dengan debounce
-        $('#search-input').on('input', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(function() {
-                loadData(1);
-            }, 200);
-        });
-
-        // Filter change
-        $('#area-filter, #status-filter').on('change', function() {
-            loadData(1);
-        });
-
-        // Pagination click (event delegation)
-        $(document).on('click', '.pagination a', function(e) {
-            e.preventDefault();
-            const url = new URL($(this).attr('href'));
-            const page = url.searchParams.get('page') || 1;
-            loadData(page);
-        });
-
-        // Delete confirmation
-        $(document).on('click', '.btn-delete', function(e) {
-            e.preventDefault();
-            const url = $(this).data('url');
-            const button = $(this);
-
-            if (confirm('Apakah Anda yakin ingin menghapus pelanggan ini?')) {
-                button.prop('disabled', true).text('Menghapus...');
-
-                $.ajax({
-                    url: url,
-                    type: 'DELETE',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        alert(response.message);
-                        loadData(currentPage);
-                    },
-                    error: function(xhr) {
-                        button.prop('disabled', false).text('Hapus');
-                        alert('Terjadi kesalahan saat menghapus data');
-                    }
-                });
+                // Update URL tanpa reload page
+                updateUrl(search, area, status, page);
+            },
+            error: function(xhr) {
+                $('#loading-spinner').hide();
+                $('#table-container').show();
+                console.error('Error:', xhr);
+                alert('Terjadi kesalahan saat memuat data');
             }
         });
+    }
 
-        // Load initial data dari URL parameters
-        function loadInitialFilters() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const search = urlParams.get('search');
-            const area = urlParams.get('area');
-            const status = urlParams.get('status');
-            const page = urlParams.get('page');
+    // Update URL dengan parameter filter
+    function updateUrl(search, area, status, page) {
+        const params = new URLSearchParams();
+        if (search) params.set('search', search);
+        if (area) params.set('area', area);
+        if (status) params.set('status', status);
+        if (page > 1) params.set('page', page);
 
-            if (search) $('#search-input').val(search);
-            if (area) $('#area-filter').val(area);
-            if (status) $('#status-filter').val(status);
+        const newUrl = params.toString() ? '{{ route("pelanggan.index") }}?' + params.toString() : '{{ route("pelanggan.index") }}';
+        window.history.replaceState({}, '', newUrl);
+    }
 
-            loadData(page || 1);
-        }
-
-        // Panggil fungsi load initial
-        loadInitialFilters();
+    // Real-time search dengan debounce
+    $('#search-input').on('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(function() {
+            loadData(1);
+        }, 200);
     });
+
+    // Filter change
+    $('#area-filter, #status-filter').on('change', function() {
+        loadData(1);
+    });
+
+    // Pagination click (event delegation)
+    $(document).on('click', '.pagination a', function(e) {
+        e.preventDefault();
+        const url = new URL($(this).attr('href'));
+        const page = url.searchParams.get('page') || 1;
+        loadData(page);
+    });
+
+    // Delete button pakai modal universal
+    $(document).on('click', '.btn-delete', function(e) {
+        e.preventDefault();
+        const url = $(this).data('url');
+        const deleteForm = $('#deleteForm');
+        deleteForm.attr('action', url);
+
+        // Tampilkan modal
+        const deleteModal = new bootstrap.Modal($('#deleteModal')[0]);
+        deleteModal.show();
+    });
+
+    // Submit delete form dari modal
+    $('#deleteForm').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const url = form.attr('action');
+        const submitButton = form.find('button[type="submit"]');
+
+        submitButton.prop('disabled', true).text('Menghapus...');
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: form.serialize() + '&_method=DELETE',
+            success: function(response) {
+                alert(response.message);
+                const deleteModal = bootstrap.Modal.getInstance($('#deleteModal')[0]);
+                deleteModal.hide();
+                loadData(currentPage);
+            },
+            error: function(xhr) {
+                submitButton.prop('disabled', false).text('Hapus');
+                alert('Terjadi kesalahan saat menghapus data');
+            }
+        });
+    });
+
+    // Load initial data dari URL parameters
+    function loadInitialFilters() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const search = urlParams.get('search');
+        const area = urlParams.get('area');
+        const status = urlParams.get('status');
+        const page = urlParams.get('page');
+
+        if (search) $('#search-input').val(search);
+        if (area) $('#area-filter').val(area);
+        if (status) $('#status-filter').val(status);
+
+        loadData(page || 1);
+    }
+
+    loadInitialFilters();
+});
 </script>
 @endpush

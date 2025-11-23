@@ -37,7 +37,7 @@
 @include('modal.delete')
 @include('modal.detail')
 
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function () {
     const deleteButtons = document.querySelectorAll('.btn-delete');
     const deleteForm = document.getElementById('deleteForm');
@@ -51,7 +51,7 @@
         });
     });
 });
-</script>
+</script> --}}
 @stack('scripts')
 </body>
 </html>

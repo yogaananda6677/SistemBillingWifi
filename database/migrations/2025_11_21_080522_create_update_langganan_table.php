@@ -20,7 +20,7 @@ return new class extends Migration
 
         Schema::table('langganan', function (Blueprint $table) {
             // Tambah kolom enum baru
-            $table->enum('status_langganan', ['aktif', 'isolir', 'nonaktif'])
+            $table->enum('status_langganan', ['aktif', 'isolir'])
                 ->default('aktif')
                 ->after('tanggal_mulai');
         });

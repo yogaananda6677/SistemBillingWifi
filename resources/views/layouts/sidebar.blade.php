@@ -93,7 +93,7 @@
             </a>
 
             <div class="collapse ps-4 {{ request()->is('sales*') ? 'show' : '' }}" id="menuSales">
-                <a href="/sales" class="sidebar-sublink {{ request()->is('sales') ? 'active-sub' : '' }}">
+                <a href="/sales/data-sales" class="sidebar-sublink {{ request()->is('sales') ? 'active-sub' : '' }}">
                     Data Sales
                 </a>
                 <a href="/sales/laporan" class="sidebar-sublink">
@@ -128,7 +128,7 @@
                     PPN
                 </a>
 
-                <a href="/pengaturan/area" class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
+                <a href="{{ route('area.index') }}" class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
                     Area
                 </a>
 

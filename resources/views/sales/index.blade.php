@@ -84,21 +84,7 @@
 
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const deleteButtons = document.querySelectorAll('.btn-delete');
-    const deleteForm = document.getElementById('deleteForm');
 
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const url = this.dataset.url;
-            deleteForm.action = url; // set action form
-            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            deleteModal.show();
-        });
-    });
-});
-</script>
 <script>
 
 $(document).ready(function() {
@@ -167,38 +153,6 @@ $(document).ready(function() {
         const page = new URL($(this).attr('href')).searchParams.get('page') || 1;
         loadData(page);
     });
-
-    // DELETE
-    $(document).on('click', '.btn-delete', function(e) {
-        e.preventDefault();
-
-        const url = $(this).data('url');
-        const button = $(this);
-
-        if (confirm('Apakah Anda yakin ingin menghapus sales ini?')) {
-
-            button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: {
-                    _method: 'DELETE',
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    alert(response.message);
-                    loadData(currentPage);
-                },
-                error: function() {
-                    button.prop('disabled', false).html('<i class="fas fa-trash-alt"></i>');
-                    alert('Terjadi kesalahan saat menghapus.');
-                }
-            });
-        }
-    });
-
-});
 
 </script>
 

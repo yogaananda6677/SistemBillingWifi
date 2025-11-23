@@ -139,6 +139,7 @@ class SalesController extends Controller
         $sales->delete();
         $sales->user->delete();
 
-        return response()->json(['message' => 'Sales berhasil dihapus']);
+        return redirect()->route('data-sales.index')->with('success', 'Sales berhasil dihapus.');
+
     }
 }

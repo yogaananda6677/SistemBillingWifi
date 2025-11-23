@@ -29,11 +29,11 @@ class Langganan extends Model
 
     public static function statusLanggananOptions($status_pelanggan)
     {
-        if($request->status_pelanggan == 'aktif')
+        if($status_pelanggan == 'aktif')
             $status_langganan = 'aktif';
-        elseif ($request->status_pelanggan == 'isolir')
+        elseif ($status_pelanggan == 'isolir')
             $status_langganan = 'isolir';
-        elseif ($request->status_pelanggan == 'berhenti')
+        elseif ($status_pelanggan == 'berhenti')
             $status_langganan = 'berhenti';
         else
             $status_langganan = 'aktif';

@@ -127,7 +127,7 @@ class PelangganController extends Controller
 
             $status_langganan = Langganan::statusLanggananOptions($request->status_pelanggan);
 
-            dd($status_langganan);
+            // dd($status_langganan);
 
             // 2. Simpan langganan
             Langganan::create([
@@ -143,6 +143,7 @@ class PelangganController extends Controller
                 ->with('success', 'Pelanggan berhasil dibuat');
         } catch (\Exception $e) {
             DB::rollBack();
+            dd($e->getMessage());
             return back()->with('error', 'Terjadi kesalahan!');
         }
     }
@@ -291,6 +292,8 @@ class PelangganController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            dd($e->getMessage());
+
             return back()->with('error', 'Terjadi kesalahan!');
         }
     }

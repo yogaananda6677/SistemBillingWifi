@@ -26,9 +26,9 @@ class LanggananController extends Controller
      */
     public function create()
     {
-        $pelanggan = Pelanggan::all(); // atau filter jika perlu
-        $paket = Paket::all();
-        return view('langganan.create', compact('pelanggan', 'paket'));
+        // $pelanggan = Pelanggan::all(); // atau filter jika perlu
+        // $paket = Paket::all();
+        // return view('langganan.create', compact('pelanggan', 'paket'));
     }
 
     /**

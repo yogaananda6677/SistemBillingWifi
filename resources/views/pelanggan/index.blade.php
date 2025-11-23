@@ -99,6 +99,7 @@
             <option value="baru">Baru</option>
             <option value="aktif">Aktif</option>
             <option value="berhenti">Berhenti</option>
+            <option value="isolir">Isolir</option>
         </select>
     </div>
 

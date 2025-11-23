@@ -26,57 +26,59 @@
                 </a>
 
                 <div class="sidebar-group">
-                    <a class="sidebar-sublink pelanggan-status-toggle 
+                    <a class="sidebar-sublink pelanggan-status-toggle
                         {{ request()->is('pelanggan/status*') ? 'active-sub' : '' }}"
                         data-bs-toggle="collapse" data-bs-target="#menuStatusPelanggan">
-                        
+
                         <span class="link-text">Status Pelanggan</span>
                         <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
                     </a>
 
-                    <div class="collapse ps-3 {{ request()->is('pelanggan/status/*') ? 'show' : '' }}" id="menuStatusPelanggan">
-                        
-                        <a href="/pelanggan/status/aktif" class="sidebar-sublink 
-                            {{ request()->is('pelanggan/status/aktif') ? 'active-sub' : '' }}">
-                            Baru 
-                        </a>
+                <div class="collapse ps-3 {{ request()->is('pelanggan/status/*') ? 'show' : '' }}" id="menuStatusPelanggan">
 
-                        <a href="/pelanggan/status/nonaktif" class="sidebar-sublink 
-                            {{ request()->is('pelanggan/status/nonaktif') ? 'active-sub' : '' }}">
-                            Aktif
-                        </a>
+                    <a href="/pelanggan?status=baru" class="sidebar-sublink {{ request('status') == 'baru' ? 'active-sub' : '' }}">
+                        Baru
+                    </a>
 
-                        <a href="/pelanggan/status/tertunda" class="sidebar-sublink 
-                            {{ request()->is('pelanggan/status/tertunda') ? 'active-sub' : '' }}">
-                            Berhenti
-                        </a>
+                    <a href="/pelanggan?status=aktif" class="sidebar-sublink {{ request('status') == 'aktif' ? 'active-sub' : '' }}">
+                        Aktif
+                    </a>
 
-                    </div>
+                    <a href="/pelanggan?status=berhenti" class="sidebar-sublink {{ request('status') == 'berhenti' ? 'active-sub' : '' }}">
+                        Berhenti
+                    </a>
+
+                    <a href="/pelanggan?status=isolir" class="sidebar-sublink {{ request('status') == 'isolir' ? 'active-sub' : '' }}">
+                        Isolir
+                    </a>
+
+                </div>
+
                 </div>
                 <div class="sidebar-group">
-                    <a class="sidebar-sublink pembayaran-status-toggle 
+                    <a class="sidebar-sublink pembayaran-status-toggle
                         {{ request()->is('pelanggan/pembayaran*') ? 'active-sub' : '' }}"
                         data-bs-toggle="collapse" data-bs-target="#menuStatusPembayaran">
-                        
+
                         <span class="link-text">Status Pembayaran</span>
                         <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
                     </a>
 
                     <div class="collapse ps-3 {{ request()->is('pelanggan/pembayaran/*') ? 'show' : '' }}" id="menuStatusPembayaran">
-                        
-                        <a href="/pelanggan/pembayaran/lunas" class="sidebar-sublink 
+
+                        <a href="/pelanggan/pembayaran/lunas" class="sidebar-sublink
                             {{ request()->is('pelanggan/pembayaran/lunas') ? 'active-sub' : '' }}">
                             Lunas
                         </a>
 
-                        <a href="/pelanggan/pembayaran/belum-lunas" class="sidebar-sublink 
+                        <a href="/pelanggan/pembayaran/belum-lunas" class="sidebar-sublink
                             {{ request()->is('pelanggan/pembayaran/belum-lunas') ? 'active-sub' : '' }}">
                             Belum Lunas
                         </a>
                     </div>
                 </div>
 
-                <a href="/pelanggan/riwayat" class="sidebar-sublink 
+                <a href="/pelanggan/riwayat" class="sidebar-sublink
                     {{ request()->is('pelanggan/riwayat') ? 'active-sub' : '' }}">
                     Riwayat Pembayaran
                 </a>
@@ -144,7 +146,7 @@
                     Area
                 </a>
 
-                <a href="/pengaturan/paket-layanan" class="sidebar-sublink {{ request()->is('pengaturan/paket-layanan') ? 'active-sub' : '' }}">
+                <a href="{{ route('paket-layanan.index') }}" class="sidebar-sublink {{ request()->is('pengaturan/paket-layanan') ? 'active-sub' : '' }}">
                     Paket Layanan
                 </a>
 

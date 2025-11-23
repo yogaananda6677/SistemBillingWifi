@@ -104,7 +104,7 @@ class PelangganController extends Controller
             'alamat' => 'required|string',
             'nomor_hp' => 'required|string',
             'ip_address' => 'required|string',
-            'status_pelanggan' => 'required|in:baru,aktif,berhenti',
+            'status_pelanggan' => 'required|in:baru,aktif,berhenti,isolir',
             'tanggal_registrasi' => 'required|date'
         ]);
 
@@ -124,12 +124,17 @@ class PelangganController extends Controller
                 'tanggal_registrasi' => $request->tanggal_registrasi,
             ]);
 
+
+            $status_langganan = Langganan::statusLanggananOptions($request->status_pelanggan);
+
+            // dd($status_langganan);
+
             // 2. Simpan langganan
             Langganan::create([
                 'id_pelanggan' => $pelanggan->id_pelanggan,
                 'id_paket'     => $request->id_paket,
                 'tanggal_mulai' => now(),
-                'status_langganan'  => 'aktif',
+                'status_langganan'  => $status_langganan,
             ]);
 
             DB::commit();
@@ -138,6 +143,7 @@ class PelangganController extends Controller
                 ->with('success', 'Pelanggan berhasil dibuat');
         } catch (\Exception $e) {
             DB::rollBack();
+            dd($e->getMessage());
             return back()->with('error', 'Terjadi kesalahan!');
         }
     }
@@ -166,6 +172,65 @@ class PelangganController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    // public function update(Request $request, $id)
+    // {
+    //     $request->validate([
+    //         'id_sales' => 'nullable|exists:sales,id_sales',
+    //         'id_area' => 'nullable|exists:area,id_area',
+    //         'nama' => 'required|string|max:100',
+    //         'nik' => 'required|string|max:30',
+    //         'alamat' => 'required|string',
+    //         'nomor_hp' => 'required|string',
+    //         'ip_address' => 'required|string',
+    //         'status_pelanggan' => 'required|in:baru,aktif,berhenti,isolir',
+    //         'tanggal_registrasi' => 'required|date',
+    //         'id_paket' => 'required|exists:paket,id_paket'
+    //     ]);
+
+    //     // dd($request->all());
+
+    //     $pelanggan = Pelanggan::findOrFail($id);
+    //     DB::beginTransaction();
+
+    //     try {
+
+    //         // ======================
+    //         // 1. UPDATE DATA PELANGGAN
+    //         // ======================
+    //         $pelanggan->update([
+    //             'id_sales'          => $request->id_sales,
+    //             'id_area'           => $request->id_area,
+    //             'nama'              => $request->nama,
+    //             'nik'               => $request->nik,
+    //             'alamat'            => $request->alamat,
+    //             'nomor_hp'          => $request->nomor_hp,
+    //             'ip_address'        => $request->ip_address,
+    //             'status_pelanggan'  => $request->status_pelanggan,
+    //             'tanggal_registrasi' => $request->tanggal_registrasi,
+    //         ]);
+
+    //         // ======================
+    //         // 2. UPDATE LANGGANAN
+    //         // ======================
+    //         $status_langganan = Langganan::statusLanggananOptions($request->status_pelanggan);
+    //         $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
+
+    //         Langganan::where('id_langganan', $langganan->id_langganan)->update([
+    //             'id_paket' => $request->id_paket,
+    //             'status_langganan' => $status_langganan,
+    //         ]);
+
+    //         DB::commit();
+
+    //         return redirect()->route('pelanggan.index')
+    //             ->with('success', 'Pelanggan berhasil diperbarui');
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return back()->with('error', 'Terjadi kesalahan!');
+    //     }
+    // }
+
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -176,16 +241,64 @@ class PelangganController extends Controller
             'alamat' => 'required|string',
             'nomor_hp' => 'required|string',
             'ip_address' => 'required|string',
-            'status_pelanggan' => 'required|in:baru,aktif,berhenti',
-            'tanggal_registrasi' => 'required|date'
+            'status_pelanggan' => 'required|in:baru,aktif,berhenti,isolir',
+            'tanggal_registrasi' => 'required|date',
+            'id_paket' => 'required|exists:paket,id_paket'
         ]);
 
         $pelanggan = Pelanggan::findOrFail($id);
-        $pelanggan->update($request->all());
 
-        return redirect()->route('pelanggan.index')
-            ->with('success', 'Data pelanggan berhasil diperbarui.');
+        DB::beginTransaction();
+
+        try {
+
+            // UPDATE PELANGGAN
+            $pelanggan->update([
+                'id_sales'          => $request->id_sales,
+                'id_area'           => $request->id_area,
+                'nama'              => $request->nama,
+                'nik'               => $request->nik,
+                'alamat'            => $request->alamat,
+                'nomor_hp'          => $request->nomor_hp,
+                'ip_address'        => $request->ip_address,
+                'status_pelanggan'  => $request->status_pelanggan,
+                'tanggal_registrasi'=> $request->tanggal_registrasi,
+            ]);
+
+            // UPDATE / CREATE LANGGANAN
+            $status_langganan = Langganan::statusLanggananOptions($request->status_pelanggan);
+            $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
+
+            if ($langganan) {
+                // update
+                $langganan->update([
+                    'id_paket' => $request->id_paket,
+                    'status_langganan' => $status_langganan,
+                ]);
+            } else {
+                // create
+                Langganan::create([
+                    'id_pelanggan' => $pelanggan->id_pelanggan,
+                    'id_paket' => $request->id_paket,
+                    'tanggal_mulai' => now(),
+                    'status_langganan' => $status_langganan,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('pelanggan.index')
+                ->with('success', 'Pelanggan berhasil diperbarui');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            dd($e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan!');
+        }
     }
+
+
 
     /**
      * Remove the specified resource from storage.

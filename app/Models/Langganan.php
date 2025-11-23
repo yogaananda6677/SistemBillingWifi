@@ -25,4 +25,19 @@ class Langganan extends Model
     {
         return $this->belongsTo(Paket::class, 'id_paket', 'id_paket');
     }
+
+
+    public static function statusLanggananOptions($status_pelanggan)
+    {
+        if($status_pelanggan == 'aktif')
+            $status_langganan = 'aktif';
+        elseif ($status_pelanggan == 'isolir')
+            $status_langganan = 'isolir';
+        elseif ($status_pelanggan == 'berhenti')
+            $status_langganan = 'berhenti';
+        else
+            $status_langganan = 'aktif';
+
+        return $status_langganan;
+    }
 }

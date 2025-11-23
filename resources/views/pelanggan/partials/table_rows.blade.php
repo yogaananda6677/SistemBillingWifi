@@ -23,6 +23,8 @@
                     <span class="badge bg-success">Aktif</span>
                 @elseif($p->status_pelanggan == 'baru')
                     <span class="badge bg-warning">Baru</span>
+                @elseif($p->status_pelanggan == 'isolir')
+                    <span class="badge bg-secondary">Isolir</span>
                 @else
                     <span class="badge bg-danger">Berhenti</span>
                 @endif

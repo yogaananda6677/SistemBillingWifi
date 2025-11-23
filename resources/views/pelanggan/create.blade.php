@@ -62,7 +62,7 @@
                 <label class="fw-semibold">Status Pelanggan</label>
                 <select name="status_pelanggan" class="form-select border-warning" required>
                     <option value="" disabled selected>Pilih Status Pelanggan</option>
-                    @foreach (['baru', 'aktif', 'berhenti'] as $status)
+                    @foreach (['baru', 'aktif', 'berhenti' , 'isolir'] as $status)
                         <option value="{{ $status }}" {{ old('status_pelanggan') == $status ? 'selected' : '' }}>
                             {{ ucfirst($status) }}
                         </option>

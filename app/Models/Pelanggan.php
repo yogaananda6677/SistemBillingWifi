@@ -24,9 +24,9 @@ class Pelanggan extends Model
         'tanggal_registrasi',
     ];
 
-    protected $casts = [
-    'tanggal_registrasi' => 'datetime',
-    ];
+    // protected $casts = [
+    // 'tanggal_registrasi' => 'datetime',
+    // ];
 
 
     public function sales()

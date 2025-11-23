@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Langganan;
 
 class Paket extends Model
 {
@@ -17,9 +18,9 @@ class Paket extends Model
         'harga_total'
     ];
 
-    public function pelanggan()
+    public function langganan()
     {
-        return $this->hasMany(Pelanggan::class, 'id_paket');
+        return $this->hasMany(Langganan::class, 'id_paket');
     }
 
 

@@ -5,6 +5,8 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PpnController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\PaketController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TagihanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -13,15 +15,19 @@ Route::get('/', function () {
 // ===== ADMIN ROUTES =====
 Route::middleware(['auth','admin'])->group(function () {
     // Dashboard admin
-    Route::get('/dashboard/admin', function(){
-        return view('admin.dashboard');
-    })->name('dashboard-admin');
+    // Route::get('/dashboard/admin', function(){
+    //     return view('admin.dashboard');
+    // })->name('dashboard-admin');
+
+    Route::get('/dashboard/admin', [DashboardController::class, 'index'])->name('dashboard-admin');
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);
     Route::resource('pengaturan/ppn', PpnController::class);
     Route::resource('pengaturan/area', AreaController::class);
     Route::resource('pengaturan/paket-layanan', PaketController::class);
+    Route::resource('pelanggan/tagihan', TagihanController::class);
+
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 });

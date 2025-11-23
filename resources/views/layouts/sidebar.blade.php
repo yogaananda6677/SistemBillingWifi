@@ -66,6 +66,11 @@
 
                     <div class="collapse ps-3 {{ request()->is('pelanggan/pembayaran/*') ? 'show' : '' }}" id="menuStatusPembayaran">
 
+                        <a href="{{ route('tagihan.index') }}" class="sidebar-sublink
+                            {{ request()->is('pelanggan/pembayaran/tagihan') ? 'active-sub' : '' }}">
+                            Tagihan
+                        </a>
+
                         <a href="/pelanggan/pembayaran/lunas" class="sidebar-sublink
                             {{ request()->is('pelanggan/pembayaran/lunas') ? 'active-sub' : '' }}">
                             Lunas

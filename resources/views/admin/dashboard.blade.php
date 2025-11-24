@@ -18,9 +18,33 @@
     {{-- =================== TITLE =================== --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold">Dashboard</h4>
-        <span class="text-secondary">Default Month:
-            <strong>Januari</strong> <i class="bi bi-chevron-right"></i>
-        </span>
+        <div class="dropdown d-inline">
+    <span class="text-secondary">Default Month:</span>
+
+    <a class="dropdown-toggle text-secondary text-decoration-none" href="#" role="button" data-bs-toggle="dropdown">
+        <strong id="selectedMonth">Januari</strong>
+    </a>
+
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item month-item" data-value="Januari">Januari</a></li>
+        <li><a class="dropdown-item month-item" data-value="Februari">Februari</a></li>
+        <li><a class="dropdown-item month-item" data-value="Maret">Maret</a></li>
+        <li><a class="dropdown-item month-item" data-value="April">April</a></li>
+        <li><a class="dropdown-item month-item" data-value="Mei">Mei</a></li>
+        <li><a class="dropdown-item month-item" data-value="Juni">Juni</a></li>
+        <li><a class="dropdown-item month-item" data-value="Juli">Juli</a></li>
+        <li><a class="dropdown-item month-item" data-value="Agustus">Agustus</a></li>
+        <li><a class="dropdown-item month-item" data-value="September">September</a></li>
+        <li><a class="dropdown-item month-item" data-value="Oktober">Oktober</a></li>
+        <li><a class="dropdown-item month-item" data-value="November">November</a></li>
+        <li><a class="dropdown-item month-item" data-value="Desember">Desember</a></li>
+    </ul>
+
+    {{-- <i class="bi bi-chevron-right"></i> --}}
+</div>
+
+
+
     </div>
 
     {{-- =================== TOTAL PEMBAYARAN =================== --}}
@@ -30,7 +54,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-secondary fw-semibold">Total Pembayaran Diterima</small>
-                        <h5 class="fw-bold text-success mt-1">Rp. {{ number_format(100000000,0,',','.') }}</h5>
+                        <h5 class="fw-bold text-success mt-1">{{ rupiah($totalPembayaranTerima) }}</h5>
                     </div>
                     <i class="bi bi-receipt-cutoff fs-2 text-warning"></i>
                 </div>
@@ -42,7 +66,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <small class="text-secondary fw-semibold">Total Pembayaran Terlambat</small>
-                        <h5 class="fw-bold text-danger mt-1">Rp. {{ number_format(100000000,0,',','.') }}</h5>
+                        <h5 class="fw-bold text-danger mt-1">{{ rupiah($totalPembayaranTerlambat) }}</h5>
                     </div>
                     <i class="bi bi-exclamation-octagon fs-2 text-danger"></i>
                 </div>
@@ -52,14 +76,6 @@
 
     {{-- =================== MINI COUNTERS =================== --}}
     <div class="row g-3 mt-3">
-        @php
-            $counters = [
-                ['icon'=>'bi-person-fill','color'=>'text-primary','label'=>'Total Pelanggan'],
-                ['icon'=>'bi-person-plus-fill','color'=>'text-success','label'=>'Pelanggan Baru'],
-                ['icon'=>'bi-emoji-smile-fill','color'=>'text-info','label'=>'Pelanggan Aktif'],
-                ['icon'=>'bi-person-x-fill','color'=>'text-danger','label'=>'Pelanggan Berhenti'],
-            ];
-        @endphp
 
         @foreach($counters as $c)
         <div class="col-6 col-lg-3">
@@ -68,13 +84,15 @@
                     <i class="bi {{ $c['icon'] }} fs-3 {{ $c['color'] }}"></i>
                     <div>
                         <small>{{ $c['label'] }}</small>
-                        <h6 class="fw-bold">{{ number_format(10870) }}</h6>
+                        <h6 class="fw-bold">{{ number_format($c['value'], 0, ',', '.') }}</h6>
                     </div>
                 </div>
             </div>
         </div>
         @endforeach
+
     </div>
+
 
     {{-- =================== CHART STATUS =================== --}}
     <div class="row mt-4 g-4">
@@ -124,7 +142,7 @@
                 </div>
             </div>
             <div class="col-2 text-end">
-                <small class="fw-bold">{{ $s['percent'] }}% 
+                <small class="fw-bold">{{ $s['percent'] }}%
                     <span class="text-secondary">
                         ({{ $s['done'] }}/{{ $s['total'] }} Pelanggan)
                     </span>
@@ -206,5 +224,13 @@
     </div>
 
 </div>
+
+<script>
+document.querySelectorAll('.month-item').forEach(item => {
+    item.addEventListener('click', function () {
+        document.getElementById('selectedMonth').innerText = this.dataset.value;
+    });
+});
+</script>
 
 @endsection

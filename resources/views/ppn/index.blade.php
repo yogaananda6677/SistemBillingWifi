@@ -23,10 +23,10 @@
                     <a href="{{ route('ppn.edit', $ppn->id_setting) }}" class="btn btn-primary">
                         <i class="bi bi-pencil"></i> Edit
                     </a>
-                <button type="button" class="btn btn-danger btn-delete"
+                <!-- <button type="button" class="btn btn-danger btn-delete"
                         data-url="{{ route('ppn.destroy', $ppn->id_setting) }}">
                     Hapus
-                </button>
+                </button> -->
 
 
                 </div>

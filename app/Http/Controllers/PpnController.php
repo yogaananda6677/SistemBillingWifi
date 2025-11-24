@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ppn;
+use App\Models\Paket;
+
 
 class PpnController extends Controller
 {
@@ -61,8 +63,16 @@ class PpnController extends Controller
             'presentase_ppn' => $ppn_convert,
         ]);
 
-        return redirect()->route('ppn.index')->with('success', 'PPN berhasil diperbarui.');
+        // 🔥 UPDATE SEMUA PAKET MENGGUNAKAN MODEL
+        $paketList = Paket::all();
+        foreach ($paketList as $paket) {
+            $paket->updateHargaDenganPpnBaru($ppn_convert);
+        }
+
+        return redirect()->route('ppn.index')
+            ->with('success', 'PPN & harga paket berhasil diperbarui.');
     }
+
 
     public function destroy(string $id)
     {

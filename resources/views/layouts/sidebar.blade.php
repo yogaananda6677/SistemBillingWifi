@@ -64,17 +64,26 @@
                         <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
                     </a>
 
-                    <div class="collapse ps-3 {{ request()->is('pelanggan/pembayaran/*') ? 'show' : '' }}" id="menuStatusPembayaran">
+                    <div class="collapse ps-3 {{ request()->is('pelanggan/tagihan/*') ? 'show' : '' }}" id="menuStatusPembayaran">
 
-                        <a href="/pelanggan/pembayaran/lunas" class="sidebar-sublink
-                            {{ request()->is('pelanggan/pembayaran/lunas') ? 'active-sub' : '' }}">
+                        <a href="{{ route('tagihan.index') }}" data-status="" class="sidebar-sublink
+                            {{ request()->is('tagihan') ? 'active-sub' : '' }}">
+                            Tagihan
+                        </a>
+
+                        <a href="{{ route('tagihan.index', ['status' => 'lunas']) }}" data-status="lunas" class="sidebar-sublink
+                            {{ request()->is('tagihan/lunas') ? 'active-sub' : '' }}">
                             Lunas
                         </a>
 
-                        <a href="/pelanggan/pembayaran/belum-lunas" class="sidebar-sublink
-                            {{ request()->is('pelanggan/pembayaran/belum-lunas') ? 'active-sub' : '' }}">
+                        <a href="{{ route('tagihan.index', ['status' => 'belum_lunas']) }}" data-status="belum_lunas" class="sidebar-sublink
+                            {{ request()->is('tagihan/belum-lunas') ? 'active-sub' : '' }}">
                             Belum Lunas
                         </a>
+                        {{-- <a href="{{ route('tagihan.index') }}" data-status="" class="sidebar-sublink status-filter">Tagihan</a>
+                        <a href="/tagihan/lunas" data-status="lunas" class="sidebar-sublink status-filter">Lunas</a>
+                        <a href="/tagihan/belum-lunas" data-status="belum_lunas" class="sidebar-sublink status-filter">Belum Lunas</a> --}}
+
                     </div>
                 </div>
 

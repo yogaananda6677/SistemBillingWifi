@@ -18,6 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'sales' => \App\Http\Middleware\Sales::class,
         ]);
     })
+
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('tagihan:generate-bulanan')->monthlyOn(1, '00:01');
+    })
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

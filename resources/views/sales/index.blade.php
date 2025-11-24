@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @extends('layouts.master')
 
 @section('content')
@@ -163,6 +164,5 @@ $(document).ready(function() {
 
 });
 </script>
-
 
 @endpush

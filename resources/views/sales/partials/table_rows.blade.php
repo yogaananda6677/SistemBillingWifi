@@ -8,17 +8,31 @@
         <td>{{ $sales->area->nama_area ?? '-' }}</td>
         <td>{{ $sales->pelanggan->count() }} Pelanggan</td>
 
-        <td>
-            <a href="{{ route('data-sales.edit', $sales->id_sales) }}" class="btn-action-icon btn-edit">
-                <i class="fas fa-pencil-alt"></i>
-            </a>
-<button type="button"
-        class="btn-action-icon btn-delete"
-        data-url="{{ route('data-sales.destroy', $sales->id_sales) }}">
-    <i class="fas fa-trash-alt"></i>
-</button>
+<td class="d-flex gap-1">
 
+    {{-- Tombol EDIT --}}
+    <a href="{{ route('data-sales.edit', $sales->id_sales) }}" 
+       class="btn btn-warning btn-sm d-flex align-items-center text-dark fw-bold">
+        <i class="fas fa-pencil-alt me-1"></i> Edit
+    </a>
 
-        </td>
+    {{-- Tombol HAPUS --}}
+    @if($sales->pelanggan->count() == 0)
+        <button type="button" 
+                class="btn btn-danger btn-sm d-flex align-items-center btn-delete"
+                data-url="{{ route('data-sales.destroy', $sales->id_sales) }}">
+            <i class="fas fa-trash me-1"></i> Hapus
+        </button>
+    @else
+        <button type="button" 
+                class="btn btn-secondary btn-sm d-flex align-items-center"
+                disabled
+                title="Sales ini masih memiliki pelanggan dan tidak dapat dihapus">
+            <i class="fas fa-lock me-1"></i> Tidak Bisa Hapus
+        </button>
+    @endif
+
+</td>
+
     </tr>
 @endforeach

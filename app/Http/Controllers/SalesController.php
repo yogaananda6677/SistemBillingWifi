@@ -133,13 +133,20 @@ class SalesController extends Controller
      */
     public function destroy($id)
     {
-        $sales = Sales::with('user')->findOrFail($id);
+        $sales = Sales::withCount('pelanggan')->with('user')->findOrFail($id);
 
-        // Hapus sales & user
+        // 🔥 CEK: Jika masih punya pelanggan, TIDAK BOLEH DIHAPUS
+        if ($sales->pelanggan_count > 0) {
+            return redirect()->route('data-sales.index')
+                ->with('error', 'Sales ini masih memiliki pelanggan, sehingga tidak dapat dihapus.');
+        }
+
+        // Aman → Hapus sales & user
         $sales->delete();
         $sales->user->delete();
 
-        return redirect()->route('data-sales.index')->with('success', 'Sales berhasil dihapus.');
-
+        return redirect()->route('data-sales.index')
+            ->with('success', 'Sales berhasil dihapus.');
     }
+
 }

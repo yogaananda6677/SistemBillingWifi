@@ -25,7 +25,12 @@ Route::middleware(['auth','admin'])->group(function () {
 
     Route::resource('sales/data-sales', SalesController::class);
     Route::get('/sales/pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
+    Route::put('/pengeluaran/update-status/{id}', 
+        [App\Http\Controllers\PengajuanController::class, 'updateStatus']
+    )->name('pengajuan.updateStatus');
 
+
+    
     
 
     Route::resource('pengaturan/ppn', PpnController::class);

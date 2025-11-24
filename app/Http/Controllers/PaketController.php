@@ -13,8 +13,10 @@ class PaketController extends Controller
      */
     public function index()
     {
-        $dataPaket = Paket::all();
-        return view('paket-layanan.index', compact('dataPaket'));
+        $dataPaket  = Paket::all();
+        $isPpnSet   = Ppn::exists(); // true kalau sudah ada minimal 1 data PPN
+
+        return view('paket-layanan.index', compact('dataPaket', 'isPpnSet'));
     }
 
     /**
@@ -23,6 +25,13 @@ class PaketController extends Controller
     public function create()
     {
         $ppn = Ppn::first();
+
+        if (!$ppn) {
+            return redirect()
+                ->route('paket-layanan.index')
+                ->with('error', 'PPN belum diatur. Silakan tambahkan PPN terlebih dahulu.');
+        }
+
         return view('paket-layanan.create', compact('ppn'));
     }
 
@@ -32,90 +41,35 @@ class PaketController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_paket' => 'required|string|max:255',
-            'kecepatan' => 'required|string|max:100',
+            'nama_paket'  => 'required|string|max:255',
+            'kecepatan'   => 'required|string|max:255',
             'harga_dasar' => 'required|numeric|min:0',
-            'ppn_nominal' => 'required|numeric|min:0|',
-            // 'harga_total' => 'required|numeric|min:0',
-            // 'durasi' => 'required|integer|min:1',
         ]);
 
+        $ppn = Ppn::first();
+        if (!$ppn) {
+            return redirect()
+                ->route('paket-layanan.index')
+                ->with('error', 'PPN belum diatur. Silakan tambahkan PPN terlebih dahulu.');
+        }
 
-        $ppnNominal = Paket::hitungPPN($request->harga_dasar, $request->ppn_nominal);
-        $hargaTotal = Paket::hitungHargaTotal($request->harga_dasar, $ppnNominal);
-
-        // $hargaDasar = Paket::formatAngka($request->harga_dasar);
-
-
+        $hargaDasar = $request->harga_dasar;
+        $ppnNominal = $hargaDasar * $ppn->presentase_ppn; // presentase_ppn sudah 0.xx
+        $hargaTotal = $hargaDasar + $ppnNominal;
 
         Paket::create([
-            'nama_paket' => $request->nama_paket,
-            'kecepatan' => $request->kecepatan,
-            'harga_dasar' => $request->harga_dasar,
-            'ppn_nominal' => $ppnNominal,
-            'harga_total' => $hargaTotal,
-            // 'durasi' => $request->durasi,
+            'nama_paket'   => $request->nama_paket,
+            'kecepatan'    => $request->kecepatan,
+            'harga_dasar'  => $hargaDasar,
+            'ppn_nominal'  => $ppnNominal,
+            'harga_total'  => $hargaTotal,
         ]);
 
-        return redirect()->route('paket-layanan.index')->with('success', 'Paket layanan berhasil ditambahkan.');
+        return redirect()
+            ->route('paket-layanan.index')
+            ->with('success', 'Paket berhasil ditambahkan.');
     }
+    
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $paket = Paket::findOrFail($id);
-        $ppn = Ppn::first();
-        return view('paket-layanan.edit', compact('paket', 'ppn'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $request->validate([
-            'nama_paket' => 'required|string|max:255',
-            'kecepatan' => 'required|string|max:100',
-            'harga_dasar' => 'required|numeric|min:0',
-            'ppn_nominal' => 'required|numeric|min:0|',
-            // 'harga_total' => 'required|numeric|min:0',
-            // 'durasi' => 'required|integer|min:1',
-        ]);
-
-        $ppnNominal = Paket::hitungPPN($request->harga_dasar, $request->ppn_nominal);
-        $hargaTotal = Paket::hitungHargaTotal($request->harga_dasar, $ppnNominal);
-
-        $paket = Paket::findOrFail($id);
-        $paket->update([
-            'nama_paket' => $request->nama_paket,
-            'kecepatan' => $request->kecepatan,
-            'harga_dasar' => $request->harga_dasar,
-            'ppn_nominal' => $ppnNominal,
-            'harga_total' => $hargaTotal,
-            // 'durasi' => $request->durasi,
-        ]);
-
-        return redirect()->route('paket-layanan.index')->with('success', 'Paket layanan berhasil diperbarui.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $paket = Paket::findOrFail($id);
-        $paket->delete();
-
-        return redirect()->route('paket-layanan.index')->with('success', 'Paket layanan berhasil dihapus.');
-    }
+    // method edit/update/destroy lanjut pakai strukturmu sendiri
 }

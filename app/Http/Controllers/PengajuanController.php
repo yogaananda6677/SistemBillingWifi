@@ -10,7 +10,10 @@ class PengajuanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pengeluaran::with(['sales.user','approvedBy']);
+        $query = Pengeluaran::with(['sales.user','admin','adminUser']);
+        if ($request->filled('status')) {
+            $query->where('status_approve', $request->status);
+        }
 
         // search: search by sales name, nama_pengeluaran, atau nominal
         if ($request->filled('search')) {
@@ -26,6 +29,7 @@ class PengajuanController extends Controller
 
         // optional: filter by month name (received from frontend)
         if ($request->filled('month')) {
+
             try {
                 $monthName = $request->month;
                 $monthIndex = Carbon::createFromFormat('F', $monthName)->month; // if english names; if not, skip
@@ -39,16 +43,32 @@ class PengajuanController extends Controller
 
         // If AJAX requested, return JSON with rendered partial and pagination html
         if ($request->ajax() || $request->wantsJson()) {
-            $html = view('sales.pengajuan.partials.rows', compact('pengajuan'))->render();
-            $pagination = view('vendor.pagination.bootstrap-4', ['paginator' => $pengajuan])->render();
+            $html = view('pengeluaran.partials.table_rows', compact('pengajuan'))->render();
+            $pagination = $pengajuan->links()->toHtml();
+
             return response()->json([
                 'html' => $html,
                 'pagination' => $pagination,
             ]);
         }
 
-        return view('sales.pengajuan.index', compact('pengajuan'));
+        return view('pengeluaran.index', compact('pengajuan'));
     }
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status_approve' => 'required|in:pending,approved,rejected'
+    ]);
+
+    $data = Pengeluaran::findOrFail($id);
+
+    $data->status_approve = $request->status_approve;
+    $data->id_admin = auth()->user()->admin->id_admin;
+    $data->tanggal_approve = now();
+    $data->save();
+
+    return back()->with('success', 'Status berhasil diperbarui.');
+}
 
     // optional methods for approve/reject (if ingin nanti)
 }

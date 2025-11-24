@@ -41,7 +41,7 @@
     <div class="header-row">
         <div>
             <div class="title">Sales - Pengajuan</div>
-            <div class="small-muted">Default Mounth: <span class="month-selector" id="month-selector">Januari <i class="fas fa-chevron-right"></i></span></div>
+            
         </div>
 
         <div class="controls">
@@ -50,7 +50,13 @@
                 <button id="search-button"><i class="fas fa-search"></i></button>
             </div>
 
-            <button class="filter-btn" id="filter-btn">Filter <i class="fas fa-chevron-down"></i></button>
+            <select id="status-filter" class="filter-btn">
+                <option value="">Semua Status</option>
+                <option value="pending">Menunggu</option>
+                <option value="approved">Disetujui</option>
+                <option value="rejected">Ditolak</option>
+            </select>
+
         </div>
     </div>
 
@@ -76,7 +82,7 @@
                         </tr>
                     </thead>
                     <tbody id="pengajuan-body">
-                        @include('sales.pengajuan.partials.rows', ['pengajuan' => $pengajuan])
+                        @include('pengeluaran.partials.table_rows', ['pengajuan' => $pengajuan])
                     </tbody>
                 </table>
             </div>
@@ -87,6 +93,46 @@
         </div>
     </div>
 </div>
+<!-- Modal Ubah Status -->
+<!-- Modal Status -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p id="modal-text"></p>
+
+                <!-- Untuk pending (dua opsi) -->
+                <div id="pending-options" class="d-none mt-3">
+                    <button class="btn btn-success w-100 mb-2 choose-status" data-value="approved">
+                        ✔ Setujui
+                    </button>
+                    <button class="btn btn-danger w-100 choose-status" data-value="rejected">
+                        ✖ Tolak
+                    </button>
+                </div>
+
+                <!-- Form untuk approved/rejected -->
+                <form id="statusForm" method="POST" class="d-none mt-3">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="status_approve" id="statusInput">
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Ya, Lanjutkan
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 
 @endsection
 
@@ -107,17 +153,24 @@ $(function(){
         setLoading(true);
 
         const q = $('#search-input').val();
-        const month = $('#month-selector').data('month') || '';
+        const status = $('#status-filter').val();
+        const month = $('#month-selector')?.data('month') || '';
 
         $.ajax({
             url: '{{ route("pengajuan.index") }}',
             type: 'GET',
-            data: { ajax: true, search: q, page: page, month: month },
+            data: { 
+                ajax: true, 
+                search: q, 
+                page: page,
+                month: month,
+                status: status 
+            },
             success: function(res) {
                 $('#pengajuan-body').html(res.html);
                 $('#pagination-wrapper').html(res.pagination);
                 setLoading(false);
-                updateUrl(q, page, month);
+                updateUrl(q, page, month, status);
             },
             error: function() {
                 setLoading(false);
@@ -126,17 +179,18 @@ $(function(){
         });
     }
 
-    function updateUrl(q, page, month) {
+    function updateUrl(q, page, month, status) {
         const params = new URLSearchParams();
         if (q) params.set('search', q);
         if (page && page > 1) params.set('page', page);
         if (month) params.set('month', month);
+        if (status) params.set('status', status);
         const base = '{{ route("pengajuan.index") }}';
         const u = params.toString() ? base + '?' + params.toString() : base;
         window.history.replaceState({}, '', u);
     }
 
-    // debounce
+    // SEARCH debounce
     $('#search-input').on('input', function(){
         clearTimeout(timeout);
         timeout = setTimeout(()=> loadData(1), 300);
@@ -144,7 +198,12 @@ $(function(){
 
     $('#search-button').on('click', function(){ loadData(1); });
 
-    // pagination links (response returns proper links)
+    // FILTER STATUS
+    $('#status-filter').on('change', function(){
+        loadData(1);
+    });
+
+    // PAGINATION AJAX
     $(document).on('click', '.pagination a', function(e){
         e.preventDefault();
         const href = $(this).attr('href') || '';
@@ -152,16 +211,88 @@ $(function(){
         loadData(page);
     });
 
-    // month selector (simple cycle demo)
+    // MONTH SELECTOR
     $('#month-selector').on('click', function(){
-        // rotate months quickly (for demo)
         const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
         const cur = $(this).data('monthIndex') || 0;
         const next = (cur + 1) % months.length;
-        $(this).data('monthIndex', next).data('month', months[next]).text(months[next] + ' ').append(' \u25B6');
+
+        $(this)
+            .data('monthIndex', next)
+            .data('month', months[next])
+            .text(months[next]);
+
         loadData(1);
     });
 
 });
+$(document).on('click', '.update-status', function() {
+    let id = $(this).data('id');
+    let status = $(this).data('status');
+
+    $.ajax({
+        url: '/pengajuan/' + id + '/status',
+        type: 'POST',
+        data: {
+            _token: '{{ csrf_token() }}',
+            status: status
+        },
+        success: function() {
+            loadData(currentPage); // reload tabel tanpa refresh halaman
+        },
+        error: function() {
+            alert('Gagal memperbarui status');
+        }
+    });
+});
+
+$(document).on('click', '.status-badge', function () {
+    const id = $(this).data('id');
+    const current = $(this).data('current');
+
+    // Set route
+    $('#statusForm').attr('action', '{{ url("pengeluaran/update-status") }}/' + id);
+
+    // Reset state modal
+    $('#pending-options').addClass('d-none');
+    $('#statusForm').addClass('d-none');
+
+    if (current === 'pending') {
+        $('#modal-text').html("Pilih tindakan untuk pengajuan ini:");
+        $('#pending-options').removeClass('d-none');
+    }
+    else if (current === 'approved') {
+        $('#modal-text').html("Ubah status dari <b>Setuju</b> menjadi <b>Tolak</b>?");
+        $('#statusInput').val('rejected');
+        $('#statusForm').removeClass('d-none');
+    }
+    else if (current === 'rejected') {
+        $('#modal-text').html("Ubah status dari <b>Tolak</b> menjadi <b>Setuju</b>?");
+        $('#statusInput').val('approved');
+        $('#statusForm').removeClass('d-none');
+    }
+
+    $('#statusModal').modal('show');
+});
+
+// Ketika tombol pending dipilih
+$(document).on('click', '.choose-status', function() {
+    const val = $(this).data('value');
+    $('#statusInput').val(val);
+    $('#statusForm').removeClass('d-none');
+    $('#statusForm').submit();
+});
+
+
+$(document).on('click', '.choose-status', function () {
+    const chosenStatus = $(this).data('value');
+
+    $('#statusInput').val(chosenStatus);
+    $('#statusForm').removeClass('d-none');  // pastikan form ada
+    $('#statusForm').submit();
+});
+
+
 </script>
+
 @endpush

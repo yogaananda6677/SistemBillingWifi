@@ -86,14 +86,12 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-
 $(document).ready(function() {
 
     let timeout = null;
     let currentPage = 1;
 
     function loadData(page = 1) {
-
         currentPage = page;
 
         $('#loading-spinner').show();
@@ -102,7 +100,7 @@ $(document).ready(function() {
         const search = $('#search-input').val();
 
         $.ajax({
-            url: '{{ route("data-sales.index") }}',   // FIX ROUTE AJAX
+            url: '{{ route("data-sales.index") }}',
             type: 'GET',
             data: {
                 search: search,
@@ -154,6 +152,17 @@ $(document).ready(function() {
         loadData(page);
     });
 
+    // 🔴 Tambahan: klik tombol delete
+    $(document).on('click', '.btn-delete', function () {
+        const url = $(this).data('url');
+        $('#deleteForm').attr('action', url);
+
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    });
+
+});
 </script>
+
 
 @endpush

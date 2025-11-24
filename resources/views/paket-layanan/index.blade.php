@@ -42,12 +42,31 @@
 <div class="container-fluid p-4">
 
     {{-- TITLE --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title">Daftar Paket</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="page-title">Daftar Paket</h4>
+@if(!$isPpnSet)
+    <div class="alert alert-warning mb-3" role="alert">
+        <strong>Peringatan!</strong> PPN belum diatur.
+        Silakan masuk ke menu <strong>Pengaturan PPN</strong> untuk menambahkan PPN terlebih dahulu.
+        <br>
+        <a href="{{ route('ppn.index') }}" class="fw-bold text-dark" style="text-decoration: underline;">
+            Klik di sini untuk mengatur PPN.
+        </a>
+    </div>
+@endif
+
+    @if($isPpnSet)
         <a href="{{ route('paket-layanan.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-2"></i> Tambah Paket
         </a>
-    </div>
+    @else
+        <button class="btn btn-secondary" type="button" disabled
+                title="Silakan tambah PPN terlebih dahulu sebelum menambah paket">
+            <i class="bi bi-lock me-2"></i> Tambah Paket
+        </button>
+    @endif
+</div>
+
 
     {{-- TABLE --}}
     <div class="table-card">

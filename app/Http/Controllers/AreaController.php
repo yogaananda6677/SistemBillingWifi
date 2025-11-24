@@ -11,11 +11,12 @@ class AreaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $dataArea = Area::all();
-        return view('area.index', compact('dataArea'));
-    }
+public function index()
+{
+    $dataArea = Area::with(['sales.user'])->get();
+    return view('area.index', compact('dataArea'));
+}
+
 
     /**
      * Show the form for creating a new resource.
@@ -80,9 +81,18 @@ class AreaController extends Controller
      */
     public function destroy(string $id)
     {
-        $area = Area::findOrFail($id);
+        $area = Area::withCount('sales')->findOrFail($id);
+
+        // Cek apakah area punya sales
+        if ($area->sales_count > 0) {
+            return redirect()
+                ->route('area.index')
+                ->with('error', 'Area tidak bisa dihapus karena masih memiliki sales.');
+        }
+
         $area->delete();
 
         return redirect()->route('area.index')->with('success', 'Area berhasil dihapus.');
     }
+
 }

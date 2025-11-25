@@ -9,50 +9,55 @@ use Carbon\Carbon;
 
 class GenerateTagihanBulanan extends Command
 {
-    protected $signature = 'tagihan:generate-bulanan';
+    protected $signature   = 'tagihan:generate-bulanan';
     protected $description = 'Generate tagihan bulanan otomatis';
 
     public function handle()
     {
-        $bulan = now()->format('m');
-        $tahun = now()->format('Y');
+        $today     = now();
+        $bulan     = (int) $today->format('n');  // 1..12
+        $tahun     = (int) $today->format('Y');
+        $awalBulan = Carbon::create($tahun, $bulan, 1)->startOfDay();
 
-        // Cegah generate ganda
-        if (Tagihan::where('bulan', $bulan)->where('tahun', $tahun)->exists()) {
-            $this->info("Tagihan bulan $bulan-$tahun sudah digenerate.");
-            return Command::SUCCESS;
-        }
+        // Jatuh tempo fix tanggal 10 bulan berjalan (silakan ubah kalau mau)
+        $jatuhTempo = Carbon::create($tahun, $bulan, 10, 23, 59, 59);
 
+        // Ambil semua langganan aktif di awal bulan, dan belum berhenti sebelum awal bulan
         $langganan = Langganan::with(['paket', 'pelanggan'])
             ->where('status_langganan', 'aktif')
+            ->whereDate('tanggal_mulai', '<=', $awalBulan->toDateString())
+            ->where(function ($q) use ($awalBulan) {
+                $q->whereNull('tanggal_berhenti')
+                  ->orWhereDate('tanggal_berhenti', '>=', $awalBulan->toDateString());
+            })
             ->get();
 
-        $ppnSetting = \App\Models\Ppn::first();
+        $jumlahDibuat = 0;
 
         foreach ($langganan as $l) {
-
             if (!$l->paket || !$l->pelanggan) {
                 // skip jika paket atau pelanggan hilang
                 continue;
             }
 
-            $tanggalPasang = $l->pelanggan->tanggal_registrasi;
-            $bulanTagihan = now()->addMonth()->month; // bulan depan
-            $tahunTagihan = now()->addMonth()->year;  // sesuaikan tahun jika Des → Jan
+            // CEK: sudah punya tagihan bulan ini belum?
+            $sudahAda = Tagihan::where('id_langganan', $l->id_langganan)
+                ->where('bulan', $bulan)
+                ->where('tahun', $tahun)
+                ->exists();
 
-            $day = Carbon::parse($tanggalPasang)->day;
+            if ($sudahAda) {
+                continue; // jangan buat dobel
+            }
 
-            $jatuhTempo = Carbon::create($tahunTagihan, $bulanTagihan, 1)
-                                ->day($day)
-                                ->min(Carbon::create($tahunTagihan, $bulanTagihan, 1)->endOfMonth());
-
+            // PPN & total ambil langsung dari paket
             $harga = $l->paket->harga_dasar;
-            $ppn   = $harga * $ppnSetting->presentase_ppn;
-            $total = $harga + $ppn;
+            $ppn   = $l->paket->ppn_nominal;
+            $total = $l->paket->harga_total;
 
             Tagihan::create([
                 'id_langganan'   => $l->id_langganan,
-                'bulan'          => $bulan,
+                'bulan'          => $bulan,     // bulan berjalan
                 'tahun'          => $tahun,
                 'harga_dasar'    => $harga,
                 'ppn_nominal'    => $ppn,
@@ -60,9 +65,11 @@ class GenerateTagihanBulanan extends Command
                 'status_tagihan' => 'belum lunas',
                 'jatuh_tempo'    => $jatuhTempo,
             ]);
+
+            $jumlahDibuat++;
         }
 
-        $this->info("Tagihan $bulan-$tahun berhasil digenerate!");
+        $this->info("Tagihan $bulan-$tahun berhasil digenerate: $jumlahDibuat tagihan dibuat.");
         return Command::SUCCESS;
     }
 }

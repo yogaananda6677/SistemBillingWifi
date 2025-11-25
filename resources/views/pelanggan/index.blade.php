@@ -70,12 +70,16 @@
     }
 </style>
 
-<div class="container-fluid p-4">
-
-    {{-- TITLE --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title">Pelanggan</h4>
-    </div>
+<div class="container-fluid p-4" id="page-wrapper" data-status="{{ request('status') }}">
+{{-- TITLE --}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="page-title">Pelanggan</h4>
+</div>
+<div class="mb-3">
+    <span class="badge bg-primary" style="font-size: 14px; padding: 8px 14px;">
+        Total Pelanggan: {{ $totalPelanggan }}
+    </span>
+</div>
 
     {{-- SEARCH & FILTER --}}
     <div class="d-flex gap-3 mb-4 flex-wrap">
@@ -93,14 +97,6 @@
                 <option value="{{ $area->id_area }}">{{ $area->nama_area }}</option>
             @endforeach
         </select>
-
-        <select class="filter-select" id="status-filter" style="min-width: 150px;">
-            <option value="">Semua Status</option>
-            <option value="baru">Baru</option>
-            <option value="aktif">Aktif</option>
-            <option value="berhenti">Berhenti</option>
-            <option value="isolir">Isolir</option>
-        </select>
     </div>
 
     {{-- TABLE --}}
@@ -115,18 +111,20 @@
         <div id="table-container">
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama</th>
-                            <th>Wilayah</th>
-                            <th>Paket</th>
-                            <th>Tagihan</th>
-                            <th>Koneksi</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Area</th>
+                        <th>Sales</th> {{-- 🔹 tambahkan ini --}}
+                        <th>Paket</th>
+                        <th>Tanggal Aktif</th>
+                        <th>IP Address</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
                     <tbody id="pelanggan-table-body">
                         @include('pelanggan.partials.table_rows', ['pelanggan' => $pelanggan])
                     </tbody>
@@ -158,8 +156,7 @@ $(document).ready(function() {
         $('#table-container').hide();
 
         const search = $('#search-input').val();
-        const area = $('#area-filter').val();
-        const status = $('#status-filter').val();
+        const area   = $('#area-filter').val();
 
         $.ajax({
             url: '{{ route("pelanggan.index") }}',
@@ -167,7 +164,6 @@ $(document).ready(function() {
             data: {
                 search: search,
                 area: area,
-                status: status,
                 page: page,
                 ajax: true
             },
@@ -177,8 +173,7 @@ $(document).ready(function() {
                 $('#table-container').show();
                 $('#loading-spinner').hide();
 
-                // Update URL tanpa reload page
-                updateUrl(search, area, status, page);
+                updateUrl(search, area, page);
             },
             error: function(xhr) {
                 $('#loading-spinner').hide();
@@ -190,16 +185,19 @@ $(document).ready(function() {
     }
 
     // Update URL dengan parameter filter
-    function updateUrl(search, area, status, page) {
+    function updateUrl(search, area, page) {
         const params = new URLSearchParams();
         if (search) params.set('search', search);
-        if (area) params.set('area', area);
-        if (status) params.set('status', status);
+        if (area)   params.set('area', area);
         if (page > 1) params.set('page', page);
 
-        const newUrl = params.toString() ? '{{ route("pelanggan.index") }}?' + params.toString() : '{{ route("pelanggan.index") }}';
+        const newUrl = params.toString()
+            ? '{{ route("pelanggan.index") }}?' + params.toString()
+            : '{{ route("pelanggan.index") }}';
+
         window.history.replaceState({}, '', newUrl);
     }
+
 
     // Real-time search dengan debounce
     $('#search-input').on('input', function() {
@@ -210,9 +208,10 @@ $(document).ready(function() {
     });
 
     // Filter change
-    $('#area-filter, #status-filter').on('change', function() {
+    $('#area-filter').on('change', function() {
         loadData(1);
     });
+
 
     // Pagination click (event delegation)
     $(document).on('click', '.pagination a', function(e) {
@@ -265,15 +264,14 @@ $(document).ready(function() {
         const urlParams = new URLSearchParams(window.location.search);
         const search = urlParams.get('search');
         const area = urlParams.get('area');
-        const status = urlParams.get('status');
         const page = urlParams.get('page');
 
         if (search) $('#search-input').val(search);
         if (area) $('#area-filter').val(area);
-        if (status) $('#status-filter').val(status);
 
         loadData(page || 1);
     }
+
 
     loadInitialFilters();
 });

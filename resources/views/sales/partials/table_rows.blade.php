@@ -1,38 +1,46 @@
-@foreach($data as $sales)
+@php
+    $nomor = ($data->currentPage() - 1) * $data->perPage() + 1;
+@endphp
+
+@forelse ($data as $sales)
+    @php
+        // Ambil nama area dari relasi many-to-many
+        $areaNames = $sales->areas->pluck('nama_area')->toArray();
+
+        // Kalau pivot kosong, fallback ke relasi lama (kolom id_area)
+        if (empty($areaNames) && $sales->area) {
+            $areaNames = [$sales->area->nama_area];
+        }
+
+        $areaText = $areaNames ? implode(', ', $areaNames) : '-';
+        $pelangganCount = $sales->pelanggan->count();
+    @endphp
+
     <tr>
-        <td>{{ $loop->iteration }}</td>
-        <td>{{ $sales->user->name }}</td>
-        <td>{{ $sales->user->no_hp }}</td>
-        <td>{{ $sales->user->email }}</td>
-        <td>••••••••</td>
-        <td>{{ $sales->area->nama_area ?? '-' }}</td>
-        <td>{{ $sales->pelanggan->count() }} Pelanggan</td>
+        <td>{{ $nomor++ }}</td>
+        <td>{{ $sales->user->name ?? '-' }}</td>
+        <td>{{ $sales->user->no_hp ?? '-' }}</td>
+        <td>{{ $sales->user->email ?? '-' }}</td>
+        <td>{{ $areaText }}</td>
+        <td>{{ $pelangganCount }}</td>
+        <td>
+            <a href="{{ route('data-sales.edit', $sales->id_sales) }}"
+               class="btn-action-icon btn-edit" title="Edit">
+                <i class="fas fa-edit"></i>
+            </a>
 
-<td class="d-flex gap-1">
-
-    {{-- Tombol EDIT --}}
-    <a href="{{ route('data-sales.edit', $sales->id_sales) }}" 
-       class="btn btn-warning btn-sm d-flex align-items-center text-dark fw-bold">
-        <i class="fas fa-pencil-alt me-1"></i> Edit
-    </a>
-
-    {{-- Tombol HAPUS --}}
-    @if($sales->pelanggan->count() == 0)
-        <button type="button" 
-                class="btn btn-danger btn-sm d-flex align-items-center btn-delete"
-                data-url="{{ route('data-sales.destroy', $sales->id_sales) }}">
-            <i class="fas fa-trash me-1"></i> Hapus
-        </button>
-    @else
-        <button type="button" 
-                class="btn btn-secondary btn-sm d-flex align-items-center"
-                disabled
-                title="Sales ini masih memiliki pelanggan dan tidak dapat dihapus">
-            <i class="fas fa-lock me-1"></i> Tidak Bisa Hapus
-        </button>
-    @endif
-
-</td>
-
+            <button type="button"
+                    class="btn-action-icon btn-delete"
+                    data-url="{{ route('data-sales.destroy', $sales->id_sales) }}"
+                    title="Hapus">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </td>
     </tr>
-@endforeach
+@empty
+    <tr>
+        <td colspan="7" class="text-center text-muted">
+            Tidak ada data sales.
+        </td>
+    </tr>
+@endforelse

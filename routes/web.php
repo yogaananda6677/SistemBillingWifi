@@ -26,6 +26,23 @@ Route::middleware(['auth','admin'])->group(function () {
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);
+// Halaman status pelanggan (menu terpisah)
+    Route::get('/pelanggan-status', [PelangganController::class, 'status'])
+        ->name('pelanggan.status');
+
+    // Aksi status (sudah cocok dengan method di controller kamu)
+    Route::patch('/pelanggan/{pelanggan}/aktivasi', [PelangganController::class, 'aktivasi'])
+        ->name('pelanggan.aktivasi');
+    Route::patch('/pelanggan/{pelanggan}/isolir', [PelangganController::class, 'isolir'])
+        ->name('pelanggan.isolir');
+    Route::patch('/pelanggan/{pelanggan}/buka-isolir', [PelangganController::class, 'bukaIsolir'])
+        ->name('pelanggan.buka_isolir');
+    Route::patch('/pelanggan/{pelanggan}/berhenti', [PelangganController::class, 'berhenti'])
+        ->name('pelanggan.berhenti');
+    Route::get('/get-sales-by-area/{id_area}', [SalesController::class, 'getSalesByArea']);
+
+
+
 
     Route::resource('sales/data-sales', SalesController::class);
     Route::get('/sales/pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');

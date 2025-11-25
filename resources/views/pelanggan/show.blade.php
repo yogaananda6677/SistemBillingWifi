@@ -31,8 +31,23 @@
         </div>
         <div class="row mb-3">
             <div class="col-md-4 fw-semibold">Status</div>
-            <div class="col-md-8">{{ ucfirst($pelanggan->status_pelanggan) }}</div>
+            <div class="col-md-8">
+                @php
+                    $status = $pelanggan->status_pelanggan_efektif;
+                @endphp
+
+                @if ($status == 'baru')
+                    <span class="badge bg-warning text-dark">Baru</span>
+                @elseif ($status == 'aktif')
+                    <span class="badge bg-success">Aktif</span>
+                @elseif ($status == 'isolir')
+                    <span class="badge bg-secondary">Isolir</span>
+                @else
+                    <span class="badge bg-danger">Berhenti</span>
+                @endif
+            </div>
         </div>
+
         <div class="row mb-3">
             <div class="col-md-4 fw-semibold">Area</div>
             <div class="col-md-8">{{ $pelanggan->area->nama_area ?? '-' }}</div>
@@ -50,7 +65,8 @@
         </div>
 
         <div class="mt-4 text-end">
-            <a href="{{ route('pelanggan.index') }}" class="btn btn-light" style="border-radius: 30px; border:1px solid #ddd;">
+            <a href="{{ request('from') === 'status' ? route('pelanggan.status', ['status' => request('status')]) : route('pelanggan.index') }}"
+            class="btn btn-secondary">
                 Kembali
             </a>
         </div>

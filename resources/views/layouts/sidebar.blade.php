@@ -21,40 +21,18 @@
 
             <div class="collapse ps-4 {{ request()->is('pelanggan*') ? 'show' : '' }}" id="menuPelanggan">
 
-                <a href="/pelanggan" class="sidebar-sublink {{ request()->is('pelanggan') ? 'active-sub' : '' }}">
+                {{-- Halaman ①: Semua Pelanggan --}}
+                <a href="{{ route('pelanggan.index') }}"
+                class="sidebar-sublink {{ request()->routeIs('pelanggan.index') ? 'active-sub' : '' }}">
                     Data Pelanggan
                 </a>
 
-                <div class="sidebar-group">
-                    <a class="sidebar-sublink pelanggan-status-toggle
-                        {{ request()->is('pelanggan/status*') ? 'active-sub' : '' }}"
-                        data-bs-toggle="collapse" data-bs-target="#menuStatusPelanggan">
+                {{-- Halaman ②: Status Pelanggan --}}
+                <a href="{{ route('pelanggan.status') }}"
+                class="sidebar-sublink {{ request()->routeIs('pelanggan.status') ? 'active-sub' : '' }}">
+                    Status Pelanggan
+                </a>
 
-                        <span class="link-text">Status Pelanggan</span>
-                        <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
-                    </a>
-
-                <div class="collapse ps-3 {{ request()->is('pelanggan/status/*') ? 'show' : '' }}" id="menuStatusPelanggan">
-
-                    <a href="/pelanggan?status=baru" class="sidebar-sublink {{ request('status') == 'baru' ? 'active-sub' : '' }}">
-                        Baru
-                    </a>
-
-                    <a href="/pelanggan?status=aktif" class="sidebar-sublink {{ request('status') == 'aktif' ? 'active-sub' : '' }}">
-                        Aktif
-                    </a>
-
-                    <a href="/pelanggan?status=berhenti" class="sidebar-sublink {{ request('status') == 'berhenti' ? 'active-sub' : '' }}">
-                        Berhenti
-                    </a>
-
-                    <a href="/pelanggan?status=isolir" class="sidebar-sublink {{ request('status') == 'isolir' ? 'active-sub' : '' }}">
-                        Isolir
-                    </a>
-
-                </div>
-
-                </div>
                 <div class="sidebar-group">
                     <a class="sidebar-sublink pembayaran-status-toggle
                         {{ request()->is('pelanggan/pembayaran*') ? 'active-sub' : '' }}"

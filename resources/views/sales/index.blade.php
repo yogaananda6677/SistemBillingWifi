@@ -20,20 +20,34 @@
 
 <div class="container-fluid p-4">
 
+    {{-- FLASH MESSAGE --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- SEARCH + TAMBAH --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
 
         <div class="d-flex align-items-center flex-grow-1">
             <div class="search-input-group me-3">
-                <input type="text" id="search-input" placeholder="Cari...">
+                <input type="text" id="search-input" placeholder="Cari nama / email..." value="{{ request('search') }}">
                 <button type="button" id="search-button">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
         </div>
 
-        {{-- FIX ROUTE CREATE --}}
-        <a href="{{ route('data-sales.create') }}" 
+        <a href="{{ route('data-sales.create') }}"
            class="btn btn-warning d-flex align-items-center fw-bold text-dark">
             <i class="fas fa-plus me-1"></i> Tambah Sales
         </a>
@@ -59,10 +73,10 @@
                             <th>Nama Sales</th>
                             <th>No. Telepon</th>
                             <th>Username</th>
-                            <th>Password</th>
+                            {{-- Password di DB sekarang di-hash di tabel users, jadi tidak ditampilkan --}}
                             <th>Area</th>
                             <th>Pelanggan</th>
-                            <th>Aksi</th>
+                            <th style="width: 100px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="sales-table-body">
@@ -89,7 +103,7 @@
 $(document).ready(function() {
 
     let timeout = null;
-    let currentPage = 1;
+    let currentPage = {{ request('page', 1) }};
 
     function loadData(page = 1) {
         currentPage = page;
@@ -104,8 +118,7 @@ $(document).ready(function() {
             type: 'GET',
             data: {
                 search: search,
-                page: page,
-                ajax: true
+                page: page
             },
             success: function(response) {
                 $('#sales-table-body').html(response.html);
@@ -145,14 +158,16 @@ $(document).ready(function() {
         loadData(1);
     });
 
-    // Pagination
+    // Pagination (delegasi)
     $(document).on('click', '.pagination a', function(e) {
         e.preventDefault();
-        const page = new URL($(this).attr('href')).searchParams.get('page') || 1;
+        const href = $(this).attr('href');
+        if (!href) return;
+        const page = new URL(href).searchParams.get('page') || 1;
         loadData(page);
     });
 
-    // 🔴 Tambahan: klik tombol delete
+    // Klik tombol delete -> buka modal konfirmasi
     $(document).on('click', '.btn-delete', function () {
         const url = $(this).data('url');
         $('#deleteForm').attr('action', url);
@@ -163,5 +178,4 @@ $(document).ready(function() {
 
 });
 </script>
-
 @endpush

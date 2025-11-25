@@ -10,7 +10,8 @@
         @auth
             <span class="fw-semibold"> {{ ucwords(Auth::user()->name)  }} </span>
         @else
-            <a href="{{ route('login') }}">Login</a> | <a href="{{ route('register') }}">Register</a>
+            <a href="{{ route('login') }}" class="text-decoration-none">Login</a> | 
+            <a href="{{ route('register') }}" class="text-decoration-none">Register</a>
         @endauth
 
         <button id="toggleSidebar" class="btn border-0 p-0 d-flex align-items-center">

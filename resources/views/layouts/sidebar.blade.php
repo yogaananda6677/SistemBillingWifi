@@ -1,5 +1,5 @@
 <div id="sidebarContainer" class="sidebar bg-white shadow-sm"
-    style="width: 260px; height: 100vh; position: sticky; left:0; top:0; transition:0.25s ease;">
+    style="width: 260px; height: 100vh; position: sticky; left:0; top:0; transition:0.25s ease; overflow-y: auto;">
 
     <div class="p-3">
 
@@ -80,9 +80,6 @@
                             {{ request()->is('tagihan/belum-lunas') ? 'active-sub' : '' }}">
                             Belum Lunas
                         </a>
-                        {{-- <a href="{{ route('tagihan.index') }}" data-status="" class="sidebar-sublink status-filter">Tagihan</a>
-                        <a href="/tagihan/lunas" data-status="lunas" class="sidebar-sublink status-filter">Lunas</a>
-                        <a href="/tagihan/belum-lunas" data-status="belum_lunas" class="sidebar-sublink status-filter">Belum Lunas</a> --}}
 
                     </div>
                 </div>

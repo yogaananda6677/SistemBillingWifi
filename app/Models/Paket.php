@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Langganan;
+use App\Models\Ppn;
 
 class Paket extends Model
 {
@@ -20,27 +21,36 @@ class Paket extends Model
 
     public function langganan()
     {
-        return $this->hasMany(Langganan::class, 'id_paket');
+        return $this->hasMany(Langganan::class, 'id_paket', 'id_paket');
     }
 
-
-    // public static function formatAngka($number)
-    // {
-    //     return number_format($number, 0, ',', '.');
-    // }
-
-    public static function hitungPPN($hargaDasar, $ppnNominal)
+    /**
+     * Hitung PPN Nominal berdasarkan harga_dasar dan presentase_ppn
+     */
+    public static function hitungPpnNominal($hargaDasar, $presentasePpn)
     {
-        $hitung = ($ppnNominal / 100) * $hargaDasar;
-
-        return $hitung;
+        return $hargaDasar * $presentasePpn;  // presentasePpn sudah 0.xx
     }
 
+    /**
+     * Hitung Harga Total = harga_dasar + ppn_nominal
+     */
     public static function hitungHargaTotal($hargaDasar, $ppnNominal)
     {
-
-        $hitungTotal = $hargaDasar + $ppnNominal;
-        return $hitungTotal;
+        return $hargaDasar + $ppnNominal;
     }
 
+    /**
+     * Update harga paket berdasarkan PPN terbaru
+     */
+    public function updateHargaDenganPpnBaru($presentasePpn)
+    {
+        $ppnNominal = self::hitungPpnNominal($this->harga_dasar, $presentasePpn);
+        $hargaTotal = self::hitungHargaTotal($this->harga_dasar, $ppnNominal);
+
+        $this->update([
+            'ppn_nominal' => $ppnNominal,
+            'harga_total' => $hargaTotal,
+        ]);
+    }
 }

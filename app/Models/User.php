@@ -51,11 +51,18 @@ class User extends Authenticatable
 
     public function admin()
     {
-        return $this->hasOne(Admin::class, 'user_id');
+        return $this->hasOne(\App\Models\Admin::class, 'user_id', 'id');
     }
+
+    public function isAdmin()
+    {
+        return $this->admin !== null;
+    }
+
 
     public function sales()
     {
         return $this->hasOne(Sales::class, 'user_id');
     }
+
 }

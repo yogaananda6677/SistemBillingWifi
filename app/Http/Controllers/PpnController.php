@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ppn;
+use App\Models\Paket;
+
 
 class PpnController extends Controller
 {
@@ -12,7 +14,7 @@ class PpnController extends Controller
      */
     public function index()
     {
-        $ppn = Ppn::first();
+        $ppn = Ppn::first(); // cuma ambil satu data PPN
         return view('ppn.index', compact('ppn'));
     }
 
@@ -39,31 +41,15 @@ class PpnController extends Controller
             'presentase_ppn' => $ppn_convert,
         ]);
 
-
-
         return redirect()->route('ppn.index')->with('success', 'PPN berhasil ditambahkan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $ppn = Ppn::findOrFail($id);
         return view('ppn.edit', compact('ppn'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $request->validate([
@@ -77,12 +63,17 @@ class PpnController extends Controller
             'presentase_ppn' => $ppn_convert,
         ]);
 
-        return redirect()->route('ppn.index')->with('success', 'PPN berhasil diperbarui.');
+        // 🔥 UPDATE SEMUA PAKET MENGGUNAKAN MODEL
+        $paketList = Paket::all();
+        foreach ($paketList as $paket) {
+            $paket->updateHargaDenganPpnBaru($ppn_convert);
+        }
+
+        return redirect()->route('ppn.index')
+            ->with('success', 'PPN & harga paket berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(string $id)
     {
         $ppn = Ppn::findOrFail($id);

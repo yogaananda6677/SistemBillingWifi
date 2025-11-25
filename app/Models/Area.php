@@ -24,4 +24,5 @@ class Area extends Model
     {
         return $this->hasMany(Sales::class, 'id_area', 'id_area');
     }
+    
 }

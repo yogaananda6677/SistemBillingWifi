@@ -19,6 +19,7 @@
                 <tr>
                     <th>#</th>
                     <th>Nama Area</th>
+                    <th>Sales di Area</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -27,14 +28,39 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $area->nama_area }}</td>
+
+                    {{-- Kolom Sales --}}
                     <td>
-                        <a href="{{ route('area.edit', $area->id_area) }}" class="btn btn-primary btn-sm">
+                        @if($area->sales->count() > 0)
+                            <ul class="mb-0 ps-3">
+                                @foreach($area->sales as $sales)
+                                    <li>{{ $sales->user->name ?? 'Sales tanpa user' }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <span class="text-muted">Belum ada sales</span>
+                        @endif
+                    </td>
+
+                    {{-- Kolom Aksi --}}
+                    <td>
+                        {{-- Tombol Edit SELALU ADA --}}
+                        <a href="{{ route('area.edit', $area->id_area) }}" class="btn btn-primary btn-sm me-1">
                             <i class="bi bi-pencil"></i> Edit
                         </a>
-                        <button type="button" class="btn btn-danger btn-sm btn-delete"
-                                data-url="{{ route('area.destroy', $area->id_area) }}">
-                            <i class="bi bi-trash"></i> Hapus
-                        </button>
+
+                        {{-- Hapus hanya kalau tidak ada sales --}}
+                        @if($area->sales->count() == 0)
+                            <button type="button" class="btn btn-danger btn-sm btn-delete"
+                                    data-url="{{ route('area.destroy', $area->id_area) }}">
+                                <i class="bi bi-trash"></i> Hapus
+                            </button>
+                        @else
+                            <button type="button" class="btn btn-secondary btn-sm" disabled
+                                    title="Tidak bisa dihapus karena masih ada sales di area ini">
+                                <i class="bi bi-lock"></i> Tidak dapat dihapus
+                            </button>
+                        @endif
                     </td>
                 </tr>
                 @endforeach

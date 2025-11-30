@@ -9,6 +9,9 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\PaketController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TagihanController;
+use App\Http\Controllers\AdminTagihanController;
+use App\Http\Controllers\PembayaranController;
+
 
 
 Route::get('/', function () {
@@ -40,6 +43,34 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::patch('/pelanggan/{pelanggan}/berhenti', [PelangganController::class, 'berhenti'])
         ->name('pelanggan.berhenti');
     Route::get('/get-sales-by-area/{id_area}', [SalesController::class, 'getSalesByArea']);
+    Route::delete('/tagihan/hapus-pelanggan', [TagihanController::class, 'hapusTagihanPelanggan'])
+    ->name('tagihan.hapus-pelanggan');
+
+    // halaman list tagihan belum lunas (pembayaran oleh admin)
+    Route::get('/admin/tagihan', [AdminTagihanController::class, 'index'])
+        ->name('admin.tagihan.index');
+
+    // bayar satu tagihan
+    Route::post('/admin/tagihan/{tagihan}/bayar', [AdminTagihanController::class, 'bayarSatu'])
+        ->name('admin.tagihan.bayar-satu');
+
+    // bayar banyak tagihan sekaligus
+    Route::post('/admin/tagihan/bayar-banyak', [AdminTagihanController::class, 'bayarBanyak'])
+        ->name('admin.tagihan.bayar-banyak');
+
+
+Route::get('/pembayaran/riwayat', [PembayaranController::class, 'riwayat'])
+    ->name('pembayaran.riwayat');
+
+
+Route::delete('/pembayaran/item/{id}', [PembayaranController::class, 'hapusItem'])
+    ->name('pembayaran.item.destroy');
+Route::delete('/pembayaran/item-bulk', [PembayaranController::class, 'hapusItemBulk'])
+    ->name('pembayaran.item.bulkDestroy');
+
+
+
+
 
 
 

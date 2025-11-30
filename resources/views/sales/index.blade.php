@@ -75,6 +75,7 @@
                             <th>Username</th>
                             {{-- Password di DB sekarang di-hash di tabel users, jadi tidak ditampilkan --}}
                             <th>Area</th>
+                            <th>Komisi</th>
                             <th>Pelanggan</th>
                             <th style="width: 100px;">Aksi</th>
                         </tr>

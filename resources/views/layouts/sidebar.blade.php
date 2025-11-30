@@ -32,43 +32,19 @@
                 class="sidebar-sublink {{ request()->routeIs('pelanggan.status') ? 'active-sub' : '' }}">
                     Status Pelanggan
                 </a>
-
-                <div class="sidebar-group">
-                    <a class="sidebar-sublink pembayaran-status-toggle
-                        {{ request()->is('pelanggan/pembayaran*') ? 'active-sub' : '' }}"
-                        data-bs-toggle="collapse" data-bs-target="#menuStatusPembayaran">
-
-                        <span class="link-text">Status Pembayaran</span>
-                        <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
-                    </a>
-
-                    <div class="collapse ps-3 {{ request()->is('pelanggan/tagihan/*') ? 'show' : '' }}" id="menuStatusPembayaran">
-
-                        <a href="{{ route('tagihan.index') }}" data-status="" class="sidebar-sublink
-                            {{ request()->is('tagihan') ? 'active-sub' : '' }}">
-                            Tagihan
-                        </a>
-
-                        <a href="{{ route('tagihan.index', ['status' => 'lunas']) }}" data-status="lunas" class="sidebar-sublink
-                            {{ request()->is('tagihan/lunas') ? 'active-sub' : '' }}">
-                            Lunas
-                        </a>
-
-                        <a href="{{ route('tagihan.index', ['status' => 'belum_lunas']) }}" data-status="belum_lunas" class="sidebar-sublink
-                            {{ request()->is('tagihan/belum-lunas') ? 'active-sub' : '' }}">
-                            Belum Lunas
-                        </a>
-                        {{-- <a href="{{ route('tagihan.index') }}" data-status="" class="sidebar-sublink status-filter">Tagihan</a>
-                        <a href="/tagihan/lunas" data-status="lunas" class="sidebar-sublink status-filter">Lunas</a>
-                        <a href="/tagihan/belum-lunas" data-status="belum_lunas" class="sidebar-sublink status-filter">Belum Lunas</a> --}}
-
-                    </div>
-                </div>
-
-                <a href="/pelanggan/riwayat" class="sidebar-sublink
-                    {{ request()->is('pelanggan/riwayat') ? 'active-sub' : '' }}">
-                    Riwayat Pembayaran
+                <a href="{{ route('tagihan.index') }}"
+                class="sidebar-sublink {{ request()->routeIs('tagihan.index') ? 'active-sub' : '' }}">
+                    Status Pembayaran
                 </a>
+<a href="{{ route('admin.tagihan.index') }}" 
+   class="sidebar-sublink {{ request()->is('admin/tagihan') ? 'active-sub' : '' }}">
+    Pembayaran Pelanggan
+</a>
+<a href="{{ route('pembayaran.riwayat') }}"
+   class="sidebar-sublink {{ request()->routeIs('pembayaran.riwayat') ? 'active-sub' : '' }}">
+    Riwayat Pembayaran
+</a>
+
 
             </div>
         </div>

@@ -40,13 +40,13 @@
             $tagihanBulanIni->status_tagihan === 'belum lunas';
 
         // TOTAL TAGIHAN = total tunggakan x harga total paket
-        $totalTagihan = 0;
-        if ($paket && $paket->harga_total && $tunggakanCount > 0) {
-            $totalTagihan = $tunggakanCount * $paket->harga_total;
-        }
+        // TOTAL TAGIHAN = jumlah total_tagihan dari semua tunggakan
+        $totalTagihan = $tunggakan->sum('total_tagihan');
+
         $totalTagihanLabel = $totalTagihan > 0
             ? 'Rp ' . number_format($totalTagihan, 0, ',', '.')
             : '-';
+
 
         // WARNA BADGE & TEKS STATUS TAGIHAN
         if ($tunggakanCount >= 2) {

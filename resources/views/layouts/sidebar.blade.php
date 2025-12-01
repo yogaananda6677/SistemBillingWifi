@@ -1,5 +1,5 @@
 <div id="sidebarContainer" class="sidebar bg-white shadow-sm"
-    style="width: 260px; height: 100vh; position: sticky; left:0; top:0; transition:0.25s ease;">
+    style="width: 260px; height: 100vh; position: sticky; left:0; top:0; transition:0.25s ease; overflow-y: auto;">
 
     <div class="p-3">
 

@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Langganan;
-use App\Models\PaymentItem;
 
 class Tagihan extends Model
 {
@@ -22,13 +20,24 @@ class Tagihan extends Model
         'jatuh_tempo',
     ];
 
+    protected $casts = [
+        'jatuh_tempo' => 'datetime',
+    ];
+
     public function langganan()
     {
         return $this->belongsTo(Langganan::class, 'id_langganan', 'id_langganan');
     }
 
+    // relasi ke detail pembayaran
+    public function paymentItems()
+    {
+        return $this->hasMany(PaymentItem::class, 'id_tagihan', 'id_tagihan');
+    }
+
+    // biar yang lama tetap jalan (nama singular yang kamu pakai sebelumnya)
     public function paymentItem()
     {
-        return $this->hasMany(PaymentItem::class, 'id_tagihan');
+        return $this->paymentItems();
     }
 }

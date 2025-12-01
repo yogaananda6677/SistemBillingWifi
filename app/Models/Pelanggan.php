@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Sales;
 use App\Models\Langganan;
 use App\Models\Area;
+use Carbon\Carbon;
 
 class Pelanggan extends Model
 {
@@ -27,7 +28,7 @@ class Pelanggan extends Model
     protected $casts = [
     'tanggal_registrasi' => 'datetime',
     ];
-
+    protected $appends = ['status_pelanggan_efektif'];
 
     public function sales()
     {
@@ -44,4 +45,31 @@ class Pelanggan extends Model
     {
         return $this->hasMany(Langganan::class, 'id_pelanggan', 'id_pelanggan');
     }
+        // ===============================
+    // STATUS PELANGGAN EFEKTIF
+    // "baru" hanya untuk bulan & tahun yang sama dengan tanggal_registrasi
+    // setelah ganti bulan → dianggap "aktif"
+    // ===============================
+    public function getStatusPelangganEfektifAttribute()
+    {
+        // Jika bukan 'baru', kembalikan status asli
+        if ($this->status_pelanggan !== 'baru') {
+            return $this->status_pelanggan;
+        }
+
+        if (!$this->tanggal_registrasi) {
+            return $this->status_pelanggan;
+        }
+
+        $bulanDaftar   = $this->tanggal_registrasi->format('Y-m');
+        $bulanSekarang = now()->format('Y-m');
+
+        if ($bulanDaftar === $bulanSekarang) {
+            return 'baru';
+        }
+
+        // Kalau status di DB 'baru' tapi sudah beda bulan → dianggap aktif
+        return 'aktif';
+    }
+
 }

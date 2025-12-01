@@ -1,127 +1,227 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container-fluid p-4">
+<style>
+    .page-title { font-size: 22px; font-weight: 700; color: #222; }
+    .search-box input {
+        border-radius: 10px; border: 1px solid #ddd;
+        padding: 8px 14px; font-size: 14px;
+    }
+    .filter-select {
+        border-radius: 10px; padding: 8px; font-size: 14px;
+        border: 1px solid #ddd; background: white;
+    }
+    .table-card {
+        background: #fff; border-radius: 14px;
+        padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    table thead th {
+        background: #f8f9fa; font-size: 13px;
+        font-weight: 600; padding: 10px;
+    }
+    table tbody td { font-size: 13px; padding: 10px; }
+    table tbody tr:hover { background: #f4f4f4; }
+    .pagination-wrapper {
+        margin-top: 20px; display: flex; justify-content: center;
+    }
+</style>
 
-    <h4 class="mb-4">Dashboard Tagihan Bulanan</h4>
-
-    <div class="row g-2 mb-3">
-        <div class="col-md-4">
-            <input type="text" id="search-tagihan" class="form-control" placeholder="Cari pelanggan atau paket...">
-        </div>
-        <div class="col-md-3">
-            <select id="status-tagihan" class="form-select">
-                <option value="">Semua Status</option>
-                <option value="lunas">Lunas</option>
-                <option value="belum lunas">Belum Lunas</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select id="paket-tagihan" class="form-select">
-                <option value="">Semua Paket</option>
-                @foreach($paketList as $paket)
-                    <option value="{{ $paket->id_paket }}">{{ $paket->nama_paket }}</option>
-                @endforeach
-            </select>
-        </div>
+<div class="container-fluid p-4" id="tagihan-page-wrapper">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="page-title">Status Tagihan per Pelanggan</h4>
     </div>
 
-    <table class="table table-hover mb-0">
-        <thead class="table-light">
-            <tr>
-                <th>#</th>
-                <th>Pelanggan</th>
-                <th>Paket</th>
-                <th>Harga Dasar</th>
-                <th>PPN</th>
-                <th>Total</th>
-                <th>Jatuh Tempo</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody id="tagihan-table-body">
-            @include('tagihan.partials.table', ['dataTagihan' => $dataTagihan])
-        </tbody>
-    </table>
-    <div id="pagination-wrapper">
-        {!! $dataTagihan->links() !!}
+    @php
+        $statusFilter = $statusFilter ?? request('status', '');
+    @endphp
+
+    {{-- TAB STATUS (bukan dropdown) --}}
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a href="{{ route('tagihan.index') }}"
+           class="btn btn-sm {{ $statusFilter === '' ? 'btn-primary' : 'btn-outline-primary' }}">
+            Semua
+        </a>
+
+        <a href="{{ route('tagihan.index', ['status' => 'belum_lunas']) }}"
+           class="btn btn-sm {{ $statusFilter === 'belum_lunas' ? 'btn-primary' : 'btn-outline-warning' }}">
+            Belum Lunas
+        </a>
+
+        <a href="{{ route('tagihan.index', ['status' => 'lunas']) }}"
+           class="btn btn-sm {{ $statusFilter === 'lunas' ? 'btn-primary' : 'btn-outline-success' }}">
+            Lunas
+        </a>
     </div>
 
+    {{-- SEARCH + FILTER: AJAX (realtime, tanpa tombol) --}}
+    <div class="d-flex gap-3 mb-4 flex-wrap" id="filter-tagihan-wrapper">
+        {{-- simpan status sekarang untuk dipakai di JS --}}
+        <input type="hidden" id="status-tagihan" value="{{ $statusFilter }}">
+
+        <div class="search-box flex-grow-1" style="min-width: 250px;">
+            <input type="text" id="search-tagihan" class="form-control"
+                   value="{{ request('search') }}"
+                   placeholder="Cari pelanggan / paket...">
+        </div>
+
+        {{-- FILTER SALES --}}
+        <select id="sales-tagihan" class="filter-select" style="min-width: 160px;">
+            <option value="">Semua Sales</option>
+            @foreach($dataSales as $s)
+                <option value="{{ $s->id_sales }}"
+                    {{ request('sales') == $s->id_sales ? 'selected' : '' }}>
+                    {{ $s->user->name }}
+                </option>
+            @endforeach
+        </select>
+
+        {{-- FILTER WILAYAH --}}
+        <select id="area-tagihan" class="filter-select" style="min-width: 160px;">
+            <option value="">Semua Wilayah</option>
+            @foreach($dataArea as $area)
+                <option value="{{ $area->id_area }}"
+                    {{ request('area') == $area->id_area ? 'selected' : '' }}>
+                    {{ $area->nama_area }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    {{-- TABLE --}}
+    <div class="table-card mt-2">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama</th>
+                    <th>Area &amp; Sales</th>
+                    <th>Paket Layanan</th>
+                    <th>IP Address</th>
+                    <th>Tanggal jatuh tempo</th>
+                    <th>Total Tagihan</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+
+                <tbody id="tagihan-table-body">
+                    @include('tagihan.partials.table', ['pelanggan' => $pelanggan])
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-wrapper" id="pagination-wrapper">
+            {{ $pelanggan->links() }}
+        </div>
+    </div>
 </div>
+@endsection
 
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).ready(function() {
-    let timeout = null;
-    let currentPage = 1;
+$(document).ready(function () {
 
-    function loadTagihanTable(search = '', status = '', paket = '', page = 1) {
+    let currentPage = 1;
+    let currentAjax = null;
+
+    function loadTagihanData(page = 1) {
         currentPage = page;
 
-        $.ajax({
+        // batalin request sebelumnya biar hasil terakhir yang dipakai
+        if (currentAjax !== null) {
+            currentAjax.abort();
+        }
+
+        const status = $('#status-tagihan').val() || '';
+        const search = $('#search-tagihan').val();
+        const paket  = $('#paket-tagihan').val();
+        const sales  = $('#sales-tagihan').val();
+        const area   = $('#area-tagihan').val();
+
+        currentAjax = $.ajax({
             url: '{{ route("tagihan.index") }}',
             type: 'GET',
-            data: { search, status, paket, page, ajax: true },
-            success: function(response) {
+            cache: false,
+            data: {
+                ajax:   true,
+                page:   page,
+                status: status,
+                search: search,
+                paket:  paket,
+                sales:  sales,
+                area:   area,
+            },
+            success: function (response) {
                 $('#tagihan-table-body').html(response.html);
                 $('#pagination-wrapper').html(response.pagination);
 
-                // Update URL tanpa reload
-                const params = new URLSearchParams();
-                if(search) params.set('search', search);
-                if(status) params.set('status', status);
-                if(paket) params.set('paket', paket);
-                if(page > 1) params.set('page', page);
-                const newUrl = params.toString() ? '{{ route("tagihan.index") }}?' + params.toString() : '{{ route("tagihan.index") }}';
-                window.history.replaceState({}, '', newUrl);
+                updateUrl(status, search, paket, sales, area, page);
             },
-            error: function(xhr) {
-                console.error('Error load tagihan:', xhr);
-                alert('Terjadi kesalahan saat memuat data tagihan');
+            error: function (xhr, textStatus) {
+                if (textStatus === 'abort') return; // diabaikan kalau karena abort
+                console.error(xhr.responseText);
+                alert('Terjadi kesalahan saat memuat data tagihan.');
+            },
+            complete: function () {
+                currentAjax = null;
             }
         });
     }
 
-    // Event search dengan debounce
-    $('#search-tagihan').on('input', function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(function() {
-            loadTagihanTable($('#search-tagihan').val(), $('#status-tagihan').val(), $('#paket-tagihan').val(), 1);
-        }, 300);
+    function updateUrl(status, search, paket, sales, area, page) {
+        const params = new URLSearchParams();
+        if (status) params.set('status', status);
+        if (search) params.set('search', search);
+        if (paket)  params.set('paket', paket);
+        if (sales)  params.set('sales', sales);
+        if (area)   params.set('area', area);
+        if (page > 1) params.set('page', page);
+
+        const newUrl = params.toString()
+            ? '{{ route("tagihan.index") }}?' + params.toString()
+            : '{{ route("tagihan.index") }}';
+
+        window.history.replaceState({}, '', newUrl);
+    }
+
+    // 🔹 SEARCH realtime (kayak contoh status pelanggan)
+    $('#search-tagihan').on('input', function () {
+        loadTagihanData(1);
     });
 
-    // Event filter status
-    $('#status-tagihan').on('change', function() {
-        loadTagihanTable($('#search-tagihan').val(), $(this).val(), $('#paket-tagihan').val(), 1);
+    // 🔹 FILTER realtime juga
+    $('#paket-tagihan, #sales-tagihan, #area-tagihan').on('change', function () {
+        loadTagihanData(1);
     });
 
-    // Event filter paket
-    $('#paket-tagihan').on('change', function() {
-        loadTagihanTable($('#search-tagihan').val(), $('#status-tagihan').val(), $(this).val(), 1);
-    });
-
-    // Pagination click (AJAX)
-    $(document).on('click', '.pagination a', function(e){
+    // 🔹 PAGINATION AJAX
+    $(document).on('click', '#pagination-wrapper .pagination a', function (e) {
         e.preventDefault();
-        const page = $(this).attr('href').split('page=')[1] || 1;
-        loadTagihanTable($('#search-tagihan').val(), $('#status-tagihan').val(), $('#paket-tagihan').val(), page);
+        const url  = new URL($(this).attr('href'));
+        const page = url.searchParams.get('page') || 1;
+        loadTagihanData(page);
     });
 
-    // Load awal dari URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const initialSearch = urlParams.get('search') || '';
-    const initialStatus = urlParams.get('status') || '';
-    const initialPaket = urlParams.get('paket') || '';
-    const initialPage = urlParams.get('page') || 1;
+    // 🔹 INISIAL – ambil dari URL kalau ada (biar refresh / share URL tetep sama)
+    (function loadInitial() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status') ?? $('#status-tagihan').val() ?? '';
+        const search = urlParams.get('search');
+        const paket  = urlParams.get('paket');
+        const sales  = urlParams.get('sales');
+        const area   = urlParams.get('area');
+        const page   = urlParams.get('page') || 1;
 
-    $('#search-tagihan').val(initialSearch);
-    $('#status-tagihan').val(initialStatus);
-    $('#paket-tagihan').val(initialPaket);
+        $('#status-tagihan').val(status);
+        if (search) $('#search-tagihan').val(search);
+        if (paket)  $('#paket-tagihan').val(paket);
+        if (sales)  $('#sales-tagihan').val(sales);
+        if (area)   $('#area-tagihan').val(area);
 
-    loadTagihanTable(initialSearch, initialStatus, initialPaket, initialPage);
+        loadTagihanData(page);
+    })();
+
 });
 </script>
 @endpush
-
-@endsection

@@ -9,6 +9,9 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\PaketController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TagihanController;
+use App\Http\Controllers\AdminTagihanController;
+use App\Http\Controllers\PembayaranController;
+
 
 
 // PUBLIC ROOT

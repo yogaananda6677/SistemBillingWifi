@@ -70,38 +70,46 @@
     }
 </style>
 
-<div class="container-fluid p-4">
+<div class="container-fluid p-4" id="page-wrapper" data-status="{{ request('status') }}">
+{{-- TITLE --}}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="page-title">Pelanggan</h4>
+</div>
+<div class="mb-3">
+    <span class="badge bg-primary" style="font-size: 14px; padding: 8px 14px;">
+        Total Pelanggan: {{ $totalPelanggan }}
+    </span>
+    
+    <a href="{{ route('pelanggan.create') }}" class="btn btn-primary">
+        Tambah Data
+    </a>
 
-    {{-- TITLE --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title">Pelanggan</h4>
-    </div>
+</div>
 
     {{-- SEARCH & FILTER --}}
-    <div class="d-flex gap-3 mb-4 flex-wrap">
-        <div class="search-box flex-grow-1" style="min-width: 250px;">
-            <input type="text" id="search-input" class="form-control" placeholder="Cari pelanggan (nama, NIK, IP, HP, wilayah, paket)...">
-        </div>
-
-        <a href="{{ route('pelanggan.create') }}" class="btn btn-primary">
-            Tambah Data
-        </a>
-
-        <select class="filter-select" id="area-filter" style="min-width: 150px;">
-            <option value="">Semua Wilayah</option>
-            @foreach($dataArea as $area)
-                <option value="{{ $area->id_area }}">{{ $area->nama_area }}</option>
-            @endforeach
-        </select>
-
-        <select class="filter-select" id="status-filter" style="min-width: 150px;">
-            <option value="">Semua Status</option>
-            <option value="baru">Baru</option>
-            <option value="aktif">Aktif</option>
-            <option value="berhenti">Berhenti</option>
-            <option value="isolir">Isolir</option>
-        </select>
+<div class="d-flex gap-3 mb-4 flex-wrap">
+    <div class="search-box flex-grow-1" style="min-width: 250px;">
+        <input type="text" id="search-input" class="form-control"
+               placeholder="Cari pelanggan (nama, NIK, IP, HP, wilayah, paket)...">
     </div>
+
+    {{-- FILTER SALES --}}
+    <select class="filter-select" id="sales-filter" style="min-width: 180px;">
+        <option value="">Semua Sales</option>
+        @foreach($dataSales as $sales)
+            <option value="{{ $sales->id_sales }}">{{ $sales->user->name }}</option>
+        @endforeach
+    </select>
+
+    {{-- FILTER WILAYAH --}}
+    <select class="filter-select" id="area-filter" style="min-width: 180px;">
+        <option value="">Semua Wilayah</option>
+        @foreach($dataArea as $area)
+            <option value="{{ $area->id_area }}">{{ $area->nama_area }}</option>
+        @endforeach
+    </select>
+</div>
+
 
     {{-- TABLE --}}
     <div class="table-card mt-2">
@@ -119,10 +127,11 @@
                         <tr>
                             <th>No</th>
                             <th>Nama</th>
-                            <th>Wilayah</th>
-                            <th>Paket</th>
-                            <th>Tagihan</th>
-                            <th>Koneksi</th>
+                            <th>Area</th>
+                            <th>Sales</th>
+                            <th>Paket Layanan</th>
+                            <th>Tanggal Aktif</th>
+                            <th>IP Address</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -142,34 +151,38 @@
 </div>
 
 @endsection
-
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    let timeout = null;
-    let currentPage = 1;
+    let currentPage   = 1;
+    let currentAjax   = null; // <-- SIMPAN REQUEST AKTIF
 
-    // Fungsi untuk memuat data via AJAX
     function loadData(page = 1) {
         currentPage = page;
+
+        // kalau ada request sebelumnya, batalin
+        if (currentAjax !== null) {
+            currentAjax.abort();
+        }
 
         $('#loading-spinner').show();
         $('#table-container').hide();
 
         const search = $('#search-input').val();
-        const area = $('#area-filter').val();
-        const status = $('#status-filter').val();
+        const area   = $('#area-filter').val();
+        const sales  = $('#sales-filter').val();
 
-        $.ajax({
+        currentAjax = $.ajax({
             url: '{{ route("pelanggan.index") }}',
             type: 'GET',
+            cache: false, // jangan cache
             data: {
                 search: search,
-                area: area,
-                status: status,
-                page: page,
-                ajax: true
+                area:   area,
+                sales:  sales,
+                page:   page,
+                ajax:   true
             },
             success: function(response) {
                 $('#pelanggan-table-body').html(response.html);
@@ -177,64 +190,72 @@ $(document).ready(function() {
                 $('#table-container').show();
                 $('#loading-spinner').hide();
 
-                // Update URL tanpa reload page
-                updateUrl(search, area, status, page);
+                updateUrl(search, area, sales, page);
             },
-            error: function(xhr) {
+            error: function(xhr, status) {
+                // kalau error karena abort, abaikan
+                if (status === 'abort') return;
+
                 $('#loading-spinner').hide();
                 $('#table-container').show();
                 console.error('Error:', xhr);
                 alert('Terjadi kesalahan saat memuat data');
+            },
+            complete: function() {
+                currentAjax = null;
             }
         });
     }
 
-    // Update URL dengan parameter filter
-    function updateUrl(search, area, status, page) {
+    function updateUrl(search, area, sales, page) {
         const params = new URLSearchParams();
         if (search) params.set('search', search);
-        if (area) params.set('area', area);
-        if (status) params.set('status', status);
+        if (area)   params.set('area', area);
+        if (sales)  params.set('sales', sales);
         if (page > 1) params.set('page', page);
 
-        const newUrl = params.toString() ? '{{ route("pelanggan.index") }}?' + params.toString() : '{{ route("pelanggan.index") }}';
+        const newUrl = params.toString()
+            ? '{{ route("pelanggan.index") }}?' + params.toString()
+            : '{{ route("pelanggan.index") }}';
+
         window.history.replaceState({}, '', newUrl);
     }
 
-    // Real-time search dengan debounce
+    // SEARCH REALTIME (tanpa debounce, beneran tiap ketik)
     $('#search-input').on('input', function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(function() {
-            loadData(1);
-        }, 200);
-    });
-
-    // Filter change
-    $('#area-filter, #status-filter').on('change', function() {
         loadData(1);
     });
 
-    // Pagination click (event delegation)
+    // FILTER AREA
+    $('#area-filter').on('change', function() {
+        loadData(1);
+    });
+
+    // FILTER SALES
+    $('#sales-filter').on('change', function() {
+        loadData(1);
+    });
+
+    // PAGINATION
     $(document).on('click', '.pagination a', function(e) {
         e.preventDefault();
-        const url = new URL($(this).attr('href'));
+        const url  = new URL($(this).attr('href'));
         const page = url.searchParams.get('page') || 1;
         loadData(page);
     });
 
-    // Delete button pakai modal universal
+    // KLIK HAPUS
     $(document).on('click', '.btn-delete', function(e) {
         e.preventDefault();
         const url = $(this).data('url');
         const deleteForm = $('#deleteForm');
         deleteForm.attr('action', url);
 
-        // Tampilkan modal
         const deleteModal = new bootstrap.Modal($('#deleteModal')[0]);
         deleteModal.show();
     });
 
-    // Submit delete form dari modal
+    // SUBMIT HAPUS (AJAX)
     $('#deleteForm').on('submit', function(e) {
         e.preventDefault();
         const form = $(this);
@@ -248,29 +269,29 @@ $(document).ready(function() {
             type: 'POST',
             data: form.serialize() + '&_method=DELETE',
             success: function(response) {
-                alert(response.message);
                 const deleteModal = bootstrap.Modal.getInstance($('#deleteModal')[0]);
                 deleteModal.hide();
-                loadData(currentPage);
+                submitButton.prop('disabled', false).text('Hapus');
+                loadData(currentPage); // refresh list setelah delete
             },
             error: function(xhr) {
                 submitButton.prop('disabled', false).text('Hapus');
+                console.error(xhr.responseText);
                 alert('Terjadi kesalahan saat menghapus data');
             }
         });
     });
 
-    // Load initial data dari URL parameters
     function loadInitialFilters() {
         const urlParams = new URLSearchParams(window.location.search);
         const search = urlParams.get('search');
-        const area = urlParams.get('area');
-        const status = urlParams.get('status');
-        const page = urlParams.get('page');
+        const area   = urlParams.get('area');
+        const sales  = urlParams.get('sales');
+        const page   = urlParams.get('page');
 
         if (search) $('#search-input').val(search);
-        if (area) $('#area-filter').val(area);
-        if (status) $('#status-filter').val(status);
+        if (area)   $('#area-filter').val(area);
+        if (sales)  $('#sales-filter').val(sales);
 
         loadData(page || 1);
     }

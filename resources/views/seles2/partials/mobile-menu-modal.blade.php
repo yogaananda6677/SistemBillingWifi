@@ -33,11 +33,11 @@
                         </a>
                     </div>
                 </div>
-                
+
                 <hr class="my-3">
-                
+
                 <div class="menu-list">
-                    <a href="{{ route('seles2.dashboard') }}" class="menu-list-item">
+                    <a href="{{ route('dashboard-sales') }}" class="menu-list-item">
                         <i class="bi bi-house"></i>
                         <span>Dashboard</span>
                         <i class="bi bi-chevron-right"></i>
@@ -69,33 +69,37 @@
 </div>
 
 <style>
-.modal-bottom {
-    margin: 0;
-    align-items: end;
-}
-.quick-action-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 16px 8px;
-    background: #f8f9fa;
-    border-radius: 12px;
-    text-decoration: none;
-    color: #333;
-    text-align: center;
-    transition: all 0.3s;
-}
-.quick-action-btn:active {
-    background: #e9ecef;
-    transform: scale(0.95);
-}
-.quick-action-btn i {
-    font-size: 1.5rem;
-    margin-bottom: 8px;
-    color: #4361ee;
-}
-.quick-action-btn span {
-    font-size: 0.8rem;
-    font-weight: 500;
-}
+    .modal-bottom {
+        margin: 0;
+        align-items: end;
+    }
+
+    .quick-action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 16px 8px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #333;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .quick-action-btn:active {
+        background: #e9ecef;
+        transform: scale(0.95);
+    }
+
+    .quick-action-btn i {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+        color: #4361ee;
+    }
+
+    .quick-action-btn span {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
 </style>

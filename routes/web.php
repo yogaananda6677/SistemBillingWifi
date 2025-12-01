@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminTagihanController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\PaketController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PembayaranController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\PpnController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\TagihanController;
+use App\Http\Controllers\TagihanPelangganSalesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -77,19 +79,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // ===== SALES ROUTES =====
 Route::middleware(['auth', 'sales'])->group(function () {
     // Dashboard sales
-    Route::get('/dashboard/sales', function () {
-        return view('seles2.dashboard.index');
-    })->name('dashboard-sales');
+    Route::get('/dashboard/sales', [DashboardSalesController::class, 'index'])->name('dashboard-sales');
+    // Resource tagihan pelanggan untuk sales
+    Route::resource('tagihan-pelanggan', TagihanPelangganSalesController::class);
 
 });
 
 // ========== SALES ROUTES ==========
 Route::prefix('seles2')->name('seles2.')->group(function () {
-
-    // DASHBOARD
-    // Route::get('/dashboard', function () {
-    //     return view('seles2.dashboard.index');
-    // })->name('dashboard');
 
     // ================== PELANGGAN ==================
     Route::get('/pelanggan', fn () => view('seles2.pelanggan.index'))->name('pelanggan.index');

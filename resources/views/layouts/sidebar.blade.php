@@ -36,16 +36,14 @@
                 class="sidebar-sublink {{ request()->routeIs('tagihan.index') ? 'active-sub' : '' }}">
                     Status Pembayaran
                 </a>
-<a href="{{ route('admin.tagihan.index') }}" 
-   class="sidebar-sublink {{ request()->is('admin/tagihan') ? 'active-sub' : '' }}">
-    Pembayaran Pelanggan
-</a>
-<a href="{{ route('pembayaran.riwayat') }}"
-   class="sidebar-sublink {{ request()->routeIs('pembayaran.riwayat') ? 'active-sub' : '' }}">
-    Riwayat Pembayaran
-</a>
-
-
+                <a href="{{ route('admin.tagihan.index') }}" 
+                class="sidebar-sublink {{ request()->is('admin/tagihan') ? 'active-sub' : '' }}">
+                    Pembayaran Pelanggan
+                </a>
+                <a href="{{ route('pembayaran.riwayat') }}"
+                class="sidebar-sublink {{ request()->routeIs('pembayaran.riwayat') ? 'active-sub' : '' }}">
+                    Riwayat Pembayaran
+                </a>
             </div>
         </div>
 

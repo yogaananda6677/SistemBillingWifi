@@ -175,27 +175,6 @@
     {{-- =================== TITLE =================== --}}
     <div class="d-flex justify-content-between align-items-center mb-3 fade-in">
         <h4 class="fw-bold">Dashboard</h4>
-        <div class="dropdown">
-            <span class="text-secondary">Default Month:</span>
-            <a class="dropdown-toggle text-secondary text-decoration-none fw-bold" href="#" role="button" 
-               data-bs-toggle="dropdown" aria-expanded="false">
-                <strong id="selectedMonth">Januari</strong>
-            </a>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item month-item" href="#" data-value="Januari">Januari</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Februari">Februari</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Maret">Maret</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="April">April</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Mei">Mei</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Juni">Juni</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Juli">Juli</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Agustus">Agustus</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="September">September</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Oktober">Oktober</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="November">November</a></li>
-                <li><a class="dropdown-item month-item" href="#" data-value="Desember">Desember</a></li>
-            </ul>
-        </div>
     </div>
 
     {{-- =================== TOTAL PEMBAYARAN =================== --}}

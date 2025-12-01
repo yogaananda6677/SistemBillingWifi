@@ -36,34 +36,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 });
 
-// ===== SALES ROUTES =====
-Route::middleware(['auth', 'sales'])->group(function () {
-
-    Route::get('/dashboard/sales', [DashboardController::class, 'index'])->name('dashboard-sales');
-
-    Route::resource('pelanggan', PelangganController::class);
-    Route::resource('sales/data-sales', SalesController::class);
-
-    Route::get('/sales/pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
-    Route::put('/pengeluaran/update-status/{id}',
-        [PengajuanController::class, 'updateStatus']
-    )->name('pengajuan.updateStatus');
-
-    Route::resource('pengaturan/ppn', PpnController::class);
-    Route::resource('pengaturan/area', AreaController::class);
-    Route::resource('pengaturan/paket-layanan', PaketController::class);
-    Route::resource('/tagihan', TagihanController::class);
-
-    Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
-});
-
 // ========== SALES ROUTES ==========
 Route::prefix('seles2')->name('seles2.')->group(function () {
 
-    // DASHBOARD
-    Route::get('/dashboard', function () {
-        return view('seles2.dashboard.index');
-    })->name('dashboard');
+    // // DASHBOARD
+    // Route::get('/dashboard', function () {
+    //     return view('seles2.dashboard.index');
+    // })->name('dashboard');
 
     // ================== PELANGGAN ==================
     Route::get('/pelanggan', fn () => view('seles2.pelanggan.index'))->name('pelanggan.index');

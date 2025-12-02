@@ -19,7 +19,9 @@ Route::get('/', function () {
 // ===== ADMIN ROUTES =====
 Route::middleware(['auth', 'admin'])->group(function () {
     // Dashboard admin
-    Route::get('/dashboard/admin', [DashboardController::class, 'index'])->name('dashboard-admin');
+
+Route::get('/dashboard/admin', [DashboardController::class, 'index'])
+    ->name('dashboard-admin');
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);
@@ -72,6 +74,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('/tagihan', TagihanController::class);
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
+
+
 });
 
 // ===== SALES ROUTES =====

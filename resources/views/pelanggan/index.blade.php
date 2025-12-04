@@ -68,6 +68,135 @@
     .table-responsive {
         min-height: 400px;
     }
+
+    .custom-arrow {
+        width: 18px;     /* ganti ukuran di sini */
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .custom-arrow.disabled {
+        opacity: 0.3;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .custom-pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .custom-pagination-wrapper ul {
+        display: flex;
+        gap: 6px;
+        list-style: none;
+        padding: 0;
+    }
+
+    .custom-pagination-wrapper li {
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .custom-pagination-wrapper li.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .custom-pagination-wrapper li.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    .pagination {
+        justify-content: flex-end; /* Posisi di kanan */
+        gap: 6px; /* Jarak antar tombol */
+        margin-bottom: 0;
+    }
+
+    .page-item .page-link {
+        border: none;
+        border-radius: 8px; /* Membuat sudut melengkung */
+        color: #64748b;     /* Warna teks abu lembut */
+        font-weight: 600;
+        font-size: 13px;
+        padding: 8px 14px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan tipis */
+        transition: all 0.2s;
+    }
+
+    /* Efek saat mouse diarahkan */
+    .page-item .page-link:hover {
+        background-color: #f1f5f9;
+        color: #0284c7;
+        transform: translateY(-1px);
+    }
+
+    /* Tombol Aktif (Halaman sekarang) */
+    .page-item.active .page-link {
+        background-color: #0284c7; /* Biru modern */
+        color: white;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); /* Efek glowing biru */
+    }
+
+    /* Tombol Disabled (Panah mati) */
+    .page-item.disabled .page-link {
+        background-color: #f8fafc;
+        color: #cbd5e1;
+        box-shadow: none;
+    }
+
+    div.pagination-wrapper nav .d-none.flex-fill.d-sm-flex .text-muted {
+        display: none !important;
+    }
+    
+    /* Atau penargetan yang lebih agresif jika yang atas tidak mempan */
+    div.pagination-wrapper nav p.small.text-muted {
+        display: none !important;
+    }
+
+    /* Pastikan Pagination Rata Kanan & Rapi */
+    div.pagination-wrapper nav {
+        display: flex;
+        justify-content: center; /* Tombol geser ke kanan */
+        width: 100%;
+    }
+
+    /* ... CSS lainnya biarkan ... */
+
+    /* --- PAKSA PAGINATION KE TENGAH & HILANGKAN TEKS --- */
+    
+    /* 1. Sembunyikan teks 'Showing...' (elemen div pertama di dalam nav) */
+    .pagination-wrapper nav .d-none.d-sm-flex > div:first-child {
+        display: none !important;
+    }
+
+    /* 2. Ubah layout container dari 'Between' menjadi 'Center' */
+    .pagination-wrapper nav .d-none.d-sm-flex {
+        justify-content: center !important;
+    }
+
+    /* 3. Gaya Tombol (Opsional: Agar lebih cantik seperti sebelumnya) */
+    .page-item .page-link {
+        border: none;
+        border-radius: 8px;
+        color: #64748b;
+        margin: 0 3px; /* Jarak antar tombol */
+        font-weight: 600;
+        font-size: 13px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .page-item.active .page-link {
+        background-color: #0284c7;
+        color: white;
+        box-shadow: 0 4px 8px rgba(2, 132, 199, 0.2);
+    }
 </style>
 
 <div class="container-fluid p-4" id="page-wrapper" data-status="{{ request('status') }}">
@@ -141,13 +270,14 @@
                     </tbody>
                 </table>
             </div>
-
-            <div class="pagination-wrapper" id="pagination-wrapper">
-                {{ $pelanggan->links() }}
+            <div class="pagination-wrapper p-3 bg-light border-top" id="pagination-wrapper" style="border-radius: 0 0 16px 16px;">
+                {{-- Kita tidak perlu class flex di sini, biarkan CSS di atas yang mengatur 'jeroan' Laravel --}}
+                {{ $pelanggan->onEachSide(1)->links('pagination::bootstrap-5') }}
             </div>
-        </div>
-    </div>
+            </div>
 
+        </div>
+    </div> 
 </div>
 
 @endsection
@@ -237,7 +367,7 @@ $(document).ready(function() {
     });
 
     // PAGINATION
-    $(document).on('click', '.pagination a', function(e) {
+        $(document).on('click', '.custom-pagination a', function(e) {
         e.preventDefault();
         const url  = new URL($(this).attr('href'));
         const page = url.searchParams.get('page') || 1;

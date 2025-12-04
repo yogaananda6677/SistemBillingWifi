@@ -68,6 +68,50 @@
     .table-responsive {
         min-height: 400px;
     }
+
+        .custom-arrow {
+        width: 18px;     /* ganti ukuran di sini */
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .custom-arrow.disabled {
+        opacity: 0.3;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .custom-pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .custom-pagination-wrapper ul {
+        display: flex;
+        gap: 6px;
+        list-style: none;
+        padding: 0;
+    }
+
+    .custom-pagination-wrapper li {
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .custom-pagination-wrapper li.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .custom-pagination-wrapper li.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
 </style>
 
 <div class="container-fluid p-4" id="page-wrapper" data-status="{{ request('status') }}">
@@ -141,13 +185,12 @@
                     </tbody>
                 </table>
             </div>
-
             <div class="pagination-wrapper" id="pagination-wrapper">
-                {{ $pelanggan->links() }}
+                {{ $pelanggan->links('pagination.custom') }}
             </div>
-        </div>
-    </div>
 
+        </div>
+    </div> 
 </div>
 
 @endsection
@@ -237,7 +280,7 @@ $(document).ready(function() {
     });
 
     // PAGINATION
-    $(document).on('click', '.pagination a', function(e) {
+        $(document).on('click', '.custom-pagination a', function(e) {
         e.preventDefault();
         const url  = new URL($(this).attr('href'));
         const page = url.searchParams.get('page') || 1;

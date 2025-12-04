@@ -1,6 +1,51 @@
 @extends('layouts.master')
 
 @section('content')
+
+<style>
+
+       .pagination-wrapper {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        margin-top: 15px;
+    }
+
+    .pagination-wrapper > p {
+        margin: 0;
+        font-size: 12px;
+        color: #444;
+        text-align: center;
+    }
+
+    .pagination {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center;
+        gap: 4px;
+    }
+
+
+    .table-responsive {
+        min-height: 400px;
+    }
+
+    /* OVERRIDE TAILWIND PAGINATION */
+    nav[role="navigation"] > div > div span,
+    nav[role="navigation"] > div > div a {
+        font-size: 11px !important;
+        padding: 3px 6px !important;
+    }
+
+    nav[role="navigation"] svg {
+        width: 12px !important;
+        height: 12px !important;
+    } 
+
+</style>
+
 <div class="container-fluid p-4">
     <h5 class="fw-bold mb-4 text-secondary">Detail Pelanggan</h5>
 
@@ -220,7 +265,7 @@
         </div>
 
         {{-- pagination tetap boleh dipakai, masih dari Pembayaran --}}
-        <div class="mt-3">
+        <div class="pagination-wrapper mt-3">
             {{ $riwayatPembayaran->links() }}
         </div>
     @endif

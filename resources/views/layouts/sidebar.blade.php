@@ -23,34 +23,32 @@
 
                 {{-- Halaman ①: Semua Pelanggan --}}
                 <a href="{{ route('pelanggan.index') }}"
-                class="sidebar-sublink {{ request()->routeIs('pelanggan.index') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->routeIs('pelanggan.index') ? 'active-sub' : '' }}">
                     Data Pelanggan
                 </a>
 
                 {{-- Halaman ②: Status Pelanggan --}}
                 <a href="{{ route('pelanggan.status') }}"
-                class="sidebar-sublink {{ request()->routeIs('pelanggan.status') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->routeIs('pelanggan.status') ? 'active-sub' : '' }}">
                     Status Pelanggan
                 </a>
                 <a href="{{ route('tagihan.index') }}"
-                class="sidebar-sublink {{ request()->routeIs('tagihan.index') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->routeIs('tagihan.index') ? 'active-sub' : '' }}">
                     Status Pembayaran
                 </a>
-                <a href="{{ route('admin.tagihan.index') }}" 
-                class="sidebar-sublink {{ request()->is('admin/tagihan') ? 'active-sub' : '' }}">
+                <a href="{{ route('admin.tagihan.index') }}"
+                    class="sidebar-sublink {{ request()->is('admin/tagihan') ? 'active-sub' : '' }}">
                     Pembayaran Pelanggan
                 </a>
                 <a href="{{ route('pembayaran.riwayat') }}"
-                class="sidebar-sublink {{ request()->routeIs('pembayaran.riwayat') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->routeIs('pembayaran.riwayat') ? 'active-sub' : '' }}">
                     Riwayat Pembayaran
                 </a>
             </div>
         </div>
 
         <div class="sidebar-group">
-            <a class="sidebar-link sales-toggle"
-                data-bs-toggle="collapse"
-                data-bs-target="#menuSales">
+            <a class="sidebar-link sales-toggle" data-bs-toggle="collapse" data-bs-target="#menuSales">
                 <i class="bi bi-cart"></i>
                 <span class="link-text">Sales</span>
                 <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
@@ -59,20 +57,20 @@
             <div class="collapse ps-4 {{ request()->is('sales/*') ? 'show' : '' }}" id="menuSales">
 
                 {{-- DATA SALES --}}
-                <a href="/sales/data-sales" 
-                class="sidebar-sublink {{ request()->is('sales/data-sales') ? 'active-sub' : '' }}">
+                <a href="/sales/data-sales"
+                    class="sidebar-sublink {{ request()->is('sales/data-sales') ? 'active-sub' : '' }}">
                     Data Sales
                 </a>
 
                 {{-- SETORAN --}}
                 <a href="/sales/setoran"
-                class="sidebar-sublink {{ request()->is('sales/setoran') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('sales/setoran') ? 'active-sub' : '' }}">
                     Setoran
                 </a>
 
                 {{-- PENGAJUAN PENGELUARAN --}}
                 <a href="/sales/pengajuan"
-                class="sidebar-sublink {{ request()->is('sales/pengajuan') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('sales/pengajuan') ? 'active-sub' : '' }}">
                     Pengajuan Pengeluaran
                 </a>
 
@@ -99,15 +97,26 @@
 
             <div class="collapse ps-4 {{ request()->is('pengaturan*') ? 'show' : '' }}" id="menuPengaturan">
 
-                <a href="{{ route('ppn.index') }}" class="sidebar-sublink {{ request()->is('pengaturan/ppn') ? 'active-sub' : '' }}">
+                <a href="{{ route('admin.index') }}"
+                    class="sidebar-sublink {{ request()->is('pengaturan/admin') ? 'active-sub' : '' }}">
+                    Admin
+                </a>
+                <a href="{{ route('ppn.index') }}"
+                    class="sidebar-sublink {{ request()->is('pengaturan/ppn') ? 'active-sub' : '' }}">
                     PPN
                 </a>
+                <a href="{{ route('profil.index') }}"
+                    class="sidebar-sublink {{ request()->is('pengaturan/profil') ? 'active-sub' : '' }}">
+                    Profil
+                </a>
 
-                <a href="{{ route('area.index') }}" class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
+                <a href="{{ route('area.index') }}"
+                    class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
                     Area
                 </a>
 
-                <a href="{{ route('paket-layanan.index') }}" class="sidebar-sublink {{ request()->is('pengaturan/paket-layanan') ? 'active-sub' : '' }}">
+                <a href="{{ route('paket-layanan.index') }}"
+                    class="sidebar-sublink {{ request()->is('pengaturan/paket-layanan') ? 'active-sub' : '' }}">
                     Paket Layanan
                 </a>
 
@@ -115,8 +124,7 @@
         </div>
 
         <!-- LOGOUT -->
-        <div class="sidebar-link text-danger mt-5 cursor-pointer"
-            data-bs-toggle="modal" data-bs-target="#logoutModal">
+        <div class="sidebar-link text-danger mt-5 cursor-pointer" data-bs-toggle="modal" data-bs-target="#logoutModal">
             <i class="bi bi-box-arrow-left"></i>
             <span class="link-text">Logout</span>
         </div>

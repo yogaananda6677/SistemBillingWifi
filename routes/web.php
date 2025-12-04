@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminTagihanController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\DashboardController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\PpnController;
+use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\TagihanPelangganSalesController;
@@ -72,8 +74,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('pengaturan/area', AreaController::class);
     Route::resource('pengaturan/paket-layanan', PaketController::class);
     Route::resource('/tagihan', TagihanController::class);
+    Route::resource('/pengaturan/profil', ProfilController::class);
+    Route::resource('/admin', AdminController::class);
 
-    Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 });
 
 // ===== SALES ROUTES =====

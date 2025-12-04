@@ -35,13 +35,7 @@
 
     <!-- Quick Actions -->
     <div class="menu-grid">
-        <a href="{{ route('seles2.pelanggan.create') }}" class="menu-item">
-            <div class="menu-icon success">
-                <i class="bi bi-person-plus"></i>
-            </div>
-            <div class="menu-label">Tambah Pelanggan</div>
-        </a>
-        <a href="{{ route('seles2.pelanggan.index') }}" class="menu-item">
+        <a href="{{ route('tagihan-pelanggan.index') }}" class="menu-item">
             <div class="menu-icon primary">
                 <i class="bi bi-people"></i>
             </div>
@@ -58,18 +52,6 @@
                 <i class="bi bi-journal-text"></i>
             </div>
             <div class="menu-label">Pembukuan</div>
-        </a>
-        <a href="{{ route('seles2.setoran.index') }}" class="menu-item">
-            <div class="menu-icon info">
-                <i class="bi bi-cash-coin"></i>
-            </div>
-            <div class="menu-label">Setor Dana</div>
-        </a>
-        <a href="{{ route('seles2.profile') }}" class="menu-item">
-            <div class="menu-icon">
-                <i class="bi bi-gear"></i>
-            </div>
-            <div class="menu-label">Pengaturan</div>
         </a>
     </div>
 @endsection

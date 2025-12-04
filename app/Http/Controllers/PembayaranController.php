@@ -15,7 +15,7 @@ use App\Models\Sales;
 use App\Models\Paket;
 use App\Models\Area;
 use App\Models\Pelanggan;
-
+use Illuminate\Support\Facades\Auth;
 class PembayaranController extends Controller
 {
     protected TagihanService $tagihanService;
@@ -62,11 +62,12 @@ class PembayaranController extends Controller
                 DB::rollBack();
                 return back()->with('error', 'Nominal kurang dari total tagihan.');
             }
-
+            
             // 4. Buat PEMBAYARAN
             $pembayaran = Pembayaran::create([
                 'id_pelanggan'  => $langganan->id_pelanggan,
                 'id_sales'      => optional($langganan->pelanggan)->id_sales,
+                'id_user'       => Auth::id(), // <── admin / user yang input
                 'tanggal_bayar' => now(),
                 'nominal'       => $nominalBayar,
                 'no_pembayaran' => 'INV-' . strtoupper(Str::random(10)),
@@ -99,6 +100,7 @@ class PembayaranController extends Controller
             'pelanggan.area',
             'pelanggan.sales.user',
             'sales.user',
+            'user', // <── tambahkan ini
             'items.tagihan.langganan.paket',
         ])->orderByDesc('tanggal_bayar');
 

@@ -79,7 +79,7 @@
             </div>
 
             {{-- STATUS PELANGGAN (diset otomatis jadi "baru", tidak ditampilkan di form) --}}
-            <input type="hidden" name="status_pelanggan" value="baru">
+            <input type="hidden" name="status_pelanggan" value="aktif">
 
             <!-- PAKET LAYANAN -->
             <div class="mb-3">

@@ -1,24 +1,32 @@
 @forelse($pembayaran as $pay)
-    @php
-        // Hitung nomor urut, support pagination & collection biasa
-        $no = method_exists($pembayaran, 'firstItem')
-            ? $pembayaran->firstItem() + $loop->index
-            : $loop->iteration;
+@php
+    $no = method_exists($pembayaran, 'firstItem')
+        ? $pembayaran->firstItem() + $loop->index
+        : $loop->iteration;
 
-        $pelanggan = $pay->pelanggan;
-        $area      = $pelanggan?->area?->nama_area;
-        $sales     = $pay->sales?->user?->name ?? $pelanggan?->sales?->user?->name;
+    $pelanggan = $pay->pelanggan;
+    $area      = $pelanggan?->area?->nama_area;
 
-        if (is_null($pay->id_sales)) {
-            $sumberText = 'Admin';
-            $badgeClass = 'bg-secondary';
-        } else {
-            $sumberText = 'Sales' . ($sales ? ' - ' . $sales : '');
-            $badgeClass = 'bg-info';
-        }
+    // nama sales yang terkait pembayaran (langsung dari relasi pembayaran->sales->user)
+    $salesName = $pay->sales?->user?->name
+        ?? $pelanggan?->sales?->user?->name;
 
-        $modalId = 'modal-detail-pembayaran-' . $pay->id_pembayaran;
-    @endphp
+    // nama admin (user yang input) dari relasi pembayaran->user
+    $adminName = $pay->user?->name;
+
+    if (is_null($pay->id_sales)) {
+        // pembayaran via admin
+        $sumberText = 'Admin' . ($adminName ? ' - ' . $adminName : '');
+        $badgeClass = 'bg-secondary';
+    } else {
+        // pembayaran via sales
+        $sumberText = 'Sales' . ($salesName ? ' - ' . $salesName : '');
+        $badgeClass = 'bg-info';
+    }
+
+    $modalId = 'modal-detail-pembayaran-' . $pay->id_pembayaran;
+@endphp
+
 
     <tr>
         <td>{{ $no }}</td>
@@ -40,6 +48,7 @@
                 {{ $sumberText }}
             </span>
         </td>
+
 
         <td>
             <strong>Rp {{ number_format($pay->nominal, 0, ',', '.') }}</strong>

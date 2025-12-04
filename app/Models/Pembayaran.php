@@ -12,6 +12,7 @@ class Pembayaran extends Model
     protected $fillable = [
         'id_pelanggan',
         'id_sales',
+        'id_user', 
         'tanggal_bayar',
         'nominal',
         'no_pembayaran',
@@ -25,6 +26,12 @@ class Pembayaran extends Model
     {
         return $this->belongsTo(Pelanggan::class, 'id_pelanggan', 'id_pelanggan');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'id_user');
+    }
+
 
     public function sales()
     {

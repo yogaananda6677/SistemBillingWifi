@@ -18,6 +18,7 @@ use App\Services\TagihanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AdminTagihanController extends Controller
 {
@@ -110,8 +111,8 @@ public function bayarBanyak(Request $request)
         'jumlah_bulan'  => 'required|integer|min:1|max:60',
     ]);
 
-    $langganan = Langganan::with(['paket', 'pelanggan', 'tagihan'])->findOrFail($request->id_langganan);
-    $admin     = Admin::where('user_id', auth()->id())->firstOrFail();
+        $langganan = Langganan::with(['paket', 'pelanggan', 'tagihan'])->findOrFail($request->id_langganan);
+        $admin     = Admin::where('user_id', Auth::id())->firstOrFail(); // boleh pakai Auth::id()
 
     DB::beginTransaction();
 
@@ -209,6 +210,7 @@ public function bayarBanyak(Request $request)
         $pembayaran = Pembayaran::create([
             'id_pelanggan'  => $pelangganId,
             'id_sales'      => null,
+            'id_user'       => Auth::id(),  
             'tanggal_bayar' => now(),
             'nominal'       => $totalBayar,
             'no_pembayaran' => $this->generateNoPembayaran(),

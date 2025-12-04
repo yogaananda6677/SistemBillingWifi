@@ -9,10 +9,9 @@ use App\Models\PaymentItem;
 use App\Models\Pelanggan;
 use App\Models\Pembayaran;
 use App\Models\Sales;
-// ⬇️ TAMBAHAN
 use App\Models\Tagihan;
-// use App\Models\Pembayaran;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -20,21 +19,24 @@ use Illuminate\Support\Str;
 class PelangganController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Halaman "Semua Pelanggan" (admin).
      */
     public function index(Request $request)
     {
-        $dataSales = Sales::with('user')->get();
-        $dataArea = Area::all();
-        $dataPaket = Paket::all();
-        $totalPelanggan = Pelanggan::count();
+        $dataSales       = Sales::with('user')->get();
+        $dataArea        = Area::all();
+        $dataPaket       = Paket::all();
+        $totalPelanggan  = Pelanggan::count();
 
-        // Jika request AJAX, return data JSON untuk pagination
+        // Untuk request AJAX (filter / pagination dinamis)
         if ($request->ajax()) {
+            // pastikan mode default = "semua"
+            $request->merge(['mode' => $request->get('mode', 'semua')]);
+
             return $this->getPelangganData($request);
         }
 
-        $pelanggan = Pelanggan::with(['area', 'sales.user', 'langganan.paket'])->paginate(10);
+        $pelanggan = $this->basePelangganQuery()->paginate(10);
 
         return view('pelanggan.index', compact(
             'pelanggan',
@@ -45,79 +47,43 @@ class PelangganController extends Controller
         ));
     }
 
+    /**
+     * Halaman "Status Pelanggan" (baru / aktif / isolir / berhenti).
+     * Catatan:
+     * - "baru" sekarang berdasar tanggal_registrasi bulan & tahun ini, bukan status di DB.
+     */
     public function status(Request $request)
     {
         $dataSales = Sales::with('user')->get();
-        $dataArea = Area::all();
+        $dataArea  = Area::all();
         $dataPaket = Paket::all();
 
         $status = $request->get('status', 'aktif'); // default aktif
-        $search = $request->get('search', '');
-        $area = $request->get('area', '');
-        $sales = $request->get('sales', '');       // 🔹 filter sales
+        $search = $request->get('search');
+        $area   = $request->get('area');
+        $sales  = $request->get('sales');
 
-        $query = Pelanggan::with([
-            'area',
-            'sales.user',
-            'langganan.paket',
-            'langganan.tagihan',
-        ]);
+        $query = $this->basePelangganQuery();
 
-        // FILTER SEARCH
-        if (! empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                    ->orWhere('nik', 'like', "%{$search}%")
-                    ->orWhere('ip_address', 'like', "%{$search}%")
-                    ->orWhere('nomor_hp', 'like', "%{$search}%")
-                    ->orWhereHas('area', function ($q2) use ($search) {
-                        $q2->where('nama_area', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('langganan.paket', function ($q3) use ($search) {
-                        $q3->where('nama_paket', 'like', "%{$search}%");
-                    });
-            });
-        }
+        $this->applyCommonFilters($query, $search, $area, $sales);
+        $this->applyStatusFilter($query, $status);
 
-        // FILTER WILAYAH
-        if (! empty($area)) {
-            $query->where('id_area', $area);
-        }
-
-        // 🔹 FILTER SALES
-        if (! empty($sales)) {
-            $query->where('id_sales', $sales);
-        }
-
-        // FILTER STATUS (logika sama kayak sebelumnya)
-        if ($status === 'baru') {
-            $query->where('status_pelanggan', 'baru')
-                ->whereMonth('tanggal_registrasi', now()->month)
-                ->whereYear('tanggal_registrasi', now()->year);
-        } elseif ($status === 'aktif') {
-            $query->whereIn('status_pelanggan', ['aktif', 'baru']);
-        } elseif (in_array($status, ['berhenti', 'isolir'])) {
-            $query->where('status_pelanggan', $status);
-        }
-
-        $pelanggan = $query->paginate(10)->appends($request->query());
-
-        // total per status
+        $pelanggan    = $query->paginate(10)->appends($request->query());
         $statusCounts = $this->getStatusCounts();
 
-        // 🔹 RESPONSE UNTUK AJAX (search/filter realtime + pagination)
+        // AJAX (ganti isi tabel + pagination saja)
         if ($request->ajax()) {
-            $html = view('pelanggan.partials.table_rows_status', compact('pelanggan', 'status'))->render();
+            $html       = view('pelanggan.partials.table_rows_status', compact('pelanggan', 'status'))->render();
             $pagination = $pelanggan->links()->toHtml();
 
             return response()->json([
-                'html' => $html,
+                'html'       => $html,
                 'pagination' => $pagination,
-                'total' => $pelanggan->total(),
+                'total'      => $pelanggan->total(),
             ]);
         }
 
-        // 🔹 NON-AJAX: tampilan biasa
+        // Non-AJAX
         return view('pelanggan.status', compact(
             'pelanggan',
             'dataSales',
@@ -128,232 +94,254 @@ class PelangganController extends Controller
         ));
     }
 
-    private function getStatusCounts()
+    /**
+     * Query dasar untuk semua list pelanggan (index, status, ajax).
+     */
+    private function basePelangganQuery(): Builder
     {
-        // === KHUSUS BARU: sama seperti filter di status() ===
-        $baruBulanIni = Pelanggan::where('status_pelanggan', 'baru')
-            ->whereMonth('tanggal_registrasi', now()->month)
+        return Pelanggan::with([
+            'area',                // wilayah
+            'sales.user',          // sales + user
+            'langganan.paket',     // paket langganan
+            'langganan.tagihan',   // tagihan-tagihan
+        ]);
+    }
+
+    /**
+     * Filter yang sering dipakai bareng (search / area / sales).
+     */
+    private function applyCommonFilters(Builder $query, ?string $search, ?string $areaId, ?string $salesId): void
+    {
+        if (!empty($search)) {
+            $query->where(function (Builder $q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('nik', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhere('nomor_hp', 'like', "%{$search}%")
+                    ->orWhereHas('area', function (Builder $q2) use ($search) {
+                        $q2->where('nama_area', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('langganan.paket', function (Builder $q3) use ($search) {
+                        $q3->where('nama_paket', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if (!empty($areaId)) {
+            $query->where('id_area', $areaId);
+        }
+
+        if (!empty($salesId)) {
+            $query->where('id_sales', $salesId);
+        }
+    }
+
+    /**
+     * Filter status untuk list pelanggan (baru / aktif / berhenti / isolir).
+     *
+     * Sekarang:
+     * - "baru"  => tanggal_registrasi bulan & tahun ini (tanpa cek status_pelanggan).
+     * - "aktif" => status_pelanggan = 'aktif'.
+     * - lainnya => sesuai status_pelanggan.
+     */
+    private function applyStatusFilter(Builder $query, ?string $status): void
+    {
+        if (empty($status)) {
+            return;
+        }
+
+        if ($status === 'baru') {
+            // Pelanggan baru bulan & tahun ini (berdasarkan tanggal_registrasi)
+            $query->whereMonth('tanggal_registrasi', now()->month)
+                  ->whereYear('tanggal_registrasi', now()->year);
+        } elseif ($status === 'aktif') {
+            $query->where('status_pelanggan', 'aktif');
+        } elseif (in_array($status, ['berhenti', 'isolir'])) {
+            $query->where('status_pelanggan', $status);
+        }
+    }
+
+    /**
+     * Hitung jumlah per status untuk badge di halaman status.
+     *
+     * - 'baru'    => jumlah pelanggan dengan tanggal_registrasi bulan & tahun ini.
+     * - 'aktif'   => status_pelanggan = 'aktif'.
+     * - 'berhenti'=> status_pelanggan = 'berhenti'.
+     * - 'isolir'  => status_pelanggan = 'isolir'.
+     */
+    private function getStatusCounts(): array
+    {
+        // Baru bulan ini (BERDASARKAN TANGGAL, bukan status)
+        $baruBulanIni = Pelanggan::whereMonth('tanggal_registrasi', now()->month)
             ->whereYear('tanggal_registrasi', now()->year)
             ->count();
 
-        // === AKTIF: samakan juga dengan query di status() (aktif + baru) ===
-        $aktifCount = Pelanggan::whereIn('status_pelanggan', ['aktif', 'baru'])->count();
+        // Aktif hanya status 'aktif'
+        $aktifCount = Pelanggan::where('status_pelanggan', 'aktif')->count();
 
-        // === STATUS LAIN: boleh pakai hitung biasa ===
         $rows = Pelanggan::select('status_pelanggan', DB::raw('COUNT(*) as total'))
             ->groupBy('status_pelanggan')
             ->pluck('total', 'status_pelanggan')
             ->toArray();
 
         return [
-            'baru' => $baruBulanIni,
-            'aktif' => $aktifCount,
+            'baru'     => $baruBulanIni,
+            'aktif'    => $aktifCount,
             'berhenti' => $rows['berhenti'] ?? 0,
-            'isolir' => $rows['isolir'] ?? 0,
+            'isolir'   => $rows['isolir'] ?? 0,
         ];
     }
 
     /**
-     * Get pelanggan data for AJAX requests
+     * Endpoint AJAX list pelanggan (dipakai index & status).
      */
     private function getPelangganData(Request $request)
     {
-        $search = $request->get('search', '');
-        $area = $request->get('area', '');
-        $status = $request->get('status', '');
-        // 🔹 TAMBAH INI
-        $salesId = $request->get('sales', '');
+        $search  = $request->get('search');
+        $area    = $request->get('area');
+        $status  = $request->get('status');
+        $salesId = $request->get('sales');
+        $mode    = $request->get('mode', 'semua'); // "semua" atau "status"
 
-        $query = Pelanggan::with([
-            'area',
-            'sales.user',
-            'langganan.paket',
-            'langganan.tagihan',
-        ]);
+        $query = $this->basePelangganQuery();
 
-        // Filter pencarian
-        if (! empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                    ->orWhere('nik', 'like', "%{$search}%")
-                    ->orWhere('ip_address', 'like', "%{$search}%")
-                    ->orWhere('nomor_hp', 'like', "%{$search}%")
-                    ->orWhereHas('area', function ($q2) use ($search) {
-                        $q2->where('nama_area', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('langganan.paket', function ($q3) use ($search) {
-                        $q3->where('nama_paket', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if (! empty($area)) {
-            $query->where('id_area', $area);
-        }
-
-        // 🔹 FILTER SALES
-        if (! empty($salesId)) {
-            $query->where('id_sales', $salesId);
-        }
-        if (! empty($status)) {
-
-            if ($status === 'baru') {
-                $query->where('status_pelanggan', 'baru')
-                    ->whereMonth('tanggal_registrasi', now()->month)
-                    ->whereYear('tanggal_registrasi', now()->year);
-            } elseif ($status === 'aktif') {
-                $query->whereIn('status_pelanggan', ['aktif', 'baru']);
-
-            } else {
-                $query->where('status_pelanggan', $status);
-            }
-        }
+        $this->applyCommonFilters($query, $search, $area, $salesId);
+        $this->applyStatusFilter($query, $status);
 
         $pelanggan = $query->paginate(10);
 
-        // mode: 'semua' (default) atau 'status'
-        $mode = $request->get('mode', 'semua');
-
         $partial = $mode === 'status'
-            ? 'pelanggan.partials.table_rows_status'   // untuk halaman Status Pelanggan (aksi lengkap)
-            : 'pelanggan.partials.table_rows';         // untuk halaman Semua Pelanggan (aksi sederhana)
+            ? 'pelanggan.partials.table_rows_status'
+            : 'pelanggan.partials.table_rows';
 
-        $view = view($partial, compact('pelanggan'))->render();
+        $html       = view($partial, compact('pelanggan'))->render();
         $pagination = $pelanggan->links()->toHtml();
 
         return response()->json([
-            'html' => $view,
+            'html'       => $html,
             'pagination' => $pagination,
-            'total' => $pelanggan->total(),
+            'total'      => $pelanggan->total(),
         ]);
-
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Form create.
      */
     public function create()
     {
         $dataSales = Sales::with('user')->get();
-        $dataArea = Area::all();
+        $dataArea  = Area::all();
         $dataPaket = Paket::all();
 
         return view('pelanggan.create', compact('dataSales', 'dataArea', 'dataPaket'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Simpan pelanggan baru (+ setup langganan dan (opsional) tagihan awal).
      */
     public function store(Request $request)
     {
         $request->validate([
-            'id_sales' => 'nullable|exists:sales,id_sales',
-            'id_area' => 'nullable|exists:area,id_area',
-            'id_paket' => 'required',
-            'nama' => 'required|string|max:100',
-            'nik' => 'required|string|max:30',
-            'alamat' => 'required|string',
-            'nomor_hp' => 'required|string',
-            'ip_address' => 'required|string',
-            'status_pelanggan' => 'required|in:baru,aktif,berhenti,isolir',
+            'id_sales'           => 'nullable|exists:sales,id_sales',
+            'id_area'            => 'nullable|exists:area,id_area',
+            'id_paket'           => 'required|exists:paket,id_paket',
+            'nama'               => 'required|string|max:100',
+            'nik'                => 'required|string|max:30',
+            'alamat'             => 'required|string',
+            'nomor_hp'           => 'required|string',
+            'ip_address'         => 'required|string',
+            // status_pelanggan: 'baru' DIHAPUS dari pilihan
+            'status_pelanggan'   => 'required|in:aktif,berhenti,isolir',
             'tanggal_registrasi' => 'required|date',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // 1. SIMPAN PELANGGAN
+            // 1. PELANGGAN
             $pelanggan = Pelanggan::create([
-                'id_sales' => $request->id_sales ?? null,
-                'id_area' => $request->id_area ?? null,
-                'nama' => $request->nama,
-                'nik' => $request->nik,
-                'alamat' => $request->alamat,
-                'nomor_hp' => $request->nomor_hp,
-                'ip_address' => $request->ip_address,
-                'status_pelanggan' => $request->status_pelanggan,
+                'id_sales'           => $request->id_sales,
+                'id_area'            => $request->id_area,
+                'nama'               => $request->nama,
+                'nik'                => $request->nik,
+                'alamat'             => $request->alamat,
+                'nomor_hp'           => $request->nomor_hp,
+                'ip_address'         => $request->ip_address,
+                'status_pelanggan'   => $request->status_pelanggan,
                 'tanggal_registrasi' => $request->tanggal_registrasi,
             ]);
 
-            // 2. SIMPAN LANGGANAN
-            $status_langganan = Langganan::statusLanggananOptions($request->status_pelanggan);
-
-            // pakai tanggal_registrasi sebagai tanggal_mulai (boleh diubah kalau mau now())
-            $tanggalMulai = Carbon::parse($request->tanggal_registrasi)->toDateString();
+            // 2. LANGGANAN
+            $statusLangganan = Langganan::statusLanggananOptions($request->status_pelanggan);
+            $tanggalMulai    = Carbon::parse($request->tanggal_registrasi)->toDateString();
 
             $langganan = Langganan::create([
-                'id_pelanggan' => $pelanggan->id_pelanggan,
-                'id_paket' => $request->id_paket,
-                'tanggal_mulai' => $tanggalMulai,
-                'status_langganan' => $status_langganan,
+                'id_pelanggan'     => $pelanggan->id_pelanggan,
+                'id_paket'         => $request->id_paket,
+                'tanggal_mulai'    => $tanggalMulai,
+                'status_langganan' => $statusLangganan,
             ]);
 
-            // 3. LOGIKA BILLING REGISTRASI
-            //    hanya buat tagihan awal kalau status_pelanggan memang "baru" atau "aktif"
-            if (in_array($request->status_pelanggan, ['baru', 'aktif'])) {
-
-                // Ambil paket & hitungan dari paket (PPN dari paket)
-                $paket = Paket::findOrFail($request->id_paket);
-
-                $hargaDasar = $paket->harga_dasar;
-                $ppnNominal = $paket->ppn_nominal;
+            // 3. (OPSIONAL) LOGIKA TAGIHAN AWAL
+            // Hanya untuk status_pelanggan 'aktif' sekarang
+            if (in_array($request->status_pelanggan, ['aktif'])) {
+                $paket        = Paket::findOrFail($request->id_paket);
+                $hargaDasar   = $paket->harga_dasar;
+                $ppnNominal   = $paket->ppn_nominal;
                 $totalTagihan = $paket->harga_total;
 
-                // Bulan tagihan pertama = bulan setelah tanggal_mulai (bulan penuh pertama)
-                $mulai = Carbon::parse($tanggalMulai);
-                $firstBillMonth = $mulai->copy()->addMonthNoOverflow(); // bulan berikutnya
+                $mulai          = Carbon::parse($tanggalMulai);
+                $firstBillMonth = $mulai->copy()->addMonthNoOverflow();
+                $bulanTagihan   = $firstBillMonth->month;
+                $tahunTagihan   = $firstBillMonth->year;
+                $jatuhTempo     = Carbon::create($tahunTagihan, $bulanTagihan, 10, 23, 59, 59);
 
-                $bulanTagihan = $firstBillMonth->month; // 1-12
-                $tahunTagihan = $firstBillMonth->year;
+                // Kalau mau diaktifkan lagi tinggal buka blok ini dan sesuaikan:
+                /*
+                $pembayaran = Pembayaran::create([
+                    'id_pelanggan'  => $pelanggan->id_pelanggan,
+                    'id_sales'      => $request->id_sales,
+                    'tanggal_bayar' => now(),
+                    'nominal'       => $totalTagihan,
+                    'no_pembayaran' => 'REG-' . strtoupper(Str::random(10)),
+                ]);
 
-                // Jatuh tempo misal tanggal 10 bulan tagihan
-                $jatuhTempo = Carbon::create($tahunTagihan, $bulanTagihan, 10, 23, 59, 59);
+                $tagihan = Tagihan::create([
+                    'id_langganan'   => $langganan->id_langganan,
+                    'bulan'          => $bulanTagihan,
+                    'tahun'          => $tahunTagihan,
+                    'harga_dasar'    => $hargaDasar,
+                    'ppn_nominal'    => $ppnNominal,
+                    'total_tagihan'  => $totalTagihan,
+                    'status_tagihan' => 'lunas',
+                    'jatuh_tempo'    => $jatuhTempo,
+                ]);
 
-                // // 3a. Buat PEMBAYARAN (uang registrasi: bayar 1 bulan)
-                // $pembayaran = Pembayaran::create([
-                //     'id_pelanggan'  => $pelanggan->id_pelanggan,
-                //     'id_sales'      => $request->id_sales ?? null,
-                //     'tanggal_bayar' => now(),
-                //     'nominal'       => $totalTagihan,
-                //     'no_pembayaran' => 'REG-' . strtoupper(Str::random(10)),
-                // ]);
-
-                // // 3b. Buat TAGIHAN bulan penuh pertama (bulan depan) dengan status LUNAS
-                // $tagihan = Tagihan::create([
-                //     'id_langganan'   => $langganan->id_langganan,
-                //     'bulan'          => $bulanTagihan,
-                //     'tahun'          => $tahunTagihan,
-                //     'harga_dasar'    => $hargaDasar,
-                //     'ppn_nominal'    => $ppnNominal,
-                //     'total_tagihan'  => $totalTagihan,
-                //     'status_tagihan' => 'lunas', // sudah dibayar saat registrasi
-                //     'jatuh_tempo'    => $jatuhTempo,
-                // ]);
-
-                // // 3c. Hubungkan via PAYMENT_ITEM
-                // PaymentItem::create([
-                //     'id_pembayaran' => $pembayaran->id_pembayaran,
-                //     'id_tagihan'    => $tagihan->id_tagihan,
-                //     'nominal_bayar' => $totalTagihan,
-                // ]);
+                PaymentItem::create([
+                    'id_pembayaran' => $pembayaran->id_pembayaran,
+                    'id_tagihan'    => $tagihan->id_tagihan,
+                    'nominal_bayar' => $totalTagihan,
+                ]);
+                */
             }
 
             DB::commit();
 
-            return redirect()->route('pelanggan.index')
-                ->with('success', 'Pelanggan berhasil dibuat dan tagihan awal sudah tercatat.');
+            return redirect()
+                ->route('pelanggan.index')
+                ->with('success', 'Pelanggan berhasil dibuat.');
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // sementara untuk debug:
-            // dd($e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan!');
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan pelanggan.');
         }
     }
 
     /**
-     * Display the specified resource.
+     * Detail pelanggan + riwayat pembayaran.
      */
     public function show($id)
     {
@@ -363,43 +351,44 @@ class PelangganController extends Controller
             'langganan.paket',
         ])->findOrFail($id);
 
-        // riwayat pembayaran khusus pelanggan ini
         $riwayatPembayaran = Pembayaran::with([
             'sales.user',
             'items.tagihan.langganan.paket',
         ])
             ->where('id_pelanggan', $pelanggan->id_pelanggan)
             ->orderByDesc('tanggal_bayar')
-            ->paginate(10); // atau ->get() kalau mau tanpa pagination
+            ->paginate(10);
+
         $items = collect();
 
         foreach ($riwayatPembayaran as $pay) {
             foreach ($pay->items as $item) {
                 $items->push([
-                    'pay' => $pay,
-                    'item' => $item,
-                    'tagihan' => $item->tagihan,
+                    'pay'       => $pay,
+                    'item'      => $item,
+                    'tagihan'   => $item->tagihan,
                     'langganan' => $item->tagihan?->langganan,
-                    'paket' => $item->tagihan?->langganan?->paket,
-                    'tahun' => $item->tagihan?->tahun,
-                    'bulan' => $item->tagihan?->bulan,
+                    'paket'     => $item->tagihan?->langganan?->paket,
+                    'tahun'     => $item->tagihan?->tahun,
+                    'bulan'     => $item->tagihan?->bulan,
                 ]);
             }
         }
 
-        $items = $items->sortByDesc(fn ($d) => $d['tahun'] * 100 + $d['bulan'])
+        $items = $items
+            ->sortByDesc(fn($d) => $d['tahun'] * 100 + $d['bulan'])
             ->values();
 
         return view('pelanggan.show', compact('pelanggan', 'riwayatPembayaran', 'items'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Form edit.
      */
     public function edit($id)
     {
         $dataSales = Sales::with('user')->get();
-        $dataArea = Area::all();
+        $dataArea  = Area::all();
         $dataPaket = Paket::all();
         $pelanggan = Pelanggan::findOrFail($id);
 
@@ -407,80 +396,22 @@ class PelangganController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update pelanggan + langganan.
      */
-    // public function update(Request $request, $id)
-    // {
-    //     $request->validate([
-    //         'id_sales' => 'nullable|exists:sales,id_sales',
-    //         'id_area' => 'nullable|exists:area,id_area',
-    //         'nama' => 'required|string|max:100',
-    //         'nik' => 'required|string|max:30',
-    //         'alamat' => 'required|string',
-    //         'nomor_hp' => 'required|string',
-    //         'ip_address' => 'required|string',
-    //         'status_pelanggan' => 'required|in:baru,aktif,berhenti,isolir',
-    //         'tanggal_registrasi' => 'required|date',
-    //         'id_paket' => 'required|exists:paket,id_paket'
-    //     ]);
-
-    //     // dd($request->all());
-
-    //     $pelanggan = Pelanggan::findOrFail($id);
-    //     DB::beginTransaction();
-
-    //     try {
-
-    //         // ======================
-    //         // 1. UPDATE DATA PELANGGAN
-    //         // ======================
-    //         $pelanggan->update([
-    //             'id_sales'          => $request->id_sales,
-    //             'id_area'           => $request->id_area,
-    //             'nama'              => $request->nama,
-    //             'nik'               => $request->nik,
-    //             'alamat'            => $request->alamat,
-    //             'nomor_hp'          => $request->nomor_hp,
-    //             'ip_address'        => $request->ip_address,
-    //             'status_pelanggan'  => $request->status_pelanggan,
-    //             'tanggal_registrasi' => $request->tanggal_registrasi,
-    //         ]);
-
-    //         // ======================
-    //         // 2. UPDATE LANGGANAN
-    //         // ======================
-    //         $status_langganan = Langganan::statusLanggananOptions($request->status_pelanggan);
-    //         $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
-
-    //         Langganan::where('id_langganan', $langganan->id_langganan)->update([
-    //             'id_paket' => $request->id_paket,
-    //             'status_langganan' => $status_langganan,
-    //         ]);
-
-    //         DB::commit();
-
-    //         return redirect()->route('pelanggan.index')
-    //             ->with('success', 'Pelanggan berhasil diperbarui');
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return back()->with('error', 'Terjadi kesalahan!');
-    //     }
-    // }
-
     public function update(Request $request, $id)
     {
         $request->validate([
-            'id_sales' => 'nullable|exists:sales,id_sales',
-            'id_area' => 'nullable|exists:area,id_area',
-            'nama' => 'required|string|max:100',
-            'nik' => 'required|string|max:30',
-            'alamat' => 'required|string',
-            'nomor_hp' => 'required|string',
-            'ip_address' => 'required|string',
-            'status_pelanggan' => 'required|in:baru,aktif,berhenti,isolir',
+            'id_sales'           => 'nullable|exists:sales,id_sales',
+            'id_area'            => 'nullable|exists:area,id_area',
+            'nama'               => 'required|string|max:100',
+            'nik'                => 'required|string|max:30',
+            'alamat'             => 'required|string',
+            'nomor_hp'           => 'required|string',
+            'ip_address'         => 'required|string',
+            // 'baru' DIHAPUS dari pilihan
+            'status_pelanggan'   => 'required|in:aktif,berhenti,isolir',
             'tanggal_registrasi' => 'required|date',
-            'id_paket' => 'required|exists:paket,id_paket',
+            'id_paket'           => 'required|exists:paket,id_paket',
         ]);
 
         $pelanggan = Pelanggan::findOrFail($id);
@@ -488,66 +419,62 @@ class PelangganController extends Controller
         DB::beginTransaction();
 
         try {
-
-            // UPDATE PELANGGAN
             $pelanggan->update([
-                'id_sales' => $request->id_sales,
-                'id_area' => $request->id_area,
-                'nama' => $request->nama,
-                'nik' => $request->nik,
-                'alamat' => $request->alamat,
-                'nomor_hp' => $request->nomor_hp,
-                'ip_address' => $request->ip_address,
-                'status_pelanggan' => $request->status_pelanggan,
+                'id_sales'           => $request->id_sales,
+                'id_area'            => $request->id_area,
+                'nama'               => $request->nama,
+                'nik'                => $request->nik,
+                'alamat'             => $request->alamat,
+                'nomor_hp'           => $request->nomor_hp,
+                'ip_address'         => $request->ip_address,
+                'status_pelanggan'   => $request->status_pelanggan,
                 'tanggal_registrasi' => $request->tanggal_registrasi,
             ]);
 
-            // UPDATE / CREATE LANGGANAN
-            $status_langganan = Langganan::statusLanggananOptions($request->status_pelanggan);
-            $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
+            $statusLangganan = Langganan::statusLanggananOptions($request->status_pelanggan);
+            $langganan       = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
 
             if ($langganan) {
-                // update
                 $langganan->update([
-                    'id_paket' => $request->id_paket,
-                    'status_langganan' => $status_langganan,
+                    'id_paket'         => $request->id_paket,
+                    'status_langganan' => $statusLangganan,
                 ]);
             } else {
-                // create
                 Langganan::create([
-                    'id_pelanggan' => $pelanggan->id_pelanggan,
-                    'id_paket' => $request->id_paket,
-                    'tanggal_mulai' => now(),
-                    'status_langganan' => $status_langganan,
+                    'id_pelanggan'     => $pelanggan->id_pelanggan,
+                    'id_paket'         => $request->id_paket,
+                    'tanggal_mulai'    => now(),
+                    'status_langganan' => $statusLangganan,
                 ]);
             }
 
             DB::commit();
+
             $redirectRoute = $request->input('redirect_to', 'pelanggan.index');
 
-            return redirect()->route($redirectRoute)
-                ->with('success', 'Pelanggan berhasil diperbarui');
+            return redirect()
+                ->route($redirectRoute)
+                ->with('success', 'Pelanggan berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            dd($e->getMessage());
 
-            return back()->with('error', 'Terjadi kesalahan!');
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat mengupdate pelanggan.');
         }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus pelanggan + langganan.
      */
     public function destroy(Request $request, $id)
     {
         $pelanggan = Pelanggan::findOrFail($id);
 
-        // hapus relasi dulu kalau perlu
         $pelanggan->langganan()->delete();
         $pelanggan->delete();
 
-        // Kalau mau dukung AJAX juga, boleh cek dulu
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -555,20 +482,22 @@ class PelangganController extends Controller
             ]);
         }
 
-        // NON-AJAX (klik tombol hapus biasa) -> redirect balik
         return redirect()
             ->back()
             ->with('success', 'Pelanggan berhasil dihapus.');
     }
 
+    /**
+     * Status pelanggan "baru" (admin).
+     * Sekarang: berdasarkan tanggal_registrasi bulan & tahun ini, tanpa cek status_pelanggan.
+     */
     public function statusBaru(Request $request)
     {
         $dataSales = Sales::with('user')->get();
-        $dataArea = Area::all();
+        $dataArea  = Area::all();
         $dataPaket = Paket::all();
 
-        $pelanggan = Pelanggan::with(['area', 'sales.user', 'langganan.paket'])
-            ->where('status_pelanggan', 'baru')
+        $pelanggan = $this->basePelangganQuery()
             ->whereMonth('tanggal_registrasi', now()->month)
             ->whereYear('tanggal_registrasi', now()->year)
             ->paginate(10);
@@ -578,15 +507,12 @@ class PelangganController extends Controller
 
     /**
      * Pastikan tagihan bulan & tahun ini ada untuk langganan ini.
-     * Kalau sudah ada → kembalikan existing.
-     * Kalau belum ada → buat baru.
      */
     private function ensureTagihanBulanIni(Langganan $langganan): ?Tagihan
     {
         $langganan->loadMissing(['paket', 'pelanggan']);
 
-        // Kalau paket atau pelanggan tidak lengkap, jangan buat tagihan
-        if (! $langganan->paket || ! $langganan->pelanggan) {
+        if (!$langganan->paket || !$langganan->pelanggan) {
             return null;
         }
 
@@ -594,7 +520,6 @@ class PelangganController extends Controller
         $tahun = (int) $today->format('Y');
         $bulan = (int) $today->format('n');
 
-        // 1. Cek apakah SUDAH ada tagihan bulan ini
         $existing = Tagihan::where('id_langganan', $langganan->id_langganan)
             ->where('tahun', $tahun)
             ->where('bulan', $bulan)
@@ -604,28 +529,26 @@ class PelangganController extends Controller
             return $existing;
         }
 
-        // 2. Hitung jatuh tempo (sama pola dengan yang lain)
         $mulai = $langganan->tanggal_mulai
             ? Carbon::parse($langganan->tanggal_mulai)
             : Carbon::parse($langganan->pelanggan->tanggal_registrasi ?? $today);
 
-        $dayAktif = $mulai->day;
+        $dayAktif      = $mulai->day;
         $endOfMonthDay = Carbon::create($tahun, $bulan, 1)->endOfMonth()->day;
         $dayJatuhTempo = min($dayAktif, $endOfMonthDay);
 
         $jatuhTempo = Carbon::create($tahun, $bulan, $dayJatuhTempo, 23, 59, 59);
-
-        $paket = $langganan->paket;
+        $paket      = $langganan->paket;
 
         return Tagihan::create([
-            'id_langganan' => $langganan->id_langganan,
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            'harga_dasar' => $paket->harga_dasar,
-            'ppn_nominal' => $paket->ppn_nominal,
-            'total_tagihan' => $paket->harga_total,
+            'id_langganan'   => $langganan->id_langganan,
+            'bulan'          => $bulan,
+            'tahun'          => $tahun,
+            'harga_dasar'    => $paket->harga_dasar,
+            'ppn_nominal'    => $paket->ppn_nominal,
+            'total_tagihan'  => $paket->harga_total,
             'status_tagihan' => 'belum lunas',
-            'jatuh_tempo' => $jatuhTempo,
+            'jatuh_tempo'    => $jatuhTempo,
         ]);
     }
 
@@ -638,37 +561,34 @@ class PelangganController extends Controller
                 'status_pelanggan' => 'aktif',
             ]);
 
-            $status_langganan = Langganan::statusLanggananOptions('aktif');
+            $statusLangganan = Langganan::statusLanggananOptions('aktif');
 
-            // 🔴 AMBIL LANGGANAN TERAKHIR YANG PUNYA PAKET
             $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)
-                ->whereNotNull('id_paket')        // <-- ini penting
+                ->whereNotNull('id_paket')
                 ->orderByDesc('tanggal_mulai')
                 ->first();
 
-            // Kalau bener-bener tidak ada langganan dengan paket → jangan paksa aktivasi
-            if (! $langganan) {
+            if (!$langganan) {
                 DB::rollBack();
 
                 return back()->with('error', 'Tidak bisa aktivasi: pelanggan belum memiliki paket langganan.');
             }
 
-            // 🔵 Tetap pakai tanggal_mulai = sekarang (sesuai keinginanmu)
             $langganan->update([
-                'status_langganan' => $status_langganan,
-                'tanggal_mulai' => now(),   // kamu tetap boleh pakai now()
-                'tanggal_isolir' => null,
+                'status_langganan' => $statusLangganan,
+                'tanggal_mulai'    => now(),
+                'tanggal_isolir'   => null,
                 'tanggal_berhenti' => null,
             ]);
 
-            // 🔹 DI SINI DIJAMIN sudah punya paket → langsung panggil helper
             $this->ensureTagihanBulanIni($langganan->fresh());
 
             DB::commit();
 
             return redirect()
                 ->route('pelanggan.status', ['status' => 'aktif'])
-                ->with('success', 'Pelanggan berhasil diaktivasi & tagihan bulan ini sudah disiapkan.');
+                ->with('success', 'Pelanggan berhasil diaktivasi & tagihan bulan ini disiapkan.');
+
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -687,13 +607,13 @@ class PelangganController extends Controller
                 'status_pelanggan' => 'isolir',
             ]);
 
-            $status_langganan = Langganan::statusLanggananOptions('isolir');
-            $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
+            $statusLangganan = Langganan::statusLanggananOptions('isolir');
+            $langganan       = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
 
             if ($langganan) {
                 $langganan->update([
-                    'status_langganan' => $status_langganan,
-                    'tanggal_isolir' => now(),
+                    'status_langganan' => $statusLangganan,
+                    'tanggal_isolir'   => now(),
                 ]);
             }
 
@@ -702,6 +622,7 @@ class PelangganController extends Controller
             return redirect()
                 ->route('pelanggan.status', ['status' => 'isolir'])
                 ->with('success', 'Pelanggan berhasil diisolir.');
+
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -720,7 +641,7 @@ class PelangganController extends Controller
                 'status_pelanggan' => 'aktif',
             ]);
 
-            $status_langganan = Langganan::statusLanggananOptions('aktif');
+            $statusLangganan = Langganan::statusLanggananOptions('aktif');
 
             $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)
                 ->orderByDesc('tanggal_mulai')
@@ -728,12 +649,10 @@ class PelangganController extends Controller
 
             if ($langganan) {
                 $langganan->update([
-                    'status_langganan' => $status_langganan,
-                    // ❌ jangan sentuh tanggal_mulai
-                    'tanggal_isolir' => null,
+                    'status_langganan' => $statusLangganan,
+                    'tanggal_isolir'   => null,
                 ]);
 
-                // 🔹 generate tagihan bulan ini kalau belum ada & paket sudah ada
                 if ($langganan->id_paket) {
                     $this->ensureTagihanBulanIni($langganan->fresh());
                 }
@@ -743,7 +662,8 @@ class PelangganController extends Controller
 
             return redirect()
                 ->route('pelanggan.status', ['status' => 'aktif'])
-                ->with('success', 'Isolir pelanggan sudah dibuka & tagihan bulan ini sudah disiapkan.');
+                ->with('success', 'Isolir pelanggan sudah dibuka & tagihan bulan ini disiapkan.');
+
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -762,12 +682,12 @@ class PelangganController extends Controller
                 'status_pelanggan' => 'berhenti',
             ]);
 
-            $status_langganan = Langganan::statusLanggananOptions('berhenti');
-            $langganan = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
+            $statusLangganan = Langganan::statusLanggananOptions('berhenti');
+            $langganan       = Langganan::where('id_pelanggan', $pelanggan->id_pelanggan)->first();
 
             if ($langganan) {
                 $langganan->update([
-                    'status_langganan' => $status_langganan,
+                    'status_langganan' => $statusLangganan,
                     'tanggal_berhenti' => now(),
                 ]);
             }
@@ -777,6 +697,7 @@ class PelangganController extends Controller
             return redirect()
                 ->route('pelanggan.status', ['status' => 'berhenti'])
                 ->with('success', 'Pelanggan sudah diberhentikan.');
+
         } catch (\Exception $e) {
             DB::rollBack();
 

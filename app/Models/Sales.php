@@ -49,4 +49,9 @@ class Sales extends Model
     {
         return $this->hasMany(Pengeluaran::class, 'id_sales');
     }
+        public function transaksiKomisi()
+    {
+        return $this->hasMany(\App\Models\TransaksiKomisi::class, 'id_sales', 'id_sales');
+    }
 }
+

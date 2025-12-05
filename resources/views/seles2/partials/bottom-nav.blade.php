@@ -19,12 +19,12 @@
                 <span>Pembayaran</span>
             </a>
 
+<a href="{{ route('seles2.pembukuan.index') }}"
+    class="nav-item {{ request()->routeIs('seles2.pembukuan.*') ? 'active' : '' }}">
+    <i class="bi bi-receipt"></i>
+    <span>Pembukuan</span>
+</a>
 
-            <a href="{{ route('seles2.pembukuan.index') }}"
-                class="nav-item {{ request()->routeIs('seles2.pembukuan.*') ? 'active' : '' }}">
-                <i class="bi bi-receipt"></i>
-                <span>Pembukuan</span>
-            </a>
 
             <a href="{{ route('seles2.setoran.riwayat') }}"
                 class="nav-item {{ request()->routeIs('seles2.setoran.*') ? 'active' : '' }}">

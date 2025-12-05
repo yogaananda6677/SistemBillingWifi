@@ -91,7 +91,7 @@
             </div>
 
             {{-- STATUS PELANGGAN (kalau memang mau di-set fix) --}}
-            <input type="hidden" name="status_pelanggan" value="baru">
+            <input type="hidden" name="status_pelanggan" value="aktif">
 
             <!-- PAKET LAYANAN -->
             <div class="mb-3">

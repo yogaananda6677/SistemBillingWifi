@@ -3,22 +3,20 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
-
-use App\Models\Pelanggan;
 use App\Models\Area;
-use App\Models\Paket;
 use App\Models\Langganan;
-use App\Models\Tagihan;
-use App\Models\Sales;
-use App\Models\Pembayaran;
+use App\Models\Paket;
 use App\Models\PaymentItem;
+use App\Models\Pelanggan;
+use App\Models\Pembayaran;
+use App\Models\Sales;
+use App\Models\Tagihan;
 use App\Models\TransaksiKomisi;
-
 use App\Services\TagihanService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TagihanSalesController extends Controller
 {
@@ -31,7 +29,7 @@ class TagihanSalesController extends Controller
 
     public function index(Request $request)
     {
-        $user    = $request->user();
+        $user = $request->user();
         $salesId = optional($user->sales)->id_sales;
 
         $query = Pelanggan::with([
@@ -51,8 +49,8 @@ class TagihanSalesController extends Controller
         if ($search = $request->get('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('alamat', 'like', "%{$search}%")
-                  ->orWhere('nomor_hp', 'like', "%{$search}%");
+                    ->orWhere('alamat', 'like', "%{$search}%")
+                    ->orWhere('nomor_hp', 'like', "%{$search}%");
             });
         }
 
@@ -70,19 +68,19 @@ class TagihanSalesController extends Controller
 
         $pelanggan = $query->paginate(15)->withQueryString();
 
-        $dataArea  = Area::orderBy('nama_area')->get();
+        $dataArea = Area::orderBy('nama_area')->get();
         $paketList = Paket::orderBy('nama_paket')->get();
 
         // AJAX
         if ($request->ajax()) {
-            $htmlTable  = view('seles2.tagihan.partials.table', compact('pelanggan'))->render();
-            $htmlPag    = $pelanggan->links()->toHtml();
+            $htmlTable = view('seles2.tagihan.partials.table', compact('pelanggan'))->render();
+            $htmlPag = $pelanggan->links()->toHtml();
             $htmlModals = view('seles2.tagihan.partials.modals', compact('pelanggan'))->render();
 
             return response()->json([
-                'html'       => $htmlTable,
+                'html' => $htmlTable,
                 'pagination' => $htmlPag,
-                'modals'     => $htmlModals,
+                'modals' => $htmlModals,
             ]);
         }
 
@@ -98,18 +96,18 @@ class TagihanSalesController extends Controller
      */
     public function bayarBanyak(Request $request)
     {
-        $user    = $request->user();
-        $sales   = optional($user)->sales;
+        $user = $request->user();
+        $sales = optional($user)->sales;
         $salesId = optional($sales)->id_sales;
 
-        if (!$salesId) {
+        if (! $salesId) {
             return back()->with('error', 'Anda tidak terdaftar sebagai sales.');
         }
 
         $request->validate([
-            'id_langganan'  => 'required|integer',
-            'start_ym'      => 'required|date_format:Y-m',
-            'jumlah_bulan'  => 'required|integer|min:1|max:60',
+            'id_langganan' => 'required|integer',
+            'start_ym' => 'required|date_format:Y-m',
+            'jumlah_bulan' => 'required|integer|min:1|max:60',
         ]);
 
         // Pastikan langganan milik sales yang login
@@ -124,39 +122,40 @@ class TagihanSalesController extends Controller
 
         try {
             // --------- Ambil data form ---------
-            $startYm     = $request->start_ym;          // "2025-08"
+            $startYm = $request->start_ym;          // "2025-08"
             $targetCount = (int) $request->jumlah_bulan;
 
             [$startYear, $startMonth] = array_map('intval', explode('-', $startYm));
             $current = Carbon::create($startYear, $startMonth, 1); // pointer bulan berjalan
 
             $tagihanDiproses = collect();
-            $allTagihan      = $langganan->tagihan;
+            $allTagihan = $langganan->tagihan;
 
             // 2025-09 -> 202509, untuk cari bulan existing max
             $maxExistingYm = $allTagihan->isNotEmpty()
-                ? $allTagihan->max(fn($t) => (int)$t->tahun * 100 + (int)$t->bulan)
+                ? $allTagihan->max(fn ($t) => (int) $t->tahun * 100 + (int) $t->bulan)
                 : null;
 
             $loopGuard = 0;
-            $maxLoop   = 120; // 10 tahun ke depan
+            $maxLoop = 120; // 10 tahun ke depan
 
             while ($tagihanDiproses->count() < $targetCount && $loopGuard < $maxLoop) {
                 $tahun = (int) $current->format('Y');
                 $bulan = (int) $current->format('n');
-                $ym    = $tahun * 100 + $bulan;
+                $ym = $tahun * 100 + $bulan;
 
                 // 1. cari tagihan existing untuk bulan ini
                 $tagihan = $allTagihan->first(function ($t) use ($tahun, $bulan) {
-                    return (int)$t->tahun === $tahun && (int)$t->bulan === $bulan;
+                    return (int) $t->tahun === $tahun && (int) $t->bulan === $bulan;
                 });
 
                 // 2. kalau belum ada tagihan
-                if (!$tagihan) {
-                    if (!is_null($maxExistingYm) && $ym <= $maxExistingYm) {
+                if (! $tagihan) {
+                    if (! is_null($maxExistingYm) && $ym <= $maxExistingYm) {
                         // ada GAP di masa lalu -> jangan create, skip saja
                         $current->addMonth();
                         $loopGuard++;
+
                         continue;
                     }
 
@@ -168,9 +167,10 @@ class TagihanSalesController extends Controller
                         true // dibuat karena bayar periode
                     );
 
-                    if (!$tagihan) {
+                    if (! $tagihan) {
                         $current->addMonth();
                         $loopGuard++;
+
                         continue;
                     }
 
@@ -183,6 +183,7 @@ class TagihanSalesController extends Controller
                 if ($tagihan->status_tagihan === 'lunas') {
                     $current->addMonth();
                     $loopGuard++;
+
                     continue;
                 }
 
@@ -199,18 +200,18 @@ class TagihanSalesController extends Controller
 
             // semua tagihan dari 1 pelanggan
             $pelangganId = $langganan->pelanggan->id_pelanggan;
-            $totalBayar  = $tagihanDiproses->sum('total_tagihan');
+            $totalBayar = $tagihanDiproses->sum('total_tagihan');
 
             // ==================================================
             // BUAT PEMBAYARAN (oleh SALES)
             // ==================================================
             $pembayaran = Pembayaran::create([
-                'id_pelanggan'  => $pelangganId,
-                'id_sales'      => $salesId,
+                'id_pelanggan' => $pelangganId,
+                'id_sales' => $salesId,
                 // kalau di tabel kamu sudah tambahkan kolom id_user, boleh aktifkan:
                 // 'id_user'       => Auth::id(),
                 'tanggal_bayar' => now(),
-                'nominal'       => $totalBayar,
+                'nominal' => $totalBayar,
                 'no_pembayaran' => $this->generateNoPembayaranSales(),
             ]);
 
@@ -220,7 +221,7 @@ class TagihanSalesController extends Controller
             foreach ($tagihanDiproses as $t) {
                 PaymentItem::create([
                     'id_pembayaran' => $pembayaran->id_pembayaran,
-                    'id_tagihan'    => $t->id_tagihan,
+                    'id_tagihan' => $t->id_tagihan,
                     'nominal_bayar' => $t->total_tagihan,
                 ]);
 
@@ -234,15 +235,15 @@ class TagihanSalesController extends Controller
             // Kalau kamu mau ubah jadi persen, tinggal ganti rumus di sini.
             if ($sales && $sales->komisi !== null) {
                 $jumlahUnitKomisi = $tagihanDiproses->count();          // berapa bulan yg dibayar
-                $nominalPerUnit   = (int) $sales->komisi;               // dari tabel sales
-                $totalKomisi      = $jumlahUnitKomisi * $nominalPerUnit;
+                $nominalPerUnit = (int) $sales->komisi;               // dari tabel sales
+                $totalKomisi = $jumlahUnitKomisi * $nominalPerUnit;
 
                 if ($totalKomisi > 0) {
                     TransaksiKomisi::create([
-                        'id_pembayaran'  => $pembayaran->id_pembayaran,
-                        'id_sales'       => $salesId,
+                        'id_pembayaran' => $pembayaran->id_pembayaran,
+                        'id_sales' => $salesId,
                         'nominal_komisi' => $totalKomisi,
-                        'jumlah_komisi'  => $jumlahUnitKomisi,
+                        'jumlah_komisi' => $jumlahUnitKomisi,
                     ]);
                 }
             }
@@ -260,7 +261,8 @@ class TagihanSalesController extends Controller
             return back()->with('success', 'Pembayaran periode berhasil diproses oleh sales.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal memproses pembayaran: '.$e->getMessage());
         }
     }
 
@@ -272,6 +274,6 @@ class TagihanSalesController extends Controller
             : 1;
 
         // prefix beda dengan admin ("ADM-") biar no_pembayaran unik & kebaca
-        return 'SLS-' . now()->format('Ymd') . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+        return 'SLS-'.now()->format('Ymd').'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 }

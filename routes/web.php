@@ -293,7 +293,7 @@ Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::cl
         | PROFILE
         |--------------------------------------------------------------------------
         */
-        Route::get('/profile', fn () => view('seles2.profile.index'))
+        Route::get('/profile', fn () => view('seles2.profil.index'))
             ->name('profile');
 
         Route::get('/profile/edit', fn () => view('seles2.profile.edit'))

@@ -13,6 +13,12 @@
                 <i class="bi bi-people"></i>
                 <span>Pelanggan</span>
             </a>
+            <a href="{{ route('seles2.tagihan.index') }}"
+                class="nav-item {{ request()->routeIs('seles2.tagihan.*') ? 'active' : '' }}">
+                <i class="bi bi-cash-coin"></i>
+                <span>Pembayaran</span>
+            </a>
+
 
             <a href="{{ route('seles2.pembukuan.index') }}"
                 class="nav-item {{ request()->routeIs('seles2.pembukuan.*') ? 'active' : '' }}">
@@ -26,11 +32,6 @@
                 <span>Setoran</span>
             </a>
 
-            <a href="{{ route('seles2.profile') }}"
-                class="nav-item {{ request()->routeIs('seles2.profile') ? 'active' : '' }}">
-                <i class="bi bi-person"></i>
-                <span>Profil</span>
-            </a>
         </div>
     </div>
 </nav>

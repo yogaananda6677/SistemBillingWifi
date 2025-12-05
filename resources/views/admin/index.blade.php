@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        {{-- Alert Success --}}
+        {{-- Alert Success
         @if (session('success'))
             <div class="row mb-4">
                 <div class="col-12">
@@ -39,7 +39,7 @@
                     </div>
                 </div>
             </div>
-        @endif
+        @endif --}}
 
         {{-- Statistics Cards --}}
         <div class="row mb-4">
@@ -67,9 +67,9 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs fw-bold text-success text-uppercase mb-1">
-                                    Admin Aktif
+                                    Password Default
                                 </div>
-                                <div class="h5 mb-0 fw-bold text-gray-800">{{ $admins->count() }}</div>
+                                <div class="h6 mb-0 fw-medium text-gray-800">admin123456</div>
                             </div>
                             <div class="col-auto">
                                 <i class="bi bi-shield-check fs-2 text-gray-300"></i>
@@ -103,7 +103,7 @@
                                 <thead class="bg-light">
                                     <tr>
                                         <th class="ps-4 fw-semibold text-muted">NAMA ADMIN</th>
-                                        <th class="fw-semibold text-muted">USERNAME</th>
+                                        {{-- <th class="fw-semibold text-muted">USERNAME</th> --}}
                                         <th class="fw-semibold text-muted">EMAIL</th>
                                         <th class="fw-semibold text-muted">NO. HP</th>
                                         <th class="fw-semibold text-muted text-center">STATUS</th>
@@ -125,11 +125,11 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            {{-- <td>
                                                 <span class="badge bg-light text-dark border">
                                                     @<span class="fw-medium">{{ $adm->username }}</span>
                                                 </span>
-                                            </td>
+                                            </td> --}}
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <i class="bi bi-envelope me-2 text-muted"></i>
@@ -152,22 +152,19 @@
                                             <td class="pe-4">
                                                 <div class="d-flex justify-content-end gap-2">
                                                     <!-- Edit Button -->
-                                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                    {{-- <button class="btn btn-sm btn-outline-primary rounded-pill px-3"
                                                         onclick="editAdmin({{ $adm->id }})">
                                                         <i class="bi bi-pencil me-1"></i> Edit
-                                                    </button>
+                                                    </button> --}}
 
                                                     <!-- Delete Form -->
-                                                    <form action="/admin/{{ $adm->id }}" method="POST"
-                                                        class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                            class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                            onclick="return confirm('Yakin ingin menghapus admin ini?')">
-                                                            <i class="bi bi-trash me-1"></i> Hapus
-                                                        </button>
-                                                    </form>
+
+                                                    <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger btn-delete rounded-pill px-3"
+                                                        data-url="{{ route('admin.destroy', $adm->id) }}">
+                                                        <i class="bi bi-trash me-1"></i> Hapus
+                                                    </button>
+
                                                 </div>
                                             </td>
                                         </tr>
@@ -499,6 +496,22 @@
                 return div;
             }
         }
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            const deleteForm = document.getElementById('deleteForm');
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const url = this.dataset.url;
+                    deleteForm.action = url; // set action form
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                    deleteModal.show();
+                });
+            });
+        });
+
 
         // Form validation
         document.getElementById('adminForm')?.addEventListener('submit', function(e) {

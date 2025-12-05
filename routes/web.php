@@ -75,7 +75,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('pengaturan/paket-layanan', PaketController::class);
     Route::resource('/tagihan', TagihanController::class);
     Route::resource('/pengaturan/profil', ProfilController::class);
-    Route::resource('/admin', AdminController::class);
+    Route::resource('/pengaturan/admin', AdminController::class);
 
 });
 

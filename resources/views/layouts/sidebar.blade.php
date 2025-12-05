@@ -3,43 +3,59 @@
 
     <div class="p-3">
 
-        <!-- DASHBOARD -->
-        <a href="{{ route('dashboard-admin') }}" class="sidebar-link {{ request()->is('dashboard') ? 'active' : '' }}">
+        <a href="{{ route('dashboard-admin') }}"
+            class="sidebar-link {{ request()->is('dashboard/admin') ? 'active' : '' }}">
             <i class="bi bi-grid"></i>
             <span class="link-text">Dashboard</span>
         </a>
 
-        <!-- PELANGGAN -->
         <div class="sidebar-group">
 
-            <a class="sidebar-link pelanggan-toggle {{ request()->is('pelanggan*') ? '' : '' }}"
-                data-bs-toggle="collapse" data-bs-target="#menuPelanggan">
+            {{-- Logic agar menu tetap terbuka saat submenu diklik --}}
+            @php
+                $isPelangganActive =
+                    request()->is('pelanggan*') ||
+                    request()->is('tagihan*') ||
+                    request()->is('admin/tagihan*') ||
+                    request()->is('pembayaran*');
+            @endphp
+
+            <a class="sidebar-link pelanggan-toggle {{ $isPelangganActive ? '' : 'collapsed' }}"
+                data-bs-toggle="collapse" data-bs-target="#menuPelanggan"
+                aria-expanded="{{ $isPelangganActive ? 'true' : 'false' }}">
+
                 <i class="bi bi-people"></i>
                 <span class="link-text">Pelanggan</span>
                 <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
             </a>
 
-            <div class="collapse ps-4 {{ request()->is('pelanggan*') ? 'show' : '' }}" id="menuPelanggan">
+            <div class="collapse ps-4 {{ $isPelangganActive ? 'show' : '' }}" id="menuPelanggan">
 
-                {{-- Halaman ①: Semua Pelanggan --}}
+                {{-- 1. Data Pelanggan --}}
                 <a href="{{ route('pelanggan.index') }}"
                     class="sidebar-sublink {{ request()->routeIs('pelanggan.index') ? 'active-sub' : '' }}">
                     Data Pelanggan
                 </a>
 
-                {{-- Halaman ②: Status Pelanggan --}}
+                {{-- 2. Status Pelanggan --}}
                 <a href="{{ route('pelanggan.status') }}"
                     class="sidebar-sublink {{ request()->routeIs('pelanggan.status') ? 'active-sub' : '' }}">
                     Status Pelanggan
                 </a>
+
+                {{-- 3. Status Pembayaran (Tagihan) --}}
                 <a href="{{ route('tagihan.index') }}"
                     class="sidebar-sublink {{ request()->routeIs('tagihan.index') ? 'active-sub' : '' }}">
                     Status Pembayaran
                 </a>
+
+                {{-- 4. Pembayaran Pelanggan (Admin) --}}
                 <a href="{{ route('admin.tagihan.index') }}"
-                    class="sidebar-sublink {{ request()->is('admin/tagihan') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('admin/tagihan*') ? 'active-sub' : '' }}">
                     Pembayaran Pelanggan
                 </a>
+
+                {{-- 5. Riwayat Pembayaran --}}
                 <a href="{{ route('pembayaran.riwayat') }}"
                     class="sidebar-sublink {{ request()->routeIs('pembayaran.riwayat') ? 'active-sub' : '' }}">
                     Riwayat Pembayaran
@@ -48,27 +64,27 @@
         </div>
 
         <div class="sidebar-group">
-            <a class="sidebar-link sales-toggle" data-bs-toggle="collapse" data-bs-target="#menuSales">
-                <i class="bi bi-cart"></i>
+            <a class="sidebar-link sales-toggle {{ request()->is('sales/*') ? '' : 'collapsed' }}"
+                data-bs-toggle="collapse" data-bs-target="#menuSales"
+                aria-expanded="{{ request()->is('sales/*') ? 'true' : 'false' }}">
+
+                <i class="bi bi-person-circle"></i>
                 <span class="link-text">Sales</span>
                 <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
             </a>
 
             <div class="collapse ps-4 {{ request()->is('sales/*') ? 'show' : '' }}" id="menuSales">
 
-                {{-- DATA SALES --}}
                 <a href="/sales/data-sales"
-                    class="sidebar-sublink {{ request()->is('sales/data-sales') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('sales/data-sales*') ? 'active-sub' : '' }}">
                     Data Sales
                 </a>
 
-                {{-- SETORAN --}}
                 <a href="/sales/setoran"
-                    class="sidebar-sublink {{ request()->is('sales/setoran') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('sales/setoran*') ? 'active-sub' : '' }}">
                     Setoran
                 </a>
 
-                {{-- PENGAJUAN PENGELUARAN --}}
                 <a href="/sales/pengajuan"
                     class="sidebar-sublink {{ request()->is('sales/pengajuan') ? 'active-sub' : '' }}">
                     Pengajuan Pengeluaran
@@ -77,19 +93,17 @@
             </div>
         </div>
 
-
-        <!-- PEMBUKUAN -->
-        <a href="/pembukuan" class="sidebar-link">
+        <a href="/pembukuan" class="sidebar-link {{ request()->is('pembukuan*') ? 'active' : '' }}">
             <i class="bi bi-journal-text"></i>
             <span class="link-text">Pembukuan</span>
         </a>
 
-
-        <!-- PENGATURAN -->
         <div class="sidebar-group">
 
-            <a class="sidebar-link pengaturan-toggle {{ request()->is('pengaturan*') ? '' : '' }}"
-                data-bs-toggle="collapse" data-bs-target="#menuPengaturan">
+            <a class="sidebar-link pengaturan-toggle {{ request()->is('pengaturan*') ? '' : 'collapsed' }}"
+                data-bs-toggle="collapse" data-bs-target="#menuPengaturan"
+                aria-expanded="{{ request()->is('pengaturan*') ? 'true' : 'false' }}">
+
                 <i class="bi bi-gear"></i>
                 <span class="link-text">Pengaturan</span>
                 <i class="bi bi-caret-down-fill arrow-icon ms-auto small"></i>
@@ -98,20 +112,21 @@
             <div class="collapse ps-4 {{ request()->is('pengaturan*') ? 'show' : '' }}" id="menuPengaturan">
 
                 <a href="{{ route('admin.index') }}"
-                    class="sidebar-sublink {{ request()->is('pengaturan/admin') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('pengaturan/admin*') ? 'active-sub' : '' }}">
                     Admin
                 </a>
+
                 <a href="{{ route('ppn.index') }}"
-                    class="sidebar-sublink {{ request()->is('pengaturan/ppn') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('pengaturan/ppn*') ? 'active-sub' : '' }}">
                     PPN
                 </a>
                 <a href="{{ route('profil.index') }}"
-                    class="sidebar-sublink {{ request()->is('pengaturan/profil') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('pengaturan/profil*') ? 'active-sub' : '' }}">
                     Profil
                 </a>
 
                 <a href="{{ route('area.index') }}"
-                    class="sidebar-sublink {{ request()->is('pengaturan/area') ? 'active-sub' : '' }}">
+                    class="sidebar-sublink {{ request()->is('pengaturan/area*') ? 'active-sub' : '' }}">
                     Area
                 </a>
 
@@ -123,7 +138,6 @@
             </div>
         </div>
 
-        <!-- LOGOUT -->
         <div class="sidebar-link text-danger mt-5 cursor-pointer" data-bs-toggle="modal" data-bs-target="#logoutModal">
             <i class="bi bi-box-arrow-left"></i>
             <span class="link-text">Logout</span>
@@ -133,7 +147,7 @@
 </div>
 
 <style>
-    /* GENERAL */
+    /* GENERAL STYLE */
     .sidebar-link {
         display: flex;
         align-items: center;
@@ -145,6 +159,7 @@
         text-decoration: none !important;
         transition: 0.2s;
         font-size: 15px;
+        cursor: pointer;
     }
 
     .sidebar-link:hover {
@@ -161,11 +176,12 @@
     .sidebar-sublink {
         display: block;
         margin: 4px 0;
-        padding: 6px 6px;
+        padding: 8px 10px;
         color: #555;
         text-decoration: none !important;
         font-size: 14px;
         border-radius: 6px;
+        transition: 0.2s;
     }
 
     .sidebar-sublink:hover {
@@ -175,18 +191,21 @@
 
     .sidebar-sublink.active-sub {
         color: #d8a800;
+        /* Warna kuning emas sesuai tema */
         font-weight: 600;
+        background: #fffbef;
     }
 
     .arrow-icon {
-        transition: 0.3s;
+        transition: transform 0.3s ease;
     }
 
-    .pelanggan-toggle[aria-expanded="true"] .arrow-icon {
+    /* Logic Panah: Kalau TIDAK ada class 'collapsed', panah muter */
+    .sidebar-link:not(.collapsed) .arrow-icon {
         transform: rotate(180deg);
     }
 
-    /* COLLAPSED SIDEBAR */
+    /* COLLAPSED SIDEBAR (Saat tombol hamburger diklik) */
     .sidebar.collapsed {
         width: 70px !important;
     }
@@ -194,10 +213,15 @@
     .sidebar.collapsed .link-text {
         opacity: 0;
         pointer-events: none;
+        display: none;
     }
 
-    .sidebar.collapsed #menuPelanggan,
+    .sidebar.collapsed .collapse,
     .sidebar.collapsed .arrow-icon {
         display: none !important;
+    }
+
+    .sidebar.collapsed .sidebar-group {
+        position: relative;
     }
 </style>

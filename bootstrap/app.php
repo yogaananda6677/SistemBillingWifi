@@ -11,7 +11,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
         $middleware->alias([
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'admin' => \App\Http\Middleware\Admin::class,
@@ -20,7 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
 
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
-        $schedule->command('tagihan:generate-bulanan')->monthlyOn(1, '00:01');
+        $schedule->command('tagihan:generate')
+            ->monthlyOn(1, '00:05')
+            ->timezone('Asia/Jakarta')
+            ->withoutOverlapping()
+            ->runInBackground();
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {

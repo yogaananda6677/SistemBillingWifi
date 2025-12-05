@@ -5,69 +5,167 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pelanggan;
 use App\Models\Tagihan;
-use App\Models\Pembayaran;
 use App\Models\Sales;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB; // <--- WAJIB, untuk DB::raw
 
 class DashboardController extends Controller
 {
-    public function index()
+    /**
+     * Hitung status pelanggan (global + pelanggan baru per bulan terpilih)
+     */
+private function getStatusCounts(Carbon $startDate, Carbon $endDate): array
+{
+    $month = $startDate->format('m');
+    $year  = $startDate->format('Y');
+
+    // Total pelanggan global
+    $total = Pelanggan::count();
+
+    // Pelanggan baru bulan ini (berdasarkan tanggal registrasi)
+    $baruBulanIni = Pelanggan::whereMonth('tanggal_registrasi', $month)
+        ->whereYear('tanggal_registrasi', $year)
+        ->count();
+
+    // Pelanggan aktif (status aktif + baru)
+    $aktif = Pelanggan::whereIn('status_pelanggan', ['aktif', 'baru'])->count();
+
+    // Pelanggan berhenti
+    $berhenti = Pelanggan::where('status_pelanggan', 'berhenti')->count();
+
+    // Pelanggan isolir
+    $isolir = Pelanggan::where('status_pelanggan', 'isolir')->count();
+
+    return [
+        'total'    => $total,
+        'baru'     => $baruBulanIni,
+        'aktif'    => $aktif,
+        'berhenti' => $berhenti,
+        'isolir'   => $isolir,
+    ];
+}
+
+
+    public function index(Request $request)
     {
-        // =========================
-        // TOTAL-TOTAL DASAR
-        // =========================
+    // ==============================
+    // FILTER BULAN + TAHUN
+    // ==============================
+    $bulanForm = $request->input('bulan');   // "01".."12"
+    $tahunForm = $request->input('tahun');  // "2023" dll
 
-        $totalPelanggan         = Pelanggan::count();
-        $totalPelangganBaru     = Pelanggan::where('status_pelanggan', 'baru')->count();
-        $totalPelangganAktif    = Pelanggan::where('status_pelanggan', 'aktif')->count();
-        $totalPelangganBerhenti = Pelanggan::where('status_pelanggan', 'berhenti')->count();
+    if ($bulanForm && $tahunForm) {
+        // bentuk "YYYY-MM" supaya sama dengan format lama
+        $bulanInput = $tahunForm . '-' . $bulanForm;    // contoh: 2025-08
+    } else {
+        // fallback kalau suatu saat kamu pakai ?bulan=YYYY-MM langsung
+        $bulanInput = $request->input('bulan_full');    // opsional
+    }
 
-        // Total pembayaran diterima (misal: semua waktu)
-        $totalPembayaranTerima = (float) Pembayaran::sum('nominal');
+    if ($bulanInput) {
+        try {
+            $startDate = \Carbon\Carbon::parse($bulanInput . '-01')->startOfMonth();
+            $endDate   = \Carbon\Carbon::parse($bulanInput . '-01')->endOfMonth();
+        } catch (\Throwable $e) {
+            $startDate = now()->startOfMonth();
+            $endDate   = now()->endOfMonth();
+        }
+    } else {
+        $startDate = now()->startOfMonth();
+        $endDate   = now()->endOfMonth();
+    }
+        // Nama bulan (Indonesia) buat label
+        $monthNames = [
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember',
+        ];
+        $currentMonthNumber = $startDate->format('m');
+        $currentYear        = $startDate->format('Y');
+        $currentMonthName   = $monthNames[$currentMonthNumber] ?? 'Bulan';
 
-        // Total tagihan terlambat (belum lunas & lewat jatuh tempo)
-        $totalPembayaranTerlambat = (float) Tagihan::where('status_tagihan', 'belum lunas')
+        // ============================================
+        // HITUNG DATA BERDASARKAN RENTANG BULAN
+        // ============================================
+
+        // Total pembayaran diterima bulan ini (tagihan lunas & jatuh tempo di bulan terpilih)
+        $totalPembayaranTerima = Tagihan::where('status_tagihan', 'lunas')
+            ->whereBetween('jatuh_tempo', [$startDate, $endDate])
+            ->sum('total_tagihan');
+
+        // Total pembayaran terlambat bulan ini
+        $totalPembayaranTerlambat = Tagihan::where('status_tagihan', 'belum lunas')
+            ->whereBetween('jatuh_tempo', [$startDate, $endDate])
             ->where('jatuh_tempo', '<', now())
             ->sum('total_tagihan');
 
-        // =========================
-        // COUNTER KECIL
-        // =========================
+        // ============================================
+        // DATA PELANGGAN (pakai helper getStatusCounts)
+        // ============================================
+        $statusCounts = $this->getStatusCounts($startDate, $endDate);
 
-        $counters = [
-            [
-                'icon'  => 'bi-person-fill',
-                'color' => 'text-primary',
-                'label' => 'Total Pelanggan',
-                'value' => $totalPelanggan,
-            ],
-            [
-                'icon'  => 'bi-person-plus-fill',
-                'color' => 'text-success',
-                'label' => 'Pelanggan Baru',
-                'value' => $totalPelangganBaru,
-            ],
-            [
-                'icon'  => 'bi-emoji-smile-fill',
-                'color' => 'text-info',
-                'label' => 'Pelanggan Aktif',
-                'value' => $totalPelangganAktif,
-            ],
-            [
-                'icon'  => 'bi-person-x-fill',
-                'color' => 'text-danger',
-                'label' => 'Pelanggan Berhenti',
-                'value' => $totalPelangganBerhenti,
-            ],
-        ];
+$counters = [
+    [
+        'icon'  => 'bi-person-fill',
+        'color' => 'text-primary',
+        'label' => 'Total Pelanggan',
+        'value' => $statusCounts['total'],
+    ],
+    [
+        'icon'  => 'bi-person-plus-fill',
+        'color' => 'text-success',
+        'label' => "Pelanggan Baru ({$currentMonthName} {$currentYear})",
+        'value' => $statusCounts['baru'],
+    ],
+    [
+        'icon'  => 'bi-emoji-smile-fill',
+        'color' => 'text-info',
+        'label' => 'Pelanggan Aktif',
+        'value' => $statusCounts['aktif'],
+    ],
+    [
+        'icon'  => 'bi-person-dash-fill',
+        'color' => 'text-warning',
+        'label' => 'Pelanggan Isolir',
+        'value' => $statusCounts['isolir'],
+    ],
+    [
+        'icon'  => 'bi-person-x-fill',
+        'color' => 'text-danger',
+        'label' => 'Pelanggan Berhenti',
+        'value' => $statusCounts['berhenti'],
+    ],
+];
 
-        // =========================
-        // DATA TABEL "BELUM BAYAR" & "SUDAH BAYAR"
-        // =========================
+// ============================================
+// STATUS PEMBAYARAN (UNTUK PIE CHART)
+// ============================================
+$statusPembayaran = [
+    'lunas'       => Tagihan::where('status_tagihan', 'lunas')
+                        ->whereBetween('jatuh_tempo', [$startDate, $endDate])
+                        ->count(),
+    'belum_lunas' => Tagihan::where('status_tagihan', 'belum lunas')
+                        ->whereBetween('jatuh_tempo', [$startDate, $endDate])
+                        ->count(),
+];
 
+        // ============================================
+        // TABEL TAGIHAN (5 TERBARU PER JENIS)
+        // ============================================
         $tagihanBelumBayar = Tagihan::with([
                 'langganan.pelanggan.area',
                 'langganan.pelanggan.sales.user',
             ])
+            ->whereBetween('jatuh_tempo', [$startDate, $endDate])
             ->where('status_tagihan', 'belum lunas')
             ->orderBy('jatuh_tempo', 'asc')
             ->limit(5)
@@ -77,52 +175,62 @@ class DashboardController extends Controller
                 'langganan.pelanggan.area',
                 'langganan.pelanggan.sales.user',
             ])
+            ->whereBetween('jatuh_tempo', [$startDate, $endDate])
             ->where('status_tagihan', 'lunas')
             ->orderBy('jatuh_tempo', 'desc')
             ->limit(5)
             ->get();
 
-        // =========================
-        // PROGRES PENARIKAN PER SALES (CONTOH SEDERHANA)
-        // =========================
-        // Contoh logika:
-        //  - total pelanggan per sales
-        //  - berapa pelanggan yang punya tagihan bulan ini & sudah lunas
-        // Silakan sesuaikan dengan kebutuhan real-mu.
+// ============================================
+// PROGRES PENARIKAN PEMBAYARAN PER SALES (BERDASARKAN TAGIHAN)
+// ============================================
+$salesProgress = Sales::with(['user'])->get()->map(function ($sales) use ($startDate, $endDate) {
 
-        $salesProgress = Sales::withCount('pelanggan')->get()->map(function ($sales) {
-            $totalPelanggan = $sales->pelanggan_count;
+    // Total tagihan milik sales ini di bulan terpilih
+    $totalTagihan = Tagihan::whereHas('langganan.pelanggan', function ($q) use ($sales) {
+            $q->where('id_sales', $sales->id_sales);
+        })
+        ->whereBetween('jatuh_tempo', [$startDate, $endDate])
+        ->count();
 
-            // misal: yang sudah bayar adalah pelanggan yang punya minimal 1 tagihan 'lunas'
-            $pelangganSudahBayar = $sales->pelanggan()
-                ->whereHas('langganan.tagihan', function ($q) {
-                    $q->where('status_tagihan', 'lunas');
-                })
-                ->count();
+    // Tagihan yang sudah lunas milik sales ini di bulan terpilih
+    $tagihanLunas = Tagihan::whereHas('langganan.pelanggan', function ($q) use ($sales) {
+            $q->where('id_sales', $sales->id_sales);
+        })
+        ->whereBetween('jatuh_tempo', [$startDate, $endDate])
+        ->where('status_tagihan', 'lunas')
+        ->count();
 
-            $percent = $totalPelanggan > 0
-                ? round(($pelangganSudahBayar / $totalPelanggan) * 100)
-                : 0;
+    $percent = $totalTagihan > 0
+        ? round(($tagihanLunas / $totalTagihan) * 100)
+        : 0;
 
-            return [
-                'nama'    => $sales->user->name ?? 'Sales #' . $sales->id_sales,
-                'percent' => $percent,
-                'done'    => $pelangganSudahBayar,
-                'total'   => $totalPelanggan,
-            ];
-        });
+    return [
+        'nama'    => $sales->user->name ?? 'Sales #' . $sales->id_sales,
+        'percent' => $percent,
+        'done'    => $tagihanLunas,   // banyak tagihan lunas
+        'total'   => $totalTagihan,   // total tagihan
+    ];
+});
 
-        return view('admin.dashboard', [
-            'counters'                => $counters,
-            'totalPembayaranTerima'   => $totalPembayaranTerima,
-            'totalPembayaranTerlambat'=> $totalPembayaranTerlambat,
-            'totalPelanggan'          => $totalPelanggan,
-            'totalPelangganBaru'      => $totalPelangganBaru,
-            'totalPelangganAktif'     => $totalPelangganAktif,
-            'totalPelangganBerhenti'  => $totalPelangganBerhenti,
-            'tagihanBelumBayar'       => $tagihanBelumBayar,
-            'tagihanSudahBayar'       => $tagihanSudahBayar,
-            'salesProgress'           => $salesProgress,
-        ]);
+
+    return view('admin.dashboard', [
+        // data2 lama...
+        'counters'                 => $counters,
+        'totalPembayaranTerima'    => $totalPembayaranTerima,
+        'totalPembayaranTerlambat' => $totalPembayaranTerlambat,
+        'tagihanBelumBayar'        => $tagihanBelumBayar,
+        'tagihanSudahBayar'        => $tagihanSudahBayar,
+        'salesProgress'            => $salesProgress,
+        'startDate'                => $startDate,
+        'endDate'                  => $endDate,
+        'statusPembayaran'         => $statusPembayaran,
+        'statusCounts'             => $statusCounts,
+
+        // buat select di Blade:
+        'selectedMonth'            => $bulanForm ?: $startDate->format('m'),
+        'selectedYear'             => $tahunForm ?: $startDate->format('Y'),
+    ]);
+
     }
 }

@@ -64,5 +64,6 @@ class User extends Authenticatable
     {
         return $this->hasOne(Sales::class, 'user_id');
     }
+    
 
 }

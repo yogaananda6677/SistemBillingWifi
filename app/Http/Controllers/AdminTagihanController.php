@@ -18,6 +18,7 @@ use App\Services\TagihanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AdminTagihanController extends Controller
 {
@@ -101,67 +102,7 @@ if ($request->ajax()) {
         ]);
     }
 
-    // Bayar satu tagihan (dari tombol "Bayar" di tabel)
-    public function bayarSatu(Request $request, Tagihan $tagihan)
-    {
-        $request->validate([
-            'nominal_bayar' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        if ($tagihan->status_tagihan === 'lunas') {
-            return back()->with('error', 'Tagihan sudah lunas.');
-        }
-
-        $nominalBayar = (float) $request->nominal_bayar;
-
-        // total minimal = total_tagihan (bisa disesuaikan kalau mau cicilan)
-        if ($nominalBayar < $tagihan->total_tagihan) {
-            // kalau mau wajib lunas penuh → jangan pakai abort, tapi flash message
-            return back()->with('error', 'Nominal kurang dari total tagihan.');
-        }
-
-        // admin yang login
-        $admin = Admin::where('user_id', auth()->id())->firstOrFail();
-
-        DB::transaction(function () use ($tagihan, $admin, $nominalBayar) {
-            $pelanggan = $tagihan->langganan->pelanggan;
-
-            // 1. Buat pembayaran (header)
-            $pembayaran = Pembayaran::create([
-                'id_pelanggan'  => $pelanggan->id_pelanggan,
-                'id_sales'      => null, // karena dibayar admin
-                'tanggal_bayar' => now(),
-                'nominal'       => $nominalBayar,
-                'no_pembayaran' => $this->generateNoPembayaran(),
-            ]);
-
-            // 2. Buat payment_item untuk tagihan ini
-            PaymentItem::create([
-                'id_pembayaran' => $pembayaran->id_pembayaran,
-                'id_tagihan'    => $tagihan->id_tagihan,
-                'nominal_bayar' => $nominalBayar,
-            ]);
-
-            // 3. Update status tagihan menjadi lunas
-            $tagihan->update([
-                'status_tagihan' => 'lunas',
-            ]);
-
-            // 4. Catat ke buku_kas
-            BukuKas::create([
-                'id_admin'       => $admin->id_admin,
-                'id_sales'       => null,
-                'id_pembayaran'  => $pembayaran->id_pembayaran,
-                'id_setoran'     => null,
-                'id_pengeluaran' => null,
-                'tipe'           => 'pemasukan',
-                'sumber'         => 'Pembayaran tagihan oleh admin',
-                'nominal'        => $nominalBayar,
-            ]);
-        });
-
-        return back()->with('success', 'Tagihan berhasil dibayar oleh admin.');
-    }
+ 
 public function bayarBanyak(Request $request)
 {
     $request->validate([
@@ -170,8 +111,8 @@ public function bayarBanyak(Request $request)
         'jumlah_bulan'  => 'required|integer|min:1|max:60',
     ]);
 
-    $langganan = Langganan::with(['paket', 'pelanggan', 'tagihan'])->findOrFail($request->id_langganan);
-    $admin     = Admin::where('user_id', auth()->id())->firstOrFail();
+        $langganan = Langganan::with(['paket', 'pelanggan', 'tagihan'])->findOrFail($request->id_langganan);
+        $admin     = Admin::where('user_id', Auth::id())->firstOrFail(); // boleh pakai Auth::id()
 
     DB::beginTransaction();
 
@@ -219,7 +160,12 @@ public function bayarBanyak(Request $request)
                 }
 
                 // Kalau ym > maxExistingYm -> bulan masa depan
-                $tagihan = $this->tagihanService->getOrCreateForMonth($langganan, $tahun, $bulan);
+                $tagihan = $this->tagihanService->getOrCreateForMonth(
+                    $langganan,
+                    $tahun,
+                    $bulan,
+                    true // dibuat karena pembayaran periode
+                );
 
                 // Kalau service memutuskan tidak boleh create (mis. di luar tanggal_mulai/berhenti)
                 if (!$tagihan) {
@@ -264,6 +210,7 @@ public function bayarBanyak(Request $request)
         $pembayaran = Pembayaran::create([
             'id_pelanggan'  => $pelangganId,
             'id_sales'      => null,
+            'id_user'       => Auth::id(),  
             'tanggal_bayar' => now(),
             'nominal'       => $totalBayar,
             'no_pembayaran' => $this->generateNoPembayaran(),

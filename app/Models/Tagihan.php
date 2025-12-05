@@ -18,22 +18,23 @@ class Tagihan extends Model
         'total_tagihan',
         'status_tagihan',
         'jatuh_tempo',
+        'dibuat_otomatis_bayar', // <---
     ];
 
     protected $casts = [
-        'jatuh_tempo' => 'datetime',
+        'jatuh_tempo'          => 'datetime',
+        'dibuat_otomatis_bayar'=> 'boolean', // <---
     ];
-
-    public function langganan()
+        public function langganan()
     {
         return $this->belongsTo(Langganan::class, 'id_langganan', 'id_langganan');
     }
 
-    // relasi ke detail pembayaran
     public function paymentItems()
     {
         return $this->hasMany(PaymentItem::class, 'id_tagihan', 'id_tagihan');
     }
+
 
     // biar yang lama tetap jalan (nama singular yang kamu pakai sebelumnya)
     public function paymentItem()

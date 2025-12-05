@@ -84,6 +84,9 @@ class AdminController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $admin = User::findOrFail($id);
+        $admin->delete();
+
+        return redirect()->back()->with('success', 'Admin berhasil dihapus!');
     }
 }

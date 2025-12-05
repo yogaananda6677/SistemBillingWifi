@@ -1,48 +1,42 @@
-<!-- Logout Modal -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 18px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
 
-            <!-- HEADER -->
-            <div class="modal-header border-0"
-                style="background: #4a69bd; color:white; border-top-left-radius:18px; border-top-right-radius:18px;">
-                <h5 class="modal-title fw-bold" id="logoutModalLabel">Konfirmasi Logout</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            <div class="modal-body p-4 text-center">
+                {{-- Tombol Close di Pojok Kanan Atas --}}
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
 
-            <!-- BODY -->
-            <div class="modal-body text-center py-4">
-
-                <div class="mb-2">
-                    <i class="fas fa-sign-out-alt text-primary" style="font-size: 42px; color:#4a69bd !important;"></i>
+                {{-- Ikon Bubble Modern (Biru/Indigo Soft) --}}
+                <div class="d-inline-flex align-items-center justify-content-center mb-4"
+                    style="width: 80px; height: 80px; background-color: #e0e7ff; border-radius: 50%;">
+                    <i class="fas fa-sign-out-alt" style="font-size: 30px; color: #4f46e5;"></i>
                 </div>
 
-                <p class="mb-1 fw-semibold" style="font-size: 16px; color: #333;">
-                    Apakah Anda yakin ingin keluar?
+                {{-- Judul & Deskripsi --}}
+                <h4 class="mb-2 fw-bold text-dark">Ingin Keluar?</h4>
+                <p class="text-muted mb-4" style="font-size: 15px; line-height: 1.6;">
+                    Anda akan diarahkan kembali ke halaman login.<br>
+                    Pastikan pekerjaan Anda sudah disimpan.
                 </p>
 
-                <p style="font-size: 13px; color: #777;">
-                    Anda akan kembali ke halaman login.
-                </p>
-
-            </div>
-
-            <!-- FOOTER -->
-            <div class="modal-footer border-0 d-flex justify-content-between px-4 pb-4">
-
-                <button type="button" class="btn btn-light fw-bold px-4"
-                    style="border-radius: 10px; border: 1px solid #ddd;" data-bs-dismiss="modal">
-                    Batal
-                </button>
-
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn text-white fw-bold px-4"
-                        style="background: #4a69bd; border-radius: 10px;">
-                        Logout
+                {{-- Tombol Aksi --}}
+                <div class="d-flex justify-content-center gap-3">
+                    {{-- Tombol Batal --}}
+                    <button type="button" class="btn btn-light px-4 py-2 fw-semibold" data-bs-dismiss="modal"
+                        style="border-radius: 12px; min-width: 120px; color: #4b5563; background: #f3f4f6;">
+                        Batal
                     </button>
-                </form>
 
+                    {{-- Form Logout Logic (TIDAK BERUBAH) --}}
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold"
+                            style="border-radius: 12px; min-width: 120px; background-color: #4f46e5; border: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);">
+                            Ya, Logout
+                        </button>
+                    </form>
+                </div>
             </div>
 
         </div>

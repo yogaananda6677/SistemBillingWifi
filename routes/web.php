@@ -17,7 +17,9 @@ use App\Http\Controllers\Sales\PelangganSalesController;
 use App\Http\Controllers\Sales\DashboardSalesController;
 use App\Http\Controllers\Sales\TagihanSalesController;
 use App\Http\Controllers\Sales\PembayaranSalesController;
-
+use App\Http\Controllers\Sales\SalesPengajuanController;
+use App\Models\Pengeluaran;
+use App\Http\Controllers\PembukuanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -53,13 +55,10 @@ Route::get('/dashboard/admin', [DashboardController::class, 'index'])
     Route::get('/admin/tagihan', [AdminTagihanController::class, 'index'])
         ->name('admin.tagihan.index');
 
-    // bayar satu tagihan
-    Route::post('/admin/tagihan/{tagihan}/bayar', [AdminTagihanController::class, 'bayarSatu'])
-        ->name('admin.tagihan.bayar-satu');
-
     // bayar banyak tagihan sekaligus
     Route::post('/admin/tagihan/bayar-banyak', [AdminTagihanController::class, 'bayarBanyak'])
         ->name('admin.tagihan.bayar-banyak');
+
 
     Route::get('/pembayaran/riwayat', [PembayaranController::class, 'riwayat'])
         ->name('pembayaran.riwayat');
@@ -70,7 +69,30 @@ Route::get('/dashboard/admin', [DashboardController::class, 'index'])
         ->name('pembayaran.item.bulkDestroy');
 
     Route::resource('sales/data-sales', SalesController::class);
-    Route::get('/sales/pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
+    Route::get('/admin/pengajuan', [PengajuanController::class, 'index'])
+    ->name('admin.pengajuan.index');
+
+        Route::get('/pembukuan', [PembukuanController::class, 'index'])->name('pembukuan.index');
+    Route::get('/pembukuan/{sales}', [PembukuanController::class, 'show'])->name('pembukuan.show');
+    
+
+
+    Route::get('/pengajuan/bukti/{pengajuan:id_pengeluaran}', function (Pengeluaran $pengajuan) {
+
+    if (!$pengajuan->bukti_file) {
+        abort(404, 'Bukti tidak ditemukan.');
+    }
+
+    $path = storage_path('app/public/' . $pengajuan->bukti_file);
+
+    if (!file_exists($path)) {
+        abort(404, 'File bukti tidak ditemukan.');
+    }
+
+    return response()->file($path);
+
+})->name('admin.pengajuan.bukti');
+
     Route::put('/pengeluaran/update-status/{id}',
         [App\Http\Controllers\PengajuanController::class, 'updateStatus']
     )->name('pengajuan.updateStatus');
@@ -91,6 +113,34 @@ Route::middleware(['auth', 'sales'])->group(function () {
     Route::get('/dashboard/sales', [DashboardSalesController::class, 'index'])->name('dashboard-sales');
     // Resource tagihan pelanggan untuk sales
     Route::resource('tagihan-pelanggan', TagihanPelangganSalesController::class);
+        // LIST PENGAJUAN SALES
+
+            
+    // LIST PENGAJUAN
+    Route::get('/dashboard/sales/pengajuan', [SalesPengajuanController::class, 'index'])
+        ->name('sales.pengajuan.index');
+
+    // FORM TAMBAH
+    Route::get('/dashboard/sales/pengajuan/create', [SalesPengajuanController::class, 'create'])
+        ->name('sales.pengajuan.create');
+
+    // SIMPAN PENGAJUAN BARU
+    Route::post('/dashboard/sales/pengajuan', [SalesPengajuanController::class, 'store'])
+        ->name('sales.pengajuan.store');
+
+    // FORM EDIT
+    Route::get('/dashboard/sales/pengajuan/{pengeluaran}/edit', [SalesPengajuanController::class, 'edit'])
+        ->name('sales.pengajuan.edit');
+
+    // UPDATE PENGAJUAN
+    Route::put('/dashboard/sales/pengajuan/{pengeluaran}', [SalesPengajuanController::class, 'update'])
+        ->name('sales.pengajuan.update');
+
+    // HAPUS PENGAJUAN
+    Route::delete('/dashboard/sales/pengajuan/{pengeluaran}', [SalesPengajuanController::class, 'destroy'])
+        ->name('sales.pengajuan.destroy');
+Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::class, 'showBukti'])
+    ->name('sales.pengajuan.bukti');
 
 });
 
@@ -136,6 +186,7 @@ Route::prefix('seles2')->name('seles2.')->group(function () {
         // DETAIL PELANGGAN SALES (MOBILE)
         Route::get('/{id}', [PelangganSalesController::class, 'show'])
             ->name('show');
+
     });
 
     /*

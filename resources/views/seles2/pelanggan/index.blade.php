@@ -35,51 +35,18 @@
         @forelse ($pelanggan as $item)
             @php
                 $langgananAktif = $item->langganan->sortByDesc('tanggal_mulai')->first();
-                $tagihanList    = $langgananAktif?->tagihan ?? collect();
+                $tagihanTerbaru = null;
 
-                // === STATUS GLOBAL PELANGGAN (ada tagihan belum lunas apa tidak) ===
-                $hasUnpaid = $tagihanList->contains(fn($t) => $t->status_tagihan === 'belum lunas');
-                $isLunas   = !$hasUnpaid;
-
-                // === TAGIHAN BELUM LUNAS PALING AWAL (kalau ada) ===
-                $tagihanBelumLunas = $tagihanList
-                    ->where('status_tagihan', 'belum lunas')
-                    ->sortBy(fn($t) => $t->tahun * 100 + $t->bulan);
-
-                // TAGIHAN TERAKHIR (apapun statusnya)
-                $tagihanTerakhir = $tagihanList
-                    ->sortByDesc(fn ($t) => $t->tahun * 100 + $t->bulan)
-                    ->first();
-
-                // TAGIHAN YANG DITAMPILKAN DI KARTU (KANAN): 
-                // prioritas: belum lunas paling awal, kalau tidak ada pakai terakhir
-                $tagihanDisplay = $tagihanBelumLunas->first() ?? $tagihanTerakhir;
-
-                // === HITUNG JATUH TEMPO (SINKRON DENGAN ensureTagihanBulanIni) ===
-                $jatuhTempo = null;
-                if ($tagihanDisplay) {
-                    if (!empty($tagihanDisplay->jatuh_tempo)) {
-                        // kalau DB sudah punya jatuh_tempo, pakai itu
-                        $jatuhTempo = \Carbon\Carbon::parse($tagihanDisplay->jatuh_tempo);
-                    } else {
-                        // fallback: hitung manual
-                        $tahun = (int) $tagihanDisplay->tahun;
-                        $bulan = (int) $tagihanDisplay->bulan;
-
-                        // referensi hari aktivasi: tanggal_mulai langganan, kalau nggak ada pakai tanggal_registrasi
-                        $refDate = $langgananAktif?->tanggal_mulai
-                            ? \Carbon\Carbon::parse($langgananAktif->tanggal_mulai)
-                            : (\Carbon\Carbon::parse($item->tanggal_registrasi ?? now()));
-
-                        $dayAktif      = $refDate->day;
-                        $endOfMonthDay = \Carbon\Carbon::create($tahun, $bulan, 1)->endOfMonth()->day;
-                        $dayJatuhTempo = min($dayAktif, $endOfMonthDay);
-
-                        $jatuhTempo = \Carbon\Carbon::create($tahun, $bulan, $dayJatuhTempo, 23, 59, 59);
-                    }
+                if ($langgananAktif && $langgananAktif->tagihan->count()) {
+                    $tagihanTerbaru = $langgananAktif->tagihan
+                        ->sortByDesc(fn ($t) => $t->tahun * 100 + $t->bulan)
+                        ->first();
                 }
 
-                $nominalTagihan = $tagihanDisplay?->total_tagihan ?? 0;
+                $tanggalTagih   = $tagihanTerbaru?->jatuh_tempo;
+                $statusTagihan  = strtolower($tagihanTerbaru->status_tagihan ?? '');
+                $isLunas        = in_array($statusTagihan, ['lunas', 'sudah lunas']);
+                $nominalTagihan = $tagihanTerbaru?->total_tagihan ?? 0;
             @endphp
 
             <div
@@ -131,10 +98,10 @@
                                 </div>
                             @endif
 
-                            @if($jatuhTempo)
+                            @if($tanggalTagih)
                                 <div class="small text-muted text-end">
                                     Jatuh Tempo:
-                                    {{ $jatuhTempo->format('d') }}
+                                    {{ \Carbon\Carbon::parse($tanggalTagih)->format('d') }}
                                 </div>
                             @endif
                         </div>
@@ -273,7 +240,6 @@
         border-radius: 12px;
         font-size: 0.8rem;
         margin: 12px 12px 0 12px;
-    }
 
     .card-lunas {
         background: #e6f8e8 !important; /* hijau lembut */
@@ -283,6 +249,8 @@
     .card-belum {
         background: #fde8e8 !important; /* merah lembut */
         border-left: 6px solid #ef4444;
+    }
+
     }
 </style>
 @endpush

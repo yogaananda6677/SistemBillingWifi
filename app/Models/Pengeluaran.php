@@ -9,7 +9,11 @@ class Pengeluaran extends Model
     protected $primaryKey = 'id_pengeluaran';
     public $timestamps = true;
 
-    protected $dates = ['tanggal_pengajuan','tanggal_approve'];
+    protected $casts = [
+        'tanggal_pengajuan' => 'datetime',
+        'tanggal_approve'   => 'datetime',
+    ];
+
 
     // Sales yang mengajukan
     public function sales()

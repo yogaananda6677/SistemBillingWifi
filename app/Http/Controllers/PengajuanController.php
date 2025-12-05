@@ -71,4 +71,24 @@ public function updateStatus(Request $request, $id)
 }
 
     // optional methods for approve/reject (if ingin nanti)
+
+public function showBukti(Pengeluaran $pengeluaran)
+{
+    // contoh cek role sales:
+    $sales = $this->getSales();
+    if ($pengeluaran->id_sales != $sales->id_sales) {
+        abort(403, 'Tidak boleh mengakses bukti pengajuan sales lain.');
+    }
+
+    if (!$pengeluaran->bukti_file) {
+        abort(404, 'Bukti tidak ditemukan.');
+    }
+
+    $path = storage_path('app/public/' . $pengeluaran->bukti_file);
+    if (!file_exists($path)) {
+        abort(404, 'File bukti tidak ditemukan.');
+    }
+
+    return response()->file($path);
+}
 }

@@ -115,13 +115,14 @@
     <div class="stat-value">{{ $totalBelumBayar }}</div>
     <div class="stat-label">Belum Bayar</div>
 </a>
-<a href="{{ route('seles2.pelanggan.index') }}" class="stat-card wide">
+<a href="{{ route('sales.pengajuan.index') }}" class="stat-card wide">
     <div class="stat-icon primary">
         <i class="bi bi-people-fill"></i>
     </div>
-    <div class="stat-value">{{ $totalPelanggan }}</div>
     <div class="stat-label">Ajukan Pengeluaran</div>
 </a>
+
+
 <a href="{{ route('seles2.pembayaran.riwayat') }}" class="stat-card wide">
     <div class="stat-icon primary">
         <i class="bi bi-receipt"></i> {{-- ikon lebih nyambung ke pembayaran --}}

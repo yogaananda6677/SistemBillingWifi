@@ -157,7 +157,7 @@ $(function(){
         const month = $('#month-selector')?.data('month') || '';
 
         $.ajax({
-            url: '{{ route("pengajuan.index") }}',
+            url: '{{ route("admin.pengajuan.index") }}',
             type: 'GET',
             data: { 
                 ajax: true, 
@@ -185,7 +185,7 @@ $(function(){
         if (page && page > 1) params.set('page', page);
         if (month) params.set('month', month);
         if (status) params.set('status', status);
-        const base = '{{ route("pengajuan.index") }}';
+        const base = '{{ route("admin.pengajuan.index") }}';
         const u = params.toString() ? base + '?' + params.toString() : base;
         window.history.replaceState({}, '', u);
     }

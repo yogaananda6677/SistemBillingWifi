@@ -206,8 +206,9 @@
             </table>
         </div>
 
-        <div class="pagination-wrapper p-3 bg-light border-top" id="pagination-wrapper" style="border-radius: 0 0 16px 16px;">
-            {{-- Kita tidak perlu class flex di sini, biarkan CSS di atas yang mengatur 'jeroan' Laravel --}}
+        <div class="pagination-wrapper p-3 bg-light border-top"
+            id="admin-tagihan-pagination"
+            style="border-radius: 0 0 16px 16px;">
             {{ $pelanggan->onEachSide(1)->links('pagination::bootstrap-5') }}
         </div>
 

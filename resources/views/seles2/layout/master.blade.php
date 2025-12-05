@@ -342,11 +342,17 @@
             }
         }
     </style>
+    @stack('styles')
 </head>
 
 <body>
     {{-- Tampilkan Header Mobile hanya jika BUKAN di halaman profil --}}
-    @if (!request()->routeIs('seles2.profile'))
+    @if (
+        !request()->routeIs('seles2.profile') and
+            !request()->routeIs('seles2.tagihan.index') and
+            !request()->routeIs('seles2.pelanggan.index') and
+            !request()->routeIs('seles2.pelanggan.show') and
+            !request()->routeIs('seles2.pembayaran.riwayat'))
         @include('seles2.partials.mobile-header')
     @endif
     @include('seles2.partials.flash-message')

@@ -2,215 +2,182 @@
 @section('title', 'Riwayat Setoran')
 
 @section('content')
-@php
-    use Carbon\Carbon;
+    @php
+        use Carbon\Carbon;
 
-    $setorans    = $setorans ?? collect();
-    $allocDetail = $allocDetail ?? [];
-@endphp
+        $setorans = $setorans ?? collect();
+        $allocDetail = $allocDetail ?? [];
+    @endphp
 
-<style>
-    .setoran-page {
-        background: #f1f3f6;
-        min-height: 100vh;
-        padding: 12px 0 80px 0;
-    }
+    <div class="pelanggan-page">
 
-    .setoran-header {
-        background: #ffffff;
-        padding: 10px 16px;
-        margin-bottom: 8px;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .setoran-header h5 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 1.05rem;
-    }
-
-    .setoran-list {
-        margin: 0 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .setoran-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 14px 16px;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-    }
-
-    .setoran-top {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 6px;
-    }
-
-    .setoran-label {
-        font-size: 0.8rem;
-        color: #6b7280;
-    }
-
-    .setoran-nominal {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #16a34a;
-    }
-
-    .setoran-meta {
-        font-size: 0.8rem;
-        color: #6b7280;
-    }
-
-    .setoran-admin {
-        font-size: 0.8rem;
-        color: #111827;
-        font-weight: 500;
-    }
-
-    .alloc-list {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .alloc-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 4px;
-        font-size: 0.8rem;
-    }
-
-    .alloc-periode {
-        color: #4b5563;
-    }
-
-    .alloc-nominal {
-        font-weight: 600;
-    }
-
-    .alloc-badge-lebih {
-        font-size: 0.7rem;
-        padding: 2px 6px;
-        border-radius: 999px;
-        background: #e0f2fe;
-        color: #0369a1;
-        margin-left: 4px;
-    }
-
-    .note-box {
-        margin: 16px;
-        font-size: 0.8rem;
-        color: #6b7280;
-    }
-
-    .text-danger { color: #ef4444 !important; }
-    .text-success { color: #16a34a !important; }
-</style>
-
-<div class="setoran-page">
-
-    <div class="setoran-header">
-        <h5>Riwayat Setoran</h5>
-        {{-- jika mau, bisa tambah tombol filter di sini nanti --}}
-    </div>
-
-    @if($setorans->isEmpty())
-        <div class="note-box">
-            Belum ada setoran yang tercatat untuk akun Anda.
+        {{-- 1. HEADER (Gradient Amber) --}}
+        <div class="pelanggan-header d-flex align-items-center justify-content-center px-3 pt-3 pb-5">
+            <a href="{{ route('seles2.pembukuan.index') }}" class="back-btn position-absolute start-0 ms-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h5 class="mb-0 fw-bold text-center text-white">Riwayat Setoran</h5>
         </div>
-    @else
-        <div class="setoran-list">
-            @foreach($setorans as $st)
-                @php
-                    $tanggal = $st->tanggal_setoran
-                        ? Carbon::parse($st->tanggal_setoran)->translatedFormat('d M Y, H:i')
-                        : '-';
 
-                    $detail = $allocDetail[$st->id_setoran] ?? [];
-                @endphp
+        {{-- 2. CONTENT CONTAINER (Floating Up) --}}
+        <div class="px-3" style="margin-top: -35px; position: relative; z-index: 20;">
 
-                <div class="setoran-card">
-                    {{-- Atas: nominal & tanggal --}}
-                    <div class="setoran-top">
-                        <div>
-                            <div class="setoran-label">Nominal Setor</div>
-                            <div class="setoran-nominal">
-                                Rp {{ number_format($st->nominal, 0, ',', '.') }}
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <div class="setoran-label">Tanggal</div>
-                            <div class="setoran-meta">
-                                {{ $tanggal }}
-                            </div>
-                        </div>
+            @if ($setorans->isEmpty())
+                <div class="bg-white rounded-4 shadow-sm p-5 text-center border border-light">
+                    <div class="mb-3">
+                        <i class="bi bi-wallet2 text-muted opacity-25" style="font-size: 3rem;"></i>
                     </div>
+                    <h6 class="fw-bold text-muted">Belum ada setoran</h6>
+                    <p class="small text-muted mb-0">Riwayat penyetoran uang ke admin akan muncul di sini.</p>
+                </div>
+            @else
+                <div class="d-flex flex-column gap-3">
+                    @foreach ($setorans as $st)
+                        @php
+                            $tanggal = $st->tanggal_setoran
+                                ? Carbon::parse($st->tanggal_setoran)->translatedFormat('d F Y, H:i')
+                                : '-';
 
-                    {{-- Admin & catatan --}}
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <div class="setoran-label">Diterima oleh</div>
-                        <div class="setoran-admin">
-                            {{ $st->nama_admin ?? '-' }}
-                        </div>
-                    </div>
+                            $detail = $allocDetail[$st->id_setoran] ?? [];
+                        @endphp
 
-                    @if($st->catatan)
-                        <div class="setoran-meta mb-1">
-                            Catatan: {{ $st->catatan }}
-                        </div>
-                    @endif
+                        {{-- CARD SETORAN --}}
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                            <div class="card-body p-3">
 
-                    {{-- Rincian alokasi --}}
-                    <div class="alloc-list">
-                        <div class="setoran-label mb-1">
-                            Rincian alokasi per bulan:
-                        </div>
-
-                        @if(empty($detail))
-                            <div class="alloc-row">
-                                <span class="alloc-periode">Tidak ada rincian alokasi.</span>
-                            </div>
-                        @else
-                            @foreach($detail as $al)
-                                @php
-                                    $periodeText = \Carbon\Carbon::createFromFormat('Y-m-d', $al['periode'].'-01')
-                                        ->translatedFormat('F Y');
-                                @endphp
-                                <div class="alloc-row">
-                                    <div class="alloc-periode">
-                                        {{ $periodeText }}
-                                        @if(!empty($al['lebih']))
-                                            <span class="alloc-badge-lebih">Kelebihan</span>
-                                        @endif
+                                {{-- Header Card: Tanggal & Penerima --}}
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="small text-muted mb-1">
+                                            <i class="bi bi-calendar-event me-1"></i> {{ $tanggal }}
+                                        </div>
+                                        <div class="badge bg-light text-dark border fw-normal">
+                                            <i class="bi bi-person-check me-1"></i> {{ $st->nama_admin ?? '-' }}
+                                        </div>
                                     </div>
-                                    <div class="alloc-nominal">
-                                        Rp {{ number_format($al['nominal'], 0, ',', '.') }}
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">Nominal Setor</small>
+                                        <h5 class="fw-bold text-success mb-0">
+                                            Rp {{ number_format($st->nominal, 0, ',', '.') }}
+                                        </h5>
                                     </div>
                                 </div>
-                            @endforeach
-                        @endif
-                    </div>
 
+                                {{-- Catatan (Jika Ada) --}}
+                                @if ($st->catatan)
+                                    <div
+                                        class="alert alert-warning bg-warning bg-opacity-10 border-0 p-2 rounded-3 small mb-3 text-dark">
+                                        <i class="bi bi-sticky me-1 text-warning"></i> {{ $st->catatan }}
+                                    </div>
+                                @endif
+
+                                {{-- Rincian Alokasi (Box Abu-abu) --}}
+                                <div class="bg-light rounded-3 p-3 mt-3 border border-light">
+                                    <h6 class="small fw-bold text-secondary mb-2 text-uppercase ls-1">Alokasi Dana</h6>
+
+                                    @if (empty($detail))
+                                        <div class="text-muted small fst-italic">Tidak ada rincian alokasi.</div>
+                                    @else
+                                        <div class="d-flex flex-column gap-2">
+                                            @foreach ($detail as $al)
+                                                @php
+                                                    $periodeText = \Carbon\Carbon::createFromFormat(
+                                                        'Y-m-d',
+                                                        $al['periode'] . '-01',
+                                                    )->translatedFormat('F Y');
+                                                @endphp
+                                                <div
+                                                    class="d-flex justify-content-between align-items-center border-bottom border-white pb-1">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="small fw-medium text-dark">{{ $periodeText }}</span>
+                                                        @if (!empty($al['lebih']))
+                                                            <span
+                                                                class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill"
+                                                                style="font-size: 0.6rem;">
+                                                                Kelebihan
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <span class="small fw-bold text-secondary">
+                                                        Rp {{ number_format($al['nominal'], 0, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-            @endforeach
+            @endif
+
+            {{-- Info Box --}}
+            <div class="mt-4 mb-5 p-3 rounded-3 bg-white border border-light shadow-sm">
+                <div class="d-flex gap-2">
+                    <i class="bi bi-info-circle-fill text-amber fs-5"></i>
+                    <div class="small text-muted">
+                        <strong>Catatan Sistem:</strong><br>
+                        Setoran dialokasikan otomatis mulai dari kewajiban bulan tertua.
+                        Sisa uang setelah semua kewajiban tertutup akan dicatat sebagai
+                        <span class="text-info fw-bold">kelebihan</span> di bulan tersebut.
+                    </div>
+                </div>
+            </div>
+
         </div>
-    @endif
-
-    <div class="note-box">
-        <strong>Catatan perhitungan:</strong><br>
-        Setiap setoran dialokasikan mulai dari bulan dengan kewajiban tertua yang masih kurang.
-        Contoh: jika bulan Januari kurang Rp 50.000 lalu bulan Februari setor Rp 100.000,
-        maka sistem menganggap Rp 50.000 menutup kekurangan Januari dan Rp 50.000 untuk Februari.
-        Kelebihan setoran setelah semua kewajiban tertutup akan ditandai sebagai <span class="text-success">kelebihan</span>
-        di bulan setoran.
     </div>
-
-</div>
 @endsection
+
+@push('styles')
+    <style>
+        /* Global Page Style */
+        .pelanggan-page {
+            background: #f9fafb;
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* HEADER */
+        .pelanggan-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25);
+            margin: -16px -16px 0 -16px;
+        }
+
+        .back-btn {
+            color: white;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .text-amber {
+            color: #d97706;
+        }
+
+        /* Typography */
+        .ls-1 {
+            letter-spacing: 1px;
+        }
+
+        /* Card Hover Effect */
+        .card {
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+@endpush

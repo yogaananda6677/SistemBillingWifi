@@ -80,10 +80,11 @@
                     Data Sales
                 </a>
 
-                <a href="/sales/setoran"
-                    class="sidebar-sublink {{ request()->is('sales/setoran*') ? 'active-sub' : '' }}">
-                    Setoran
-                </a>
+<a href="{{ route('admin.setoran.index') }}"
+   class="sidebar-link {{ request()->routeIs('admin.setoran.*') ? 'active' : '' }}">
+    <span class="link-text">Setoran Sales</span>
+</a>
+
 
                 {{-- PENGAJUAN PENGELUARAN --}}
             <a href="/admin/pengajuan"
@@ -113,17 +114,16 @@
     <i class="bi bi-journal-text"></i>
     <span class="link-text">Pembukuan</span>
 </a>
-                {{-- SETORAN --}}
-                <a href="/sales/setoran"
-                class="sidebar-sublink {{ request()->is('sales/setoran') ? 'active-sub' : '' }}">
-                    Setoran
-                </a>
+
+
 
                 {{-- PENGAJUAN PENGELUARAN --}}
-            <a href="/admin/pengajuan"
-            class="sidebar-sublink {{ request()->is('admin/pengajuan*') ? 'active-sub' : '' }}">
-                Pengajuan Pengeluaran
-            </a>
+<a href="{{ route('laporan.index') }}"
+   class="sidebar-sublink {{ request()->routeIs('laporan.*') ? 'active-sub' : '' }}">
+    Laporan & Rekap
+</a>
+
+
 
 
             </div>

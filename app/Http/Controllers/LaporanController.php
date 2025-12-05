@@ -4,49 +4,70 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+// Jika nanti sudah pakai Excel & PDF:
+// use Maatwebsite\Excel\Facades\Excel;
+// use App\Exports\LaporanGlobalExport;
+// use Barryvdh\DomPDF\Facade\Pdf;
 
-class PembukuanController extends Controller
+class LaporanController extends Controller
 {
     public function index(Request $request)
     {
         $tahun = (int) ($request->input('tahun') ?? now()->year);
         $bulan = (int) ($request->input('bulan') ?? now()->month);
 
-        // ============================
-        //  STATISTIK GLOBAL ATAS
-        // ============================
+        $awalBulan  = Carbon::create($tahun, $bulan, 1)->startOfDay();
+        $akhirBulan = (clone $awalBulan)->endOfMonth();
 
-        // Jumlah pelanggan yang punya pembayaran di bulan ini
+        // ======================
+        // STAT GLOBAL ATAS
+        // ======================
+
+        // Pelanggan yang punya pembayaran di bulan ini
         $jumlahPelanggan = DB::table('pembayaran as p')
             ->whereYear('p.tanggal_bayar', $tahun)
             ->whereMonth('p.tanggal_bayar', $bulan)
             ->distinct('p.id_pelanggan')
             ->count('p.id_pelanggan');
 
-        // Total nominal pembayaran bulan ini (semua, baik oleh admin maupun sales)
+        // Total nominal pembayaran bulan ini (semua: admin + sales)
         $jumlahPembayaran = DB::table('pembayaran as p')
             ->whereYear('p.tanggal_bayar', $tahun)
             ->whereMonth('p.tanggal_bayar', $bulan)
             ->sum('p.nominal');
 
-        // Total pengeluaran approved bulan ini
+        // Total pengeluaran approve bulan ini
         $jumlahPengeluaran = DB::table('pengeluaran as pg')
             ->where('pg.status_approve', 'approved')
             ->whereYear('pg.tanggal_approve', $tahun)
             ->whereMonth('pg.tanggal_approve', $bulan)
             ->sum('pg.nominal');
 
+        // Total komisi bulan ini
+        $jumlahKomisi = DB::table('transaksi_komisi as tk')
+            ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
+            ->whereYear('p.tanggal_bayar', $tahun)
+            ->whereMonth('p.tanggal_bayar', $bulan)
+            ->sum('tk.nominal_komisi');
+
+        $labaKotor = $jumlahPembayaran - $jumlahPengeluaran - $jumlahKomisi;
+
         $stat = [
             'jumlah_pelanggan'   => $jumlahPelanggan,
             'jumlah_pembayaran'  => $jumlahPembayaran,
             'jumlah_pengeluaran' => $jumlahPengeluaran,
+            'jumlah_komisi'      => $jumlahKomisi,
+            'laba_kotor'         => $labaKotor,
+            'last_updated'       => now(),
         ];
 
         $rows = collect();
 
-        // ============================
-        //  REKAP PER SALES
-        // ============================
+        // ======================
+        // REKAP PER SALES
+        // ======================
+
         $sales = DB::table('sales as s')
             ->join('users as u', 'u.id', '=', 's.user_id')
             ->select('s.id_sales', 'u.id as user_id', 'u.name')
@@ -54,14 +75,14 @@ class PembukuanController extends Controller
             ->get();
 
         foreach ($sales as $s) {
-            // Pendapatan: pembayaran bulan ini yang id_sales = sales ini
+            // Pendapatan: pembayaran bulan ini dimana id_sales = sales ini
             $pendapatan = DB::table('pembayaran as p')
                 ->whereYear('p.tanggal_bayar', $tahun)
                 ->whereMonth('p.tanggal_bayar', $bulan)
                 ->where('p.id_sales', $s->id_sales)
                 ->sum('p.nominal');
 
-            // Komisi: dari transaksi_komisi yang terkait pembayaran bulan ini
+            // Komisi: dari transaksi_komisi bulan ini untuk sales ini
             $komisi = DB::table('transaksi_komisi as tk')
                 ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
                 ->where('tk.id_sales', $s->id_sales)
@@ -77,7 +98,7 @@ class PembukuanController extends Controller
                 ->whereMonth('pg.tanggal_approve', $bulan)
                 ->sum('pg.nominal');
 
-            // Setoran: setoran yang dilakukan sales ini bulan ini
+            // Setoran oleh sales ini bulan ini
             $setoran = DB::table('setoran as st')
                 ->where('st.id_sales', $s->id_sales)
                 ->whereYear('st.tanggal_setoran', $tahun)
@@ -87,7 +108,7 @@ class PembukuanController extends Controller
             $totalBersih = $pendapatan - $komisi - $pengeluaran;
             $selisih     = $setoran - $totalBersih;
 
-            // -------- DETAIL: PEMBAYARAN --------
+            // DETAIL PEMBAYARAN
             $detailPembayaran = DB::table('pembayaran as p')
                 ->leftJoin('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
                 ->select(
@@ -102,7 +123,7 @@ class PembukuanController extends Controller
                 ->orderBy('p.tanggal_bayar')
                 ->get();
 
-            // -------- DETAIL: KOMISI --------
+            // DETAIL KOMISI
             $detailKomisi = DB::table('transaksi_komisi as tk')
                 ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
                 ->leftJoin('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
@@ -119,7 +140,7 @@ class PembukuanController extends Controller
                 ->orderBy('p.tanggal_bayar')
                 ->get();
 
-            // -------- DETAIL: PENGELUARAN --------
+            // DETAIL PENGELUARAN
             $detailPengeluaran = DB::table('pengeluaran as pg')
                 ->select(
                     'pg.nama_pengeluaran',
@@ -134,7 +155,7 @@ class PembukuanController extends Controller
                 ->orderBy('pg.tanggal_approve')
                 ->get();
 
-            // -------- DETAIL: SETORAN --------
+            // DETAIL SETORAN
             $detailSetoran = DB::table('setoran as st')
                 ->join('admins as a', 'a.id_admin', '=', 'st.id_admin')
                 ->join('users as ua', 'ua.id', '=', 'a.user_id')
@@ -168,31 +189,30 @@ class PembukuanController extends Controller
             ]);
         }
 
-        // ============================
-        //  REKAP PER ADMIN
-        // ============================
+        // ======================
+        // REKAP PER ADMIN
+        // ======================
+
         $admins = DB::table('admins as a')
             ->join('users as u', 'u.id', '=', 'a.user_id')
             ->select(
                 'u.id as user_id',
                 'u.name',
-                DB::raw('MIN(a.id_admin) as id_admin')  // ambil salah satu id_admin saja
+                DB::raw('MIN(a.id_admin) as id_admin')
             )
             ->groupBy('u.id', 'u.name')
             ->orderBy('u.name')
             ->get();
 
         foreach ($admins as $a) {
-
-            // Pendapatan admin = pembayaran yang diinput admin bulan itu
+            // Pendapatan: pembayaran bulan ini yang diinput oleh admin ini (p.id_user)
             $pendapatan = DB::table('pembayaran as p')
-                ->leftJoin('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
                 ->whereYear('p.tanggal_bayar', $tahun)
                 ->whereMonth('p.tanggal_bayar', $bulan)
                 ->where('p.id_user', $a->user_id)
                 ->sum('p.nominal');
 
-            // Detail pembayaran admin
+            // DETAIL PEMBAYARAN
             $detailPembayaran = DB::table('pembayaran as p')
                 ->leftJoin('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
                 ->select(
@@ -207,7 +227,6 @@ class PembukuanController extends Controller
                 ->orderBy('p.tanggal_bayar')
                 ->get();
 
-            // Admin: otomatis semua dianggap sudah disetor
             $rows->push((object) [
                 'jenis'              => 'admin',
                 'label'              => $a->name . ' (admin)',
@@ -216,10 +235,9 @@ class PembukuanController extends Controller
                 'pendapatan'         => $pendapatan,
                 'total_komisi'       => 0,
                 'total_pengeluaran'  => 0,
-                'total_bersih'       => $pendapatan,
-                'total_setoran'      => $pendapatan, // ADMIN SELALU SUDAH SETOR
+                'total_bersih'       => $pendapatan,   // admin dianggap langsung setor
+                'total_setoran'      => $pendapatan,   // otomatis sudah disetor
                 'selisih'            => 0,
-
                 'detail_pembayaran'  => $detailPembayaran,
                 'detail_komisi'      => collect(),
                 'detail_pengeluaran' => collect(),
@@ -227,10 +245,9 @@ class PembukuanController extends Controller
             ]);
         }
 
-
         $rekap = $rows->sortBy('label')->values();
 
-        return view('pembukuan.index', [
+        return view('laporan.index', [
             'rekap'         => $rekap,
             'selectedYear'  => $tahun,
             'selectedMonth' => $bulan,
@@ -238,9 +255,17 @@ class PembukuanController extends Controller
         ]);
     }
 
-    public function show(Request $request, $salesId)
+    // ========== EXPORT (boleh diisi nanti kalau sudah siap package) ==========
+
+    public function exportExcel(Request $request)
     {
-        // kalau route show kepencet, sementara arahkan balik ke index saja
-        return redirect()->route('pembukuan.index');
+        // Nanti kalau sudah install Maatwebsite/Excel, isi di sini.
+        return back()->with('error', 'Export Excel belum diaktifkan.');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        // Nanti kalau sudah install dompdf, isi di sini.
+        return back()->with('error', 'Export PDF belum diaktifkan.');
     }
 }

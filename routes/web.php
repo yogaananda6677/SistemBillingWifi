@@ -1,4 +1,6 @@
 <?php
+use App\Models\Pelanggan;
+use App\Models\Pengeluaran;
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminTagihanController;
@@ -19,10 +21,11 @@ use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\TagihanPelangganSalesController;
 use App\Http\Controllers\PembukuanController;
 use App\Http\Controllers\ProfilController;
-use App\Models\Pelanggan;
+use App\Http\Controllers\SetoranAdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Sales\PembukuanSalesController;
 use App\Http\Controllers\Sales\SetoranSalesController;
+use App\Http\Controllers\LaporanController;
 
 
 Route::get('/', function () {
@@ -78,7 +81,23 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/pembukuan', [PembukuanController::class, 'index'])->name('pembukuan.index');
     Route::get('/pembukuan/{sales}', [PembukuanController::class, 'show'])->name('pembukuan.show');
-    
+    Route::get('/pembukuan/detail-data/{tipe}/{sales}', [PembukuanController::class, 'detailData']);
+
+
+    Route::get('/setoran-sales', [SetoranAdminController::class, 'index'])
+        ->name('admin.setoran.index');
+
+    Route::post('/setoran-sales', [SetoranAdminController::class, 'store'])
+        ->name('admin.setoran.store');
+
+    Route::get('/laporan', [LaporanController::class, 'index'])
+        ->name('laporan.index');
+
+    Route::get('/laporan/export-excel', [LaporanController::class, 'exportExcel'])
+        ->name('laporan.export.excel');
+
+    Route::get('/laporan/export-pdf', [LaporanController::class, 'exportPdf'])
+        ->name('laporan.export.pdf');
 
 
     Route::get('/pengajuan/bukti/{pengajuan:id_pengeluaran}', function (Pengeluaran $pengajuan) {

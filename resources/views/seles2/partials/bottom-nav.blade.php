@@ -26,11 +26,12 @@
 </a>
 
 
-            <a href="{{ route('seles2.setoran.riwayat') }}"
-                class="nav-item {{ request()->routeIs('seles2.setoran.*') ? 'active' : '' }}">
-                <i class="bi bi-cash-stack"></i>
-                <span>Setoran</span>
-            </a>
+<a href="{{ route('seles2.setoran.index') }}"
+    class="nav-item {{ request()->routeIs('seles2.setoran.*') ? 'active' : '' }}">
+    <i class="bi bi-cash-stack"></i>
+    <span>Setoran</span>
+</a>
+
 
         </div>
     </div>

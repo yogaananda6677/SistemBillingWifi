@@ -42,14 +42,10 @@
             </div>
             
             {{-- Tanggal (tanggal_pengajuan) --}}
-            <div class="mb-3">
-                <label class="form-label">Tanggal</label>
-                <input type="datetime-local"
-                       name="tanggal_pengajuan"
-                       class="form-control"
-                       value="{{ old('tanggal_pengajuan', now()->format('Y-m-d\TH:i')) }}"
-                       required>
+            <div class="mb-2 small text-muted">
+                Tanggal pengajuan akan otomatis diisi: {{ now()->translatedFormat('d F Y, H:i') }}
             </div>
+
             
             {{-- Nominal --}}
             <div class="mb-3">

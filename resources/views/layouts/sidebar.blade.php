@@ -108,12 +108,11 @@
             <div class="collapse ps-4 {{ request()->is('sales/*') ? 'show' : '' }}" id="menuSales">
 
                 {{-- DATA SALES --}}
-<a href="{{ route('pembukuan.index') }}" class="sidebar-link {{ request()->is('pembukuan*') ? 'active' : '' }}">
+<a href="{{ route('pembukuan.index') }}"
+   class="sidebar-link {{ request()->routeIs('pembukuan.*') ? 'active' : '' }}">
     <i class="bi bi-journal-text"></i>
     <span class="link-text">Pembukuan</span>
 </a>
-
-
                 {{-- SETORAN --}}
                 <a href="/sales/setoran"
                 class="sidebar-sublink {{ request()->is('sales/setoran') ? 'active-sub' : '' }}">

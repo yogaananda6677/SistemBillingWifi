@@ -97,7 +97,7 @@ public function store(Request $request)
 
     $data = $request->validate([
         'nama_pengeluaran'  => 'required|string|max:255',
-        'tanggal_pengajuan' => 'required|date',
+        // 'tanggal_pengajuan' DIHAPUS dari validasi
         'nominal'           => 'required|integer|min:1',
         'catatan'           => 'nullable|string',
         'bukti_file'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
@@ -111,7 +111,7 @@ public function store(Request $request)
     $pengeluaran = new \App\Models\Pengeluaran();
     $pengeluaran->id_sales          = $sales->id_sales;
     $pengeluaran->nama_pengeluaran  = $data['nama_pengeluaran'];
-    $pengeluaran->tanggal_pengajuan = $data['tanggal_pengajuan'];
+    $pengeluaran->tanggal_pengajuan = now(); // ⬅️ otomatis tanggal & jam saat ini
     $pengeluaran->nominal           = $data['nominal'];
     $pengeluaran->catatan           = $data['catatan'] ?? null;
     $pengeluaran->bukti_file        = $filePath;
@@ -122,6 +122,7 @@ public function store(Request $request)
         ->route('sales.pengajuan.index')
         ->with('success', 'Pengajuan berhasil dikirim, menunggu persetujuan admin.');
 }
+
 
     public function edit($id)
     {
@@ -141,46 +142,46 @@ public function store(Request $request)
         return view('seles2.pengajuan.edit', compact('pengajuan'));
     }
 
-    public function update(Request $request, $id)
-    {
-        $sales = $this->getSales();
+public function update(Request $request, $id)
+{
+    $sales = $this->getSales();
 
-        $pengajuan = Pengeluaran::where('id_pengeluaran', $id)
-            ->where('id_sales', $sales->id_sales)
-            ->firstOrFail();
+    $pengajuan = Pengeluaran::where('id_pengeluaran', $id)
+        ->where('id_sales', $sales->id_sales)
+        ->firstOrFail();
 
-        if ($pengajuan->status_approve !== 'pending') {
-            return redirect()
-                ->route('sales.pengajuan.index')
-                ->with('error', 'Pengajuan yang sudah diproses tidak bisa diubah.');
-        }
-
-        $data = $request->validate([
-            'nama_pengeluaran'  => 'required|string|max:255',
-            'tanggal_pengajuan' => 'required|date',
-            'nominal'           => 'required|integer|min:1',
-            'catatan'           => 'nullable|string',
-            'bukti_file'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
-
-        if ($request->hasFile('bukti_file')) {
-            // hapus bukti lama kalau ada
-            if ($pengajuan->bukti_file) {
-                Storage::disk('public')->delete($pengajuan->bukti_file);
-            }
-            $pengajuan->bukti_file = $request->file('bukti_file')->store('pengeluaran', 'public');
-        }
-
-        $pengajuan->nama_pengeluaran  = $data['nama_pengeluaran'];
-        $pengajuan->tanggal_pengajuan = $data['tanggal_pengajuan'];
-        $pengajuan->nominal           = $data['nominal'];
-        $pengajuan->catatan           = $data['catatan'] ?? null;
-        $pengajuan->save();
-
+    if ($pengajuan->status_approve !== 'pending') {
         return redirect()
             ->route('sales.pengajuan.index')
-            ->with('success', 'Pengajuan berhasil diperbarui.');
+            ->with('error', 'Pengajuan yang sudah diproses tidak bisa diubah.');
     }
+
+    $data = $request->validate([
+        'nama_pengeluaran'  => 'required|string|max:255',
+        // 'tanggal_pengajuan' DIHAPUS dari validasi
+        'nominal'           => 'required|integer|min:1',
+        'catatan'           => 'nullable|string',
+        'bukti_file'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+    ]);
+
+    if ($request->hasFile('bukti_file')) {
+        if ($pengajuan->bukti_file) {
+            Storage::disk('public')->delete($pengajuan->bukti_file);
+        }
+        $pengajuan->bukti_file = $request->file('bukti_file')->store('pengeluaran', 'public');
+    }
+
+    $pengajuan->nama_pengeluaran  = $data['nama_pengeluaran'];
+    // $pengajuan->tanggal_pengajuan TIDAK diubah, biarkan tanggal awal
+    $pengajuan->nominal           = $data['nominal'];
+    $pengajuan->catatan           = $data['catatan'] ?? null;
+    $pengajuan->save();
+
+    return redirect()
+        ->route('sales.pengajuan.index')
+        ->with('success', 'Pengajuan berhasil diperbarui.');
+}
+
 
     public function destroy($id)
     {

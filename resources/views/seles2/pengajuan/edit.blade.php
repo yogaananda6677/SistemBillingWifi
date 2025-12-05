@@ -59,15 +59,12 @@
                 {{-- Tanggal Pengajuan --}}
                 <div class="mb-3">
                     <label class="form-label small mb-1">Tanggal Pengajuan</label>
-                    <input type="date"
-                           name="tanggal_pengajuan"
-                           class="form-control form-control-sm @error('tanggal_pengajuan') is-invalid @enderror"
-                           value="{{ old('tanggal_pengajuan', \Illuminate\Support\Carbon::parse($pengajuan->tanggal_pengajuan)->format('Y-m-d')) }}"
-                           required>
-                    @error('tanggal_pengajuan')
-                        <div class="invalid-feedback small">{{ $message }}</div>
-                    @enderror
+                    <input type="text"
+                        class="form-control form-control-sm"
+                        value="{{ \Carbon\Carbon::parse($pengajuan->tanggal_pengajuan)->translatedFormat('d F Y, H:i') }}"
+                        disabled>
                 </div>
+
 
                 {{-- Nominal --}}
                 <div class="mb-3">

@@ -4,348 +4,218 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class PembukuanController extends Controller
 {
     /**
-     * Halaman rekap pembukuan per sales
+     * Rekap semua sales per bulan (admin).
      */
     public function index(Request $request)
     {
-        // === 1. Ambil filter dari request ===
-        $startDate = $request->input('start_date');
-        $endDate   = $request->input('end_date');
-        $areaId    = $request->input('area_id');
-        $salesId   = $request->input('sales_id');
+        $tahun = (int) ($request->input('tahun') ?? now()->year);
+        $bulan = (int) ($request->input('bulan') ?? now()->month);
 
-        // Default: pakai bulan berjalan kalau tidak diisi
-        if (!$startDate || !$endDate) {
-            $startDate = Carbon::now()->startOfMonth()->toDateString();
-            $endDate   = Carbon::now()->endOfMonth()->toDateString();
-        }
-
-        // Bikin range datetime (karena di DB banyak yg datetime)
-        $startDateTime = $startDate . ' 00:00:00';
-        $endDateTime   = $endDate . ' 23:59:59';
-
-        // === 2. Data untuk dropdown filter ===
-        $areas = DB::table('area')
-            ->orderBy('nama_area')
-            ->get();
-
-        $salesOptions = DB::table('sales as s')
-            ->join('users as u', 's.user_id', '=', 'u.id')
-            ->leftJoin('area as a', 's.id_area', '=', 'a.id_area')
-            ->select(
-                's.id_sales',
-                'u.name as nama_sales',
-                'u.no_hp',
-                'a.nama_area'
-            )
-            ->orderBy('u.name')
-            ->get();
-
-        // === 3. Query summary global (total pendapatan, komisi, dsb) ===
-
-        // 3.1 Total Pendapatan (pembayaran.nominal)
-        $pembayaranSummaryQuery = DB::table('pembayaran as p')
-            ->leftJoin('sales as s', 'p.id_sales', '=', 's.id_sales')
-            ->leftJoin('area as a', 's.id_area', '=', 'a.id_area')
-            ->whereBetween('p.tanggal_bayar', [$startDateTime, $endDateTime]);
-
-        if ($salesId) {
-            $pembayaranSummaryQuery->where('p.id_sales', $salesId);
-        }
-        if ($areaId) {
-            $pembayaranSummaryQuery->where('s.id_area', $areaId);
-        }
-
-        $totalPendapatan = $pembayaranSummaryQuery->sum('p.nominal');
-
-        // 3.2 Total Komisi (transaksi_komisi)
-        // asumsi: total per baris = nominal_komisi * jumlah_komisi
-        $komisiSummaryQuery = DB::table('transaksi_komisi as tk')
-            ->leftJoin('sales as s', 'tk.id_sales', '=', 's.id_sales')
-            ->leftJoin('area as a', 's.id_area', '=', 'a.id_area')
-            ->whereBetween('tk.created_at', [$startDateTime, $endDateTime]);
-
-        if ($salesId) {
-            $komisiSummaryQuery->where('tk.id_sales', $salesId);
-        }
-        if ($areaId) {
-            $komisiSummaryQuery->where('s.id_area', $areaId);
-        }
-
-        $totalKomisi = $komisiSummaryQuery->sum(DB::raw('tk.nominal_komisi * tk.jumlah_komisi'));
-
-        // 3.3 Total Pengeluaran approved
-        $pengeluaranSummaryQuery = DB::table('pengeluaran as pg')
-            ->leftJoin('sales as s', 'pg.id_sales', '=', 's.id_sales')
-            ->leftJoin('area as a', 's.id_area', '=', 'a.id_area')
-            ->where('pg.status_approve', 'approved')
-            ->whereBetween('pg.tanggal_pengajuan', [$startDateTime, $endDateTime]);
-
-        if ($salesId) {
-            $pengeluaranSummaryQuery->where('pg.id_sales', $salesId);
-        }
-        if ($areaId) {
-            $pengeluaranSummaryQuery->where('s.id_area', $areaId);
-        }
-
-        $totalPengeluaran = $pengeluaranSummaryQuery->sum('pg.nominal');
-
-        // 3.4 Total Setoran
-        $setoranSummaryQuery = DB::table('setoran as st')
-            ->leftJoin('sales as s', 'st.id_sales', '=', 's.id_sales')
-            ->leftJoin('area as a', 's.id_area', '=', 'a.id_area')
-            ->whereBetween('st.tanggal_setoran', [$startDateTime, $endDateTime]);
-
-        if ($salesId) {
-            $setoranSummaryQuery->where('st.id_sales', $salesId);
-        }
-        if ($areaId) {
-            $setoranSummaryQuery->where('s.id_area', $areaId);
-        }
-
-        $totalSetoran = $setoranSummaryQuery->sum('st.nominal');
-
-        // 3.5 Hitung total harus setor & belum setor
-        $totalHarusSetor    = $totalPendapatan - $totalKomisi - $totalPengeluaran;
-        $totalBelumDisetor  = $totalHarusSetor - $totalSetoran;
-
-        $summary = [
-            'total_pendapatan'    => $totalPendapatan,
-            'total_komisi'        => $totalKomisi,
-            'total_pengeluaran'   => $totalPengeluaran,
-            'total_belum_disetor' => $totalBelumDisetor,
-        ];
-
-        // === 4. Subquery per jenis transaksi untuk REKAP per sales ===
-
-        // 4.1 Subquery pendapatan per sales
-        $pembayaranSub = DB::table('pembayaran')
-            ->select(
-                'id_sales',
-                DB::raw('SUM(nominal) as pendapatan_kotor')
-            )
-            ->whereBetween('tanggal_bayar', [$startDateTime, $endDateTime])
-            ->groupBy('id_sales');
-
-        if ($salesId) {
-            $pembayaranSub->where('id_sales', $salesId);
-        }
-
-        // 4.2 Subquery komisi per sales
-        $komisiSub = DB::table('transaksi_komisi')
-            ->select(
-                'id_sales',
-                DB::raw('SUM(nominal_komisi * jumlah_komisi) as total_komisi')
-            )
-            ->whereBetween('created_at', [$startDateTime, $endDateTime])
-            ->groupBy('id_sales');
-
-        if ($salesId) {
-            $komisiSub->where('id_sales', $salesId);
-        }
-
-        // 4.3 Subquery pengeluaran approved per sales
-        $pengeluaranSub = DB::table('pengeluaran')
-            ->select(
-                'id_sales',
-                DB::raw('SUM(nominal) as pengeluaran_approved')
-            )
-            ->where('status_approve', 'approved')
-            ->whereBetween('tanggal_pengajuan', [$startDateTime, $endDateTime])
-            ->groupBy('id_sales');
-
-        if ($salesId) {
-            $pengeluaranSub->where('id_sales', $salesId);
-        }
-
-        // 4.4 Subquery setoran per sales
-        $setoranSub = DB::table('setoran')
-            ->select(
-                'id_sales',
-                DB::raw('SUM(nominal) as sudah_setor')
-            )
-            ->whereBetween('tanggal_setoran', [$startDateTime, $endDateTime])
-            ->groupBy('id_sales');
-
-        if ($salesId) {
-            $setoranSub->where('id_sales', $salesId);
-        }
-
-        // === 5. Query utama rekap per sales ===
-
-        $rekapQuery = DB::table('sales as s')
-            ->leftJoin('users as u', 's.user_id', '=', 'u.id')
-            ->leftJoin('area as a', 's.id_area', '=', 'a.id_area')
-            ->leftJoinSub($pembayaranSub, 'pb', function ($join) {
-                $join->on('s.id_sales', '=', 'pb.id_sales');
-            })
-            ->leftJoinSub($komisiSub, 'km', function ($join) {
-                $join->on('s.id_sales', '=', 'km.id_sales');
-            })
-            ->leftJoinSub($pengeluaranSub, 'pg', function ($join) {
-                $join->on('s.id_sales', '=', 'pg.id_sales');
-            })
-            ->leftJoinSub($setoranSub, 'st', function ($join) {
-                $join->on('s.id_sales', '=', 'st.id_sales');
-            })
-            ->select(
-                's.id_sales',
-                'u.name as nama_sales',
-                'u.no_hp',
-                'a.nama_area',
-                DB::raw('COALESCE(pb.pendapatan_kotor, 0) as pendapatan_kotor'),
-                DB::raw('COALESCE(km.total_komisi, 0) as total_komisi'),
-                DB::raw('COALESCE(pg.pengeluaran_approved, 0) as pengeluaran_approved'),
-                DB::raw('COALESCE(st.sudah_setor, 0) as sudah_setor')
-            )
+        $rekap = DB::table('sales as s')
+            ->join('users as u', 'u.id', '=', 's.user_id')
             ->selectRaw('
-                (COALESCE(pb.pendapatan_kotor, 0)
-                 - COALESCE(km.total_komisi, 0)
-                 - COALESCE(pg.pengeluaran_approved, 0)) as harus_setor
-            ')
-            ->selectRaw('
-                ((COALESCE(pb.pendapatan_kotor, 0)
-                 - COALESCE(km.total_komisi, 0)
-                 - COALESCE(pg.pengeluaran_approved, 0))
-                 - COALESCE(st.sudah_setor, 0)) as belum_disetor
-            ')
-            ->orderBy('u.name');
+                s.id_sales,
+                u.name as nama_sales,
 
-        // Filter area di query utama
-        if ($areaId) {
-            $rekapQuery->where('s.id_area', $areaId);
-        }
+                -- PENDAPATAN: pembayaran bulan ini oleh sales ini
+                COALESCE((
+                    SELECT SUM(p.nominal)
+                    FROM pembayaran p
+                    WHERE p.id_sales = s.id_sales
+                      AND YEAR(p.tanggal_bayar) = ?
+                      AND MONTH(p.tanggal_bayar) = ?
+                ), 0) AS total_pendapatan,
 
-        if ($salesId) {
-            $rekapQuery->where('s.id_sales', $salesId);
-        }
+                -- KOMISI: komisi dari pembayaran bulan ini
+                COALESCE((
+                    SELECT SUM(tk.nominal_komisi)
+                    FROM transaksi_komisi tk
+                    JOIN pembayaran p2 ON p2.id_pembayaran = tk.id_pembayaran
+                    WHERE tk.id_sales = s.id_sales
+                      AND YEAR(p2.tanggal_bayar) = ?
+                      AND MONTH(p2.tanggal_bayar) = ?
+                ), 0) AS total_komisi,
 
-        // Pakai paginate biar enak di tabel
-        $rekapSales = $rekapQuery->paginate(15)->withQueryString();
+                -- PENGELUARAN: pengeluaran approved di bulan ini (tanggal_approve)
+                COALESCE((
+                    SELECT SUM(pg.nominal)
+                    FROM pengeluaran pg
+                    WHERE pg.id_sales = s.id_sales
+                      AND pg.status_approve = "approved"
+                      AND pg.tanggal_approve IS NOT NULL
+                      AND YEAR(pg.tanggal_approve) = ?
+                      AND MONTH(pg.tanggal_approve) = ?
+                ), 0) AS total_pengeluaran,
 
-        // === 6. Kirim ke view ===
-        return view('pembukuan.index', [
-            'areas'        => $areas,
-            'salesOptions' => $salesOptions,
-            'summary'      => $summary,
-            'rekapSales'   => $rekapSales,
-            'startDate'    => $startDate,
-            'endDate'      => $endDate,
+                -- SETORAN: semua setoran di bulan ini (pakai tanggal_setoran)
+                COALESCE((
+                    SELECT SUM(st.nominal)
+                    FROM setoran st
+                    WHERE st.id_sales = s.id_sales
+                      AND YEAR(st.tanggal_setoran) = ?
+                      AND MONTH(st.tanggal_setoran) = ?
+                ), 0) AS total_setoran
+            ', [
+                $tahun, $bulan,
+                $tahun, $bulan,
+                $tahun, $bulan,
+                $tahun, $bulan,
+            ])
+            ->get()
+            ->map(function ($row) {
+                $row->harus_disetorkan =
+                    $row->total_pendapatan - $row->total_komisi - $row->total_pengeluaran;
+
+                $row->selisih_setoran =
+                    $row->total_setoran - $row->harus_disetorkan;
+
+                return $row;
+            });
+
+        return view('admin.pembukuan.index', [
+            'rekap'        => $rekap,
+            'selectedYear' => $tahun,
+            'selectedMonth'=> $bulan,
         ]);
     }
 
     /**
-     * Detail pembukuan untuk 1 sales
-     * /pembukuan/{id_sales}
+     * Detail pembukuan satu sales untuk bulan tertentu.
      */
-    public function show(Request $request, $idSales)
+    public function show(Request $request, $salesId)
     {
-        $startDate = $request->input('start_date');
-        $endDate   = $request->input('end_date');
+        $tahun = (int) ($request->input('tahun') ?? now()->year);
+        $bulan = (int) ($request->input('bulan') ?? now()->month);
 
-        if (!$startDate || !$endDate) {
-            $startDate = Carbon::now()->startOfMonth()->toDateString();
-            $endDate   = Carbon::now()->endOfMonth()->toDateString();
-        }
+        // Rekap untuk header
+        $summary = DB::table('sales as s')
+            ->join('users as u', 'u.id', '=', 's.user_id')
+            ->where('s.id_sales', $salesId)
+            ->selectRaw('
+                s.id_sales,
+                u.name as nama_sales,
 
-        $startDateTime = $startDate . ' 00:00:00';
-        $endDateTime   = $endDate . ' 23:59:59';
+                COALESCE((
+                    SELECT SUM(p.nominal)
+                    FROM pembayaran p
+                    WHERE p.id_sales = s.id_sales
+                      AND YEAR(p.tanggal_bayar) = ?
+                      AND MONTH(p.tanggal_bayar) = ?
+                ), 0) AS total_pendapatan,
 
-        // Info sales
-        $sales = DB::table('sales as s')
-            ->join('users as u', 's.user_id', '=', 'u.id')
-            ->leftJoin('area as a', 's.id_area', '=', 'a.id_area')
-            ->where('s.id_sales', $idSales)
-            ->select(
-                's.*',
-                'u.name as nama_sales',
-                'u.no_hp',
-                'a.nama_area'
-            )
+                COALESCE((
+                    SELECT SUM(tk.nominal_komisi)
+                    FROM transaksi_komisi tk
+                    JOIN pembayaran p2 ON p2.id_pembayaran = tk.id_pembayaran
+                    WHERE tk.id_sales = s.id_sales
+                      AND YEAR(p2.tanggal_bayar) = ?
+                      AND MONTH(p2.tanggal_bayar) = ?
+                ), 0) AS total_komisi,
+
+                COALESCE((
+                    SELECT SUM(pg.nominal)
+                    FROM pengeluaran pg
+                    WHERE pg.id_sales = s.id_sales
+                      AND pg.status_approve = "approved"
+                      AND pg.tanggal_approve IS NOT NULL
+                      AND YEAR(pg.tanggal_approve) = ?
+                      AND MONTH(pg.tanggal_approve) = ?
+                ), 0) AS total_pengeluaran,
+
+                COALESCE((
+                    SELECT SUM(st.nominal)
+                    FROM setoran st
+                    WHERE st.id_sales = s.id_sales
+                      AND YEAR(st.tanggal_setoran) = ?
+                      AND MONTH(st.tanggal_setoran) = ?
+                ), 0) AS total_setoran
+            ', [
+                $tahun, $bulan,
+                $tahun, $bulan,
+                $tahun, $bulan,
+                $tahun, $bulan,
+            ])
             ->first();
 
-        if (!$sales) {
-            abort(404, 'Data sales tidak ditemukan');
+        if ($summary) {
+            $summary->harus_disetorkan =
+                $summary->total_pendapatan - $summary->total_komisi - $summary->total_pengeluaran;
+
+            $summary->selisih_setoran =
+                $summary->total_setoran - $summary->harus_disetorkan;
         }
 
-        // Detail Pendapatan
-        $pendapatan = DB::table('pembayaran as p')
-            ->leftJoin('pelanggan as pl', 'p.id_pelanggan', '=', 'pl.id_pelanggan')
-            ->where('p.id_sales', $idSales)
-            ->whereBetween('p.tanggal_bayar', [$startDateTime, $endDateTime])
+        // DETAIL: PEMBAYARAN
+        $pembayaran = DB::table('pembayaran as p')
+            ->leftJoin('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
+            ->where('p.id_sales', $salesId)
+            ->whereYear('p.tanggal_bayar', $tahun)
+            ->whereMonth('p.tanggal_bayar', $bulan)
             ->select(
                 'p.*',
                 'pl.nama as nama_pelanggan'
             )
-            ->orderBy('p.tanggal_bayar', 'desc')
+            ->orderBy('p.tanggal_bayar')
             ->get();
 
-        // Detail Komisi
+        // DETAIL: KOMISI
         $komisi = DB::table('transaksi_komisi as tk')
-            ->leftJoin('pembayaran as p', 'tk.id_pembayaran', '=', 'p.id_pembayaran')
-            ->leftJoin('pelanggan as pl', 'p.id_pelanggan', '=', 'pl.id_pelanggan')
-            ->where('tk.id_sales', $idSales)
-            ->whereBetween('tk.created_at', [$startDateTime, $endDateTime])
+            ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
+            ->leftJoin('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
+            ->where('tk.id_sales', $salesId)
+            ->whereYear('p.tanggal_bayar', $tahun)
+            ->whereMonth('p.tanggal_bayar', $bulan)
             ->select(
                 'tk.*',
                 'p.tanggal_bayar',
                 'p.no_pembayaran',
-                'pl.nama as nama_pelanggan',
-                DB::raw('(tk.nominal_komisi * tk.jumlah_komisi) as total_komisi')
+                'pl.nama as nama_pelanggan'
             )
-            ->orderBy('tk.created_at', 'desc')
+            ->orderBy('p.tanggal_bayar')
             ->get();
 
-        // Detail Pengeluaran
+        // DETAIL: PENGELUARAN
         $pengeluaran = DB::table('pengeluaran as pg')
-            ->where('pg.id_sales', $idSales)
-            ->whereBetween('pg.tanggal_pengajuan', [$startDateTime, $endDateTime])
-            ->orderBy('pg.tanggal_pengajuan', 'desc')
+            ->leftJoin('admins as a', 'a.id_admin', '=', 'pg.id_admin')
+            ->leftJoin('users as ua', 'ua.id', '=', 'a.user_id')
+            ->where('pg.id_sales', $salesId)
+            ->where('pg.status_approve', 'approved')
+            ->whereNotNull('pg.tanggal_approve')
+            ->whereYear('pg.tanggal_approve', $tahun)
+            ->whereMonth('pg.tanggal_approve', $bulan)
+            ->select(
+                'pg.*',
+                'ua.name as nama_admin'
+            )
+            ->orderBy('pg.tanggal_approve')
             ->get();
 
-        // Detail Setoran
+        // DETAIL: SETORAN
         $setoran = DB::table('setoran as st')
-            ->leftJoin('admins as ad', 'st.id_admin', '=', 'ad.id_admin')
-            ->leftJoin('users as u', 'ad.user_id', '=', 'u.id')
-            ->where('st.id_sales', $idSales)
-            ->whereBetween('st.tanggal_setoran', [$startDateTime, $endDateTime])
+            ->join('admins as a', 'a.id_admin', '=', 'st.id_admin')
+            ->join('users as ua', 'ua.id', '=', 'a.user_id')
+            ->where('st.id_sales', $salesId)
+            ->whereYear('st.tanggal_setoran', $tahun)
+            ->whereMonth('st.tanggal_setoran', $bulan)
             ->select(
                 'st.*',
-                'u.name as nama_admin'
+                'ua.name as nama_admin'
             )
-            ->orderBy('st.tanggal_setoran', 'desc')
+            ->orderBy('st.tanggal_setoran')
             ->get();
 
-        // Hitung kecil ringkasan khusus sales ini
-        $pendapatanTotal = $pendapatan->sum('nominal');
-        $komisiTotal     = $komisi->sum('total_komisi');
-        $pengeluaranApproved = $pengeluaran->where('status_approve', 'approved')->sum('nominal');
-        $setoranTotal    = $setoran->sum('nominal');
-
-        $harusSetor   = $pendapatanTotal - $komisiTotal - $pengeluaranApproved;
-        $belumSetor   = $harusSetor - $setoranTotal;
-
-        return view('pembukuan.show', [
-            'sales'                => $sales,
-            'startDate'            => $startDate,
-            'endDate'              => $endDate,
-            'pendapatan'           => $pendapatan,
-            'komisi'               => $komisi,
-            'pengeluaran'          => $pengeluaran,
-            'setoran'              => $setoran,
-            'ringkasanSales'       => [
-                'pendapatan'   => $pendapatanTotal,
-                'komisi'       => $komisiTotal,
-                'pengeluaran'  => $pengeluaranApproved,
-                'harus_setor'  => $harusSetor,
-                'sudah_setor'  => $setoranTotal,
-                'belum_setor'  => $belumSetor,
-            ],
+        return view('admin.pembukuan.show', [
+            'summary'       => $summary,
+            'pembayaran'    => $pembayaran,
+            'komisi'        => $komisi,
+            'pengeluaran'   => $pengeluaran,
+            'setoran'       => $setoran,
+            'selectedYear'  => $tahun,
+            'selectedMonth' => $bulan,
         ]);
     }
 }

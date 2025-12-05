@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminTagihanController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\DashboardController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\PpnController;
+use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\TagihanPelangganSalesController;
@@ -19,7 +21,6 @@ use App\Http\Controllers\Sales\TagihanSalesController;
 use App\Http\Controllers\Sales\PembayaranSalesController;
 use App\Http\Controllers\Sales\SalesPengajuanController;
 use App\Models\Pengeluaran;
-use App\Http\Controllers\PembukuanController;
 use App\Http\Controllers\Sales\PembukuanSalesController;
 
 Route::get('/', function () {
@@ -97,15 +98,12 @@ Route::get('/dashboard/admin', [DashboardController::class, 'index'])
     Route::put('/pengeluaran/update-status/{id}',
         [App\Http\Controllers\PengajuanController::class, 'updateStatus']
     )->name('pengajuan.updateStatus');
-
     Route::resource('pengaturan/ppn', PpnController::class);
     Route::resource('pengaturan/area', AreaController::class);
     Route::resource('pengaturan/paket-layanan', PaketController::class);
     Route::resource('/tagihan', TagihanController::class);
-
-    Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
-
-
+    Route::resource('/pengaturan/profil', ProfilController::class);
+    Route::resource('/pengaturan/admin', AdminController::class);
 });
 
 // ===== SALES ROUTES =====
@@ -219,8 +217,8 @@ Route::prefix('seles2')->name('seles2.')->group(function () {
     */
 
 
-    Route::get('/sales/pembukuan', [PembukuanSalesController::class, 'index'])
-            ->name('sales.pembukuan.index');
+    Route::get('/seles2/pembukuan', [PembukuanSalesController::class, 'index'])
+        ->name('seles2.pembukuan.index');
 
 
 

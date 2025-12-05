@@ -18,7 +18,7 @@ class PembukuanSalesController extends Controller
             ->selectRaw('
                 s.id_sales,
                 u.name as nama_sales,
-                
+
                 COALESCE((
                     SELECT SUM(p.nominal)
                     FROM pembayaran p
@@ -69,7 +69,6 @@ class PembukuanSalesController extends Controller
                 return $row;
             });
 
-        // variabel yang DIKIRIM ke view
         return view('seles2.pembukuan.index', [
             'rekap'         => $rekap,
             'selectedYear'  => $tahun,

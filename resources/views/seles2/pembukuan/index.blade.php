@@ -1,8 +1,15 @@
 @extends('seles2.layout.master')
-
 @section('title', 'Pembukuan Sales Bulanan')
 
 @section('content')
+@php
+    // Biar nggak error kalau controller belum kirim $rekap (fallback ke collection kosong)
+    /** @var \Illuminate\Support\Collection $rekap */
+    $rekap = $rekap ?? collect();
+    $selectedMonth = $selectedMonth ?? now()->month;
+    $selectedYear  = $selectedYear ?? now()->year;
+@endphp
+
 <div class="max-w-6xl mx-auto px-4 py-6">
 
     {{-- FILTER BULAN & TAHUN --}}
@@ -10,13 +17,12 @@
         <form method="GET" action="{{ route('seles2.pembukuan.index') }}"
             class="bg-white p-4 rounded-lg shadow-sm border flex flex-wrap gap-4 items-end">
 
-
             <div>
                 <label class="text-xs text-gray-600">Bulan</label>
                 <select name="bulan" class="border rounded-md px-2 py-1 text-sm">
                     @foreach(range(1,12) as $m)
                         <option value="{{ $m }}"
-                            {{ (int)($selectedMonth ?? now()->month) === $m ? 'selected' : '' }}>
+                            {{ (int)$selectedMonth === $m ? 'selected' : '' }}>
                             {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                         </option>
                     @endforeach
@@ -25,14 +31,14 @@
 
             <div>
                 <label class="text-xs text-gray-600">Tahun</label>
-                    <select name="tahun" class="border rounded-md px-2 py-1 text-sm">
-                        @foreach(range(now()->year - 3, now()->year + 1) as $y)
-                            <option value="{{ $y }}"
-                                {{ (int)($selectedYear ?? now()->year) === $y ? 'selected' : '' }}>
-                                {{ $y }}
-                            </option>
-                        @endforeach
-                    </select>
+                <select name="tahun" class="border rounded-md px-2 py-1 text-sm">
+                    @foreach(range(now()->year - 3, now()->year + 1) as $y)
+                        <option value="{{ $y }}"
+                            {{ (int)$selectedYear === $y ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <button class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm">
@@ -41,6 +47,15 @@
         </form>
     </div>
 
+    {{-- Info periode --}}
+    <div class="mb-3 text-sm text-gray-600">
+        Periode:
+        <span class="font-semibold">
+            {{ \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->translatedFormat('F Y') }}
+        </span>
+    </div>
+
+    {{-- JIKA KOSONG --}}
     @if($rekap->isEmpty())
         <div class="p-3 bg-yellow-100 text-yellow-700 text-sm rounded">
             Data tidak ditemukan untuk bulan & tahun ini.
@@ -48,7 +63,8 @@
     @endif
 
     {{-- MOBILE VIEW (CARD) --}}
-    <div class="md:hidden space-y-3">
+    @if(!$rekap->isEmpty())
+    <div class="md:hidden space-y-3 mt-3">
         @foreach($rekap as $row)
         <div class="bg-white p-4 rounded-lg shadow border">
             <div class="flex justify-between mb-2">
@@ -60,7 +76,7 @@
                 <span class="text-xs px-2 py-1 rounded
                     {{ $row->selisih_setoran < 0 ? 'bg-red-100 text-red-600' :
                        ($row->selisih_setoran > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-700') }}">
-                    Rp {{ number_format($row->selisih_setoran,0,',','.') }}
+                    Selisih: Rp {{ number_format($row->selisih_setoran,0,',','.') }}
                 </span>
             </div>
 
@@ -83,8 +99,10 @@
         </div>
         @endforeach
     </div>
+    @endif
 
     {{-- DESKTOP VIEW --}}
+    @if(!$rekap->isEmpty())
     <div class="hidden md:block mt-4">
         <div class="bg-white rounded-lg shadow border overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -103,27 +121,21 @@
                     @foreach($rekap as $row)
                     <tr class="border-t">
                         <td class="px-4 py-2">{{ $row->nama_sales }}</td>
-
                         <td class="px-4 py-2 text-right">
                             Rp {{ number_format($row->total_pendapatan,0,',','.') }}
                         </td>
-
                         <td class="px-4 py-2 text-right">
                             Rp {{ number_format($row->total_komisi,0,',','.') }}
                         </td>
-
                         <td class="px-4 py-2 text-right">
                             Rp {{ number_format($row->total_pengeluaran,0,',','.') }}
                         </td>
-
                         <td class="px-4 py-2 text-right font-semibold">
                             Rp {{ number_format($row->harus_disetorkan,0,',','.') }}
                         </td>
-
                         <td class="px-4 py-2 text-right font-semibold">
                             Rp {{ number_format($row->total_setoran,0,',','.') }}
                         </td>
-
                         <td class="px-4 py-2 text-right">
                             <span class="px-2 py-1 rounded text-xs
                                 {{ $row->selisih_setoran < 0 ? 'bg-red-100 text-red-600' :
@@ -137,6 +149,7 @@
             </table>
         </div>
     </div>
+    @endif
 
 </div>
 @endsection

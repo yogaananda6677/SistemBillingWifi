@@ -37,13 +37,10 @@ Route::get('/', function () {
 // ===== ADMIN ROUTES =====
 Route::middleware(['auth', 'admin'])->group(function () {
     // Dashboard admin
-<<<<<<< HEAD
 
     Route::get('/dashboard/admin', [DashboardController::class, 'index'])
         ->name('dashboard-admin');
-=======
     Route::get('/dashboard/admin', [DashboardController::class, 'index'])->name('dashboard-admin');
->>>>>>> f0d7dbacbbec81f9019833cbf6ac5cae35366d78
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);
@@ -134,6 +131,17 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 
+    Route::get('/setoran-sales', [SetoranAdminController::class, 'index'])
+    ->name('admin.setoran.index');
+
+Route::get('/setoran-sales/{id_sales}/riwayat', [SetoranAdminController::class, 'riwayat'])
+    ->name('admin.setoran.riwayat');
+
+Route::get('/setoran-sales/{id_sales}/tambah', [SetoranAdminController::class, 'create'])
+    ->name('admin.setoran.create');
+
+Route::post('/setoran-sales', [SetoranAdminController::class, 'store'])
+    ->name('admin.setoran.store');
 });
 
 // ===== SALES ROUTES =====

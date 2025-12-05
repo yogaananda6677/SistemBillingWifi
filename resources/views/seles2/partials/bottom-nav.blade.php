@@ -26,14 +26,6 @@
                 </div>
                 <span>Pembayaran</span>
             </a>
-
-<a href="{{ route('seles2.pembukuan.index') }}"
-    class="nav-item {{ request()->routeIs('seles2.pembukuan.*') ? 'active' : '' }}">
-    <i class="bi bi-receipt"></i>
-    <span>Pembukuan</span>
-</a>
-
-
 <a href="{{ route('seles2.setoran.index') }}"
     class="nav-item {{ request()->routeIs('seles2.setoran.*') ? 'active' : '' }}">
     <i class="bi bi-cash-stack"></i>
@@ -47,12 +39,6 @@
                 <span>Buku</span>
             </a>
 
-            {{-- 5. Setoran --}}
-            <a href="{{ route('seles2.setoran.riwayat') }}"
-                class="nav-item {{ request()->routeIs('seles2.setoran.*') ? 'active' : '' }}">
-                <i class="bi bi-wallet2{{ request()->routeIs('seles2.setoran.*') ? '-fill' : '' }}"></i>
-                <span>Setoran</span>
-            </a>
 
         </div>
     </div>

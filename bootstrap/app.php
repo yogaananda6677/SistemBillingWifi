@@ -1,5 +1,5 @@
 <?php
-use Illuminate\Console\Scheduling\Schedule;
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'auth'  => \Illuminate\Auth\Middleware\Authenticate::class,
+            'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'admin' => \App\Http\Middleware\Admin::class,
             'sales' => \App\Http\Middleware\Sales::class,
         ]);
@@ -25,7 +25,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ->withoutOverlapping()
             ->runInBackground();
     })
-
 
     ->withExceptions(function (Exceptions $exceptions): void {
         //

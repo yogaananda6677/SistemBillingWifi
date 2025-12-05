@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminTagihanController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\DashboardController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\PpnController;
+use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\TagihanPelangganSalesController;
@@ -25,20 +27,24 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// ===== ADMIN ROUTES =====
-Route::middleware(['auth', 'admin'])->group(function () {
-    // Dashboard admin
 
-Route::get('/dashboard/admin', [DashboardController::class, 'index'])
-    ->name('dashboard-admin');
+// ===============================
+// ======== ADMIN ROUTES =========
+// ===============================
+Route::middleware(['auth', 'admin'])->group(function () {
+
+    // Dashboard admin
+    Route::get('/dashboard/admin', [DashboardController::class, 'index'])
+        ->name('dashboard-admin');
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);
+
     // Halaman status pelanggan (menu terpisah)
     Route::get('/pelanggan-status', [PelangganController::class, 'status'])
         ->name('pelanggan.status');
 
-    // Aksi status (sudah cocok dengan method di controller kamu)
+    // Aksi status
     Route::patch('/pelanggan/{pelanggan}/aktivasi', [PelangganController::class, 'aktivasi'])
         ->name('pelanggan.aktivasi');
     Route::patch('/pelanggan/{pelanggan}/isolir', [PelangganController::class, 'isolir'])
@@ -47,19 +53,21 @@ Route::get('/dashboard/admin', [DashboardController::class, 'index'])
         ->name('pelanggan.buka_isolir');
     Route::patch('/pelanggan/{pelanggan}/berhenti', [PelangganController::class, 'berhenti'])
         ->name('pelanggan.berhenti');
+
     Route::get('/get-sales-by-area/{id_area}', [SalesController::class, 'getSalesByArea']);
+
     Route::delete('/tagihan/hapus-pelanggan', [TagihanController::class, 'hapusTagihanPelanggan'])
         ->name('tagihan.hapus-pelanggan');
 
-    // halaman list tagihan belum lunas (pembayaran oleh admin)
+    // Halaman list tagihan belum lunas (pembayaran oleh admin)
     Route::get('/admin/tagihan', [AdminTagihanController::class, 'index'])
         ->name('admin.tagihan.index');
 
-    // bayar banyak tagihan sekaligus
+    // Bayar banyak tagihan sekaligus
     Route::post('/admin/tagihan/bayar-banyak', [AdminTagihanController::class, 'bayarBanyak'])
         ->name('admin.tagihan.bayar-banyak');
 
-
+    // Pembayaran (admin)
     Route::get('/pembayaran/riwayat', [PembayaranController::class, 'riwayat'])
         ->name('pembayaran.riwayat');
 
@@ -68,198 +76,252 @@ Route::get('/dashboard/admin', [DashboardController::class, 'index'])
     Route::delete('/pembayaran/item-bulk', [PembayaranController::class, 'hapusItemBulk'])
         ->name('pembayaran.item.bulkDestroy');
 
+    // Master sales (data sales)
     Route::resource('sales/data-sales', SalesController::class);
+
+    // Pengajuan (admin)
     Route::get('/admin/pengajuan', [PengajuanController::class, 'index'])
-    ->name('admin.pengajuan.index');
+        ->name('admin.pengajuan.index');
 
-        Route::get('/pembukuan', [PembukuanController::class, 'index'])->name('pembukuan.index');
-    Route::get('/pembukuan/{sales}', [PembukuanController::class, 'show'])->name('pembukuan.show');
-    
+    // Pembukuan (admin)
+    Route::get('/pembukuan', [PembukuanController::class, 'index'])
+        ->name('pembukuan.index');
+    Route::get('/pembukuan/{sales}', [PembukuanController::class, 'show'])
+        ->name('pembukuan.show');
 
-
+    // Lihat bukti pengajuan (admin)
     Route::get('/pengajuan/bukti/{pengajuan:id_pengeluaran}', function (Pengeluaran $pengajuan) {
 
-    if (!$pengajuan->bukti_file) {
-        abort(404, 'Bukti tidak ditemukan.');
-    }
+        if (!$pengajuan->bukti_file) {
+            abort(404, 'Bukti tidak ditemukan.');
+        }
 
-    $path = storage_path('app/public/' . $pengajuan->bukti_file);
+        $path = storage_path('app/public/' . $pengajuan->bukti_file);
 
-    if (!file_exists($path)) {
-        abort(404, 'File bukti tidak ditemukan.');
-    }
+        if (!file_exists($path)) {
+            abort(404, 'File bukti tidak ditemukan.');
+        }
 
-    return response()->file($path);
+        return response()->file($path);
 
-})->name('admin.pengajuan.bukti');
+    })->name('admin.pengajuan.bukti');
 
-    Route::put('/pengeluaran/update-status/{id}',
-        [App\Http\Controllers\PengajuanController::class, 'updateStatus']
-    )->name('pengajuan.updateStatus');
+    // Update status pengeluaran
+    Route::put('/pengeluaran/update-status/{id}', [PengajuanController::class, 'updateStatus'])
+        ->name('pengajuan.updateStatus');
 
+    // Pengaturan
     Route::resource('pengaturan/ppn', PpnController::class);
     Route::resource('pengaturan/area', AreaController::class);
     Route::resource('pengaturan/paket-layanan', PaketController::class);
     Route::resource('/tagihan', TagihanController::class);
-
-    Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
-
-
-});
-
-// ===== SALES ROUTES =====
-Route::middleware(['auth', 'sales'])->group(function () {
-    // Dashboard sales
-    Route::get('/dashboard/sales', [DashboardSalesController::class, 'index'])->name('dashboard-sales');
-    // Resource tagihan pelanggan untuk sales
-    Route::resource('tagihan-pelanggan', TagihanPelangganSalesController::class);
-        // LIST PENGAJUAN SALES
-
-            
-    // LIST PENGAJUAN
-    Route::get('/dashboard/sales/pengajuan', [SalesPengajuanController::class, 'index'])
-        ->name('sales.pengajuan.index');
-
-    // FORM TAMBAH
-    Route::get('/dashboard/sales/pengajuan/create', [SalesPengajuanController::class, 'create'])
-        ->name('sales.pengajuan.create');
-
-    // SIMPAN PENGAJUAN BARU
-    Route::post('/dashboard/sales/pengajuan', [SalesPengajuanController::class, 'store'])
-        ->name('sales.pengajuan.store');
-
-    // FORM EDIT
-    Route::get('/dashboard/sales/pengajuan/{pengeluaran}/edit', [SalesPengajuanController::class, 'edit'])
-        ->name('sales.pengajuan.edit');
-
-    // UPDATE PENGAJUAN
-    Route::put('/dashboard/sales/pengajuan/{pengeluaran}', [SalesPengajuanController::class, 'update'])
-        ->name('sales.pengajuan.update');
-
-    // HAPUS PENGAJUAN
-    Route::delete('/dashboard/sales/pengajuan/{pengeluaran}', [SalesPengajuanController::class, 'destroy'])
-        ->name('sales.pengajuan.destroy');
-Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::class, 'showBukti'])
-    ->name('sales.pengajuan.bukti');
+    Route::resource('/pengaturan/profil', ProfilController::class);
+    Route::resource('/pengaturan/admin', AdminController::class);
 
 });
 
-Route::prefix('seles2')->name('seles2.')->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | PELANGGAN (SALES)
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('pelanggan')->name('pelanggan.')->group(function () {
-
-        // LIST PELANGGAN SALES (MOBILE)
-        Route::get('/', [PelangganSalesController::class, 'index'])
-            ->name('index');
-
-        // HALAMAN STATUS PELANGGAN (baru / aktif / berhenti / isolir)
-        Route::get('/status', [PelangganSalesController::class, 'status'])
-            ->name('status');
-
-        // HALAMAN STATUS PEMBAYARAN (sudah / belum bayar)
-        Route::get('/status-bayar', [PelangganSalesController::class, 'statusBayar'])
-            ->name('statusBayar');
-
-        // FILTER: BELUM BAYAR (VERSI LAMA BERDASARKAN KOLOM status_bayar)
-        Route::get('/belum-bayar', function () {
-            $pelanggan = Pelanggan::where('status_bayar', 'belum')
-                ->latest()
-                ->paginate(10);
-
-            return view('seles2.pelanggan.belum-bayar', compact('pelanggan'));
-        })->name('belum-bayar');
-
-        // FILTER: SUDAH BAYAR (VERSI LAMA BERDASARKAN KOLOM status_bayar)
-        Route::get('/sudah-bayar', function () {
-            $pelanggan = Pelanggan::where('status_bayar', 'sudah')
-                ->latest()
-                ->paginate(10);
-
-            return view('seles2.pelanggan.sudah-bayar', compact('pelanggan'));
-        })->name('sudah-bayar');
-
-        // DETAIL PELANGGAN SALES (MOBILE)
-        Route::get('/{id}', [PelangganSalesController::class, 'show'])
-            ->name('show');
-
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | TAGIHAN (PEMBAYARAN) SALES – HALAMAN PEMBAYARAN
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/tagihan', [TagihanSalesController::class, 'index'])
-        ->name('tagihan.index');
-
-    Route::post('/tagihan/bayar-banyak', [TagihanSalesController::class, 'bayarBanyak'])
-        ->name('tagihan.bayar-banyak');
+// ===============================
+// ========= SALES ROUTES ========
+// ===============================
+// Semua route sales sekarang otomatis berprefix:
+// - URL:   /sales/...
+// - Name:  sales....
+Route::middleware(['auth', 'sales'])
+    ->prefix('sales')
+    ->name('sales.')
+    ->group(function () {
 
         /*
-    |----------------------------------------------------------------------
-    | RIWAYAT PEMBAYARAN (SALES)
-    |----------------------------------------------------------------------
-    */
-    Route::prefix('pembayaran')->name('pembayaran.')->group(function () {
-        Route::get('/riwayat', [PembayaranSalesController::class, 'riwayat'])
-            ->name('riwayat');
-    });
+        |--------------------------------------------------------------------------
+        | DASHBOARD SALES
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/dashboard', [DashboardSalesController::class, 'index'])
+            ->name('dashboard');
+
+        /*
+        |--------------------------------------------------------------------------
+        | TAGIHAN PELANGGAN (SALES)
+        |--------------------------------------------------------------------------
+        */
+        Route::resource('tagihan-pelanggan', TagihanPelangganSalesController::class);
+
+        /*
+        |--------------------------------------------------------------------------
+        | PENGAJUAN SALES (FORM & LIST)
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/pengajuan', [SalesPengajuanController::class, 'index'])
+            ->name('pengajuan.index');
+
+        Route::get('/pengajuan/create', [SalesPengajuanController::class, 'create'])
+            ->name('pengajuan.create');
+
+        Route::post('/pengajuan', [SalesPengajuanController::class, 'store'])
+            ->name('pengajuan.store');
+
+        Route::get('/pengajuan/{pengeluaran}/edit', [SalesPengajuanController::class, 'edit'])
+            ->name('pengajuan.edit');
+
+        Route::put('/pengajuan/{pengeluaran}', [SalesPengajuanController::class, 'update'])
+            ->name('pengajuan.update');
+
+        Route::delete('/pengajuan/{pengeluaran}', [SalesPengajuanController::class, 'destroy'])
+            ->name('pengajuan.destroy');
+
+        Route::get('/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::class, 'showBukti'])
+            ->name('pengajuan.bukti');
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | PEMBUKUAN
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('pembukuan')->name('pembukuan.')->group(function () {
+        /*
+        |--------------------------------------------------------------------------
+        | SALES2 (MOBILE VIEW) - PELANGGAN & STATUS
+        |--------------------------------------------------------------------------
+        | URL:  /sales/seles2/...
+        | Name: sales.seles2....
+        */
+        Route::prefix('seles2')->name('seles2.')->group(function () {
 
-        Route::get('/', fn () => view('seles2.pembukuan.index'))
-            ->name('index');
+            // Halaman statis blade
+            Route::get('/pelanggan', fn () => view('seles2.pelanggan.index'))
+                ->name('pelanggan.index');
+            Route::get('/pelanggan/{id}', fn ($id) => view('seles2.pelanggan.show'))
+                ->name('pelanggan.show');
+            Route::get('/pelanggan/belum-bayar', fn () => view('seles2.pelanggan.belum-bayar'))
+                ->name('pelanggan.belum-bayar');
+            Route::get('/pelanggan/sudah-bayar', fn () => view('seles2.pelanggan.sudah-bayar'))
+                ->name('pelanggan.sudah-bayar');
+            Route::get('/pelanggan/baru', fn () => view('seles2.pelanggan.pelanggan-baru'))
+                ->name('pelanggan.baru');
+            Route::get('/pelanggan/berhenti', fn () => view('seles2.pelanggan.berhenti'))
+                ->name('pelanggan.berhenti');
+            Route::get('/pelanggan/create', fn () => view('seles2.pelanggan.create'))
+                ->name('pelanggan.create');
 
-        Route::get('/detail', fn () => view('seles2.pembukuan.detail'))
-            ->name('detail');
-
-        // --------- PENGAJUAN NESTED ----------
-        Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
-
-            Route::get('/', fn () => view('seles2.pembukuan.pengajuan.index'))
+            // LIST PELANGGAN SALES (MOBILE)
+            Route::get('/', [PelangganSalesController::class, 'index'])
                 ->name('index');
 
-            Route::get('/create', fn () => view('seles2.pembukuan.pengajuan.create'))
-                ->name('create');
+            // HALAMAN STATUS PELANGGAN (baru / aktif / berhenti / isolir)
+            Route::get('/status', [PelangganSalesController::class, 'status'])
+                ->name('status');
 
-            Route::get('/{id}', fn ($id) => view('seles2.pembukuan.pengajuan.show'))
+            // HALAMAN STATUS PEMBAYARAN (sudah / belum bayar)
+            Route::get('/status-bayar', [PelangganSalesController::class, 'statusBayar'])
+                ->name('statusBayar');
+
+            // FILTER: BELUM BAYAR (VERSI LAMA BERDASARKAN KOLOM status_bayar)
+            Route::get('/belum-bayar', function () {
+                $pelanggan = Pelanggan::where('status_bayar', 'belum')
+                    ->latest()
+                    ->paginate(10);
+
+                return view('seles2.pelanggan.belum-bayar', compact('pelanggan'));
+            })->name('belum-bayar');
+
+            // FILTER: SUDAH BAYAR (VERSI LAMA BERDASARKAN KOLOM status_bayar)
+            Route::get('/sudah-bayar', function () {
+                $pelanggan = Pelanggan::where('status_bayar', 'sudah')
+                    ->latest()
+                    ->paginate(10);
+
+                return view('seles2.pelanggan.sudah-bayar', compact('pelanggan'));
+            })->name('sudah-bayar');
+
+            // DETAIL PELANGGAN SALES (MOBILE)
+            Route::get('/detail/{id}', [PelangganSalesController::class, 'show'])
                 ->name('show');
         });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TAGIHAN (PEMBAYARAN) SALES – HALAMAN PEMBAYARAN
+        |--------------------------------------------------------------------------
+        | URL:  /sales/tagihan
+        | Name: sales.tagihan.index
+        */
+        Route::get('/tagihan', [TagihanSalesController::class, 'index'])
+            ->name('tagihan.index');
+
+        Route::post('/tagihan/bayar-banyak', [TagihanSalesController::class, 'bayarBanyak'])
+            ->name('tagihan.bayar-banyak');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RIWAYAT PEMBAYARAN (SALES)
+        |--------------------------------------------------------------------------
+        | URL:  /sales/pembayaran/riwayat
+        | Name: sales.pembayaran.riwayat
+        */
+        Route::prefix('pembayaran')->name('pembayaran.')->group(function () {
+            Route::get('/riwayat', [PembayaranSalesController::class, 'riwayat'])
+                ->name('riwayat');
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PEMBUKUAN (SALES)
+        |--------------------------------------------------------------------------
+        | URL:  /sales/pembukuan/...
+        | Name: sales.pembukuan....
+        */
+        Route::prefix('pembukuan')->name('pembukuan.')->group(function () {
+
+            Route::get('/', fn () => view('seles2.pembukuan.index'))
+                ->name('index');
+
+            Route::get('/detail', fn () => view('seles2.pembukuan.detail'))
+                ->name('detail');
+
+            // --------- PENGAJUAN NESTED (SALES PEMBUKUAN) ----------
+            Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
+
+                Route::get('/', fn () => view('seles2.pembukuan.pengajuan.index'))
+                    ->name('index');
+
+                Route::get('/create', fn () => view('seles2.pembukuan.pengajuan.create'))
+                    ->name('create');
+
+                Route::get('/{id}', fn ($id) => view('seles2.pembukuan.pengajuan.show'))
+                    ->name('show');
+
+            });
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SETORAN (SALES)
+        |--------------------------------------------------------------------------
+        | URL:  /sales/setoran, /sales/setoran/riwayat
+        | Name: sales.setoran.index, sales.setoran.riwayat
+        */
+        Route::get('/setoran', fn () => view('seles2.setoran.index'))
+            ->name('setoran.index');
+
+        Route::get('/setoran/riwayat', fn () => view('seles2.setoran.riwayat'))
+            ->name('setoran.riwayat');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROFILE (SALES)
+        |--------------------------------------------------------------------------
+        | URL:  /sales/profile, /sales/profile/edit, /sales/profile/password
+        | Name: sales.profile, sales.profile.edit, sales.profile.password
+        */
+        Route::get('/profile', fn () => view('seles2.profile.index'))
+            ->name('profile');
+
+        Route::get('/profile/edit', fn () => view('seles2.profile.edit'))
+            ->name('profile.edit');
+
+        Route::get('/profile/password', fn () => view('seles2.profile.password'))
+            ->name('profile.password');
+
     });
-
-    /*
-    |--------------------------------------------------------------------------
-    | SETORAN
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/setoran', fn () => view('seles2.setoran.index'))
-        ->name('setoran.index');
-
-    Route::get('/setoran/riwayat', fn () => view('seles2.setoran.riwayat'))
-        ->name('setoran.riwayat');
-
-    /*
-    |--------------------------------------------------------------------------
-    | PROFILE
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/profile', fn () => view('seles2.profile.index'))
-        ->name('profile');
-
-    Route::get('/profile/edit', fn () => view('seles2.profile.edit'))
-        ->name('profile.edit');
-
-    Route::get('/profile/password', fn () => view('seles2.profile.password'))
-        ->name('profile.password');
-});

@@ -2,63 +2,57 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SalesSetoranService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SetoranAdminController extends Controller
 {
     // ======================== //
-    // 1. HALAMAN LIST SALES   //
+    // 1. LIST SEMUA SALES      //
     // ======================== //
-    public function index(Request $request)
+    public function index()
     {
-        // Bulan default: bulan berjalan (PASTIKAN INTEGER)
-        $bulan = (int) $request->get('bulan', now()->month);
-        $namaBulan = now()->startOfMonth()->month($bulan)->translatedFormat('F');
-
-        // Ringkasan per sales (total setor, target sementara 0)
-        $sales = DB::table('sales as s')
+        $salesList = DB::table('sales as s')
             ->join('users as u', 'u.id', '=', 's.user_id')
-            ->leftJoin('setoran as st', function ($join) use ($bulan) {
-                $join->on('st.id_sales', '=', 's.id_sales')
-                     ->whereMonth('st.tanggal_setoran', $bulan);
-            })
-            ->select(
-                's.id_sales',
-                'u.name as nama_sales',
-                DB::raw('COALESCE(SUM(st.nominal), 0) as total_setor')
-            )
-            ->groupBy('s.id_sales', 'u.name')
+            ->select('s.id_sales', 'u.name as nama_sales')
             ->orderBy('u.name')
             ->get()
             ->map(function ($row) {
-                // karena di tabel sales belum ada kolom target_setor, kita set 0 dulu
-                $row->target_setor = 0;
+                $ledger = SalesSetoranService::buildLedger($row->id_sales);
 
-                // sisa = target - total_setor
-                $row->sisa = $row->target_setor - $row->total_setor;
+                // total akumulasi
+                $row->total_pendapatan  = $ledger['totalPendapatan'];
+                $row->total_komisi      = $ledger['totalKomisi'];
+                $row->total_pengeluaran = $ledger['totalPengeluaran'];
+                $row->total_wajib       = $ledger['totalWajib'];
+                $row->total_setoran     = $ledger['totalSetoran'];
+                $row->saldo_global      = $ledger['saldoGlobal']; // total_setoran - total_wajib
+
+                // 👉 dipakai di Blade
+                $row->target_setor = $ledger['totalWajib'];              // kolom "Target Setor"
+                $row->total_setor  = $ledger['totalSetoran'];           // kolom "Setor"
+                $row->sisa         = $row->target_setor - $row->total_setor; // positif = masih kurang
 
                 return $row;
             });
 
         return view('setoran.index', [
-            'sales'      => $sales,
-            'bulan'      => $bulan,
-            'namaBulan'  => $namaBulan,
+            'sales' => $salesList,
         ]);
     }
 
     // ======================== //
-    // 2. RIWAYAT SETORAN      //
+    // 2. RIWAYAT DETAIL SALES  //
     // ======================== //
     public function riwayat($id_sales, Request $request)
     {
-        // Bulan juga harus integer, jangan pakai format('m') string
+        $tahun = (int) $request->get('tahun', now()->year);
         $bulan = (int) $request->get('bulan', now()->month);
-        $namaBulan = now()->startOfMonth()->month($bulan)->translatedFormat('F');
+        $namaBulan = now()->setYear($tahun)->setMonth($bulan)->translatedFormat('F');
 
-        // data sales
+        // Data sales
         $sales = DB::table('sales as s')
             ->join('users as u', 'u.id', '=', 's.user_id')
             ->select('s.id_sales', 'u.name as nama_sales')
@@ -69,40 +63,58 @@ class SetoranAdminController extends Controller
             abort(404);
         }
 
-        // sementara: target 0 dulu (belum ada kolom target di DB)
-        $sales->target_setor = 0;
+        // Bangun ledger global dari service
+        $ledger = SalesSetoranService::buildLedger($id_sales);
 
-        // total setor bulan ini
-        $totalSetor = DB::table('setoran')
-            ->where('id_sales', $id_sales)
-            ->whereMonth('tanggal_setoran', $bulan)
-            ->sum('nominal');
+        $ym = sprintf('%04d-%02d', $tahun, $bulan);
 
-        // sisa global bulan ini (target - total)
-        $sisa = $sales->target_setor - $totalSetor;
+        // Wajib setor bulan ini (pendapatan - komisi - pengeluaran)
+        $wajibBulan = $ledger['monthlyKewajiban'][$ym]['wajib'] ?? 0;
 
-        // riwayat detail
-        $riwayat = DB::table('setoran as st')
-            ->join('admins as a', 'a.id_admin', '=', 'st.id_admin')
-            ->join('users as ua', 'ua.id', '=', 'a.user_id')
-            ->select(
-                'st.tanggal_setoran',
-                'st.nominal',
-                'st.catatan',
-                'ua.name as nama_admin'
-            )
-            ->where('st.id_sales', $id_sales)
-            ->whereMonth('st.tanggal_setoran', $bulan)
-            ->orderByDesc('st.tanggal_setoran')
-            ->get();
+        // Hitung alokasi setoran yang benar-benar menutup kewajiban bulan ini
+        // dan kelebihan di bulan ini (lebih == true)
+        $alokUntukBulanIni   = 0; // dipakai untuk nutup kewajiban bulan ini
+        $kelebihanBulanIni   = 0; // setoran ekstra di bulan ini (lebih)
+
+        foreach ($ledger['allocDetail'] as $entries) {
+            foreach ($entries as $aloc) {
+                if ($aloc['periode'] === $ym) {
+                    if (!empty($aloc['lebih'])) {
+                        $kelebihanBulanIni += $aloc['nominal'];
+                    } else {
+                        $alokUntukBulanIni += $aloc['nominal'];
+                    }
+                }
+            }
+        }
+
+        // Sisa kewajiban bulan ini = wajib - alokasi
+        $sisaBulan = $wajibBulan - $alokUntukBulanIni;
+        if ($sisaBulan < 0) {
+            $sisaBulan = 0; // jaga-jaga, secara teori nggak akan negatif
+        }
+
+        // Ambil hanya setoran yang DIBAYAR bulan ini (untuk tabel riwayat)
+        $setoransBulanIni = $ledger['setorans']->filter(function ($st) use ($tahun, $bulan) {
+            return (int) substr($st->tanggal_setoran, 0, 4) === $tahun
+                && (int) substr($st->tanggal_setoran, 5, 2) === $bulan;
+        });
 
         return view('setoran.riwayat', [
-            'sales'      => $sales,
-            'riwayat'    => $riwayat,
-            'totalSetor' => $totalSetor,
-            'sisa'       => $sisa,
-            'bulan'      => $bulan,
-            'namaBulan'  => $namaBulan,
+            'sales'          => $sales,
+            'setorans'       => $setoransBulanIni,
+            'allocDetail'    => $ledger['allocDetail'],
+            'saldoPerBulan'  => $ledger['saldoPerBulan'],
+            'saldoGlobal'    => $ledger['saldoGlobal'],
+
+            'tahun'          => $tahun,
+            'bulan'          => $bulan,
+            'namaBulan'      => $namaBulan,
+
+            'wajibBulan'     => $wajibBulan,
+            'alokBulanIni'   => $alokUntukBulanIni,
+            'kelebihanBulan' => $kelebihanBulanIni,
+            'sisaBulan'      => $sisaBulan,
         ]);
     }
 

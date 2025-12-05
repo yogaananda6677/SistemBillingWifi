@@ -59,24 +59,46 @@
                 <table class="table table-sm table-bordered mb-0 align-middle text-end">
                     <thead class="table-light text-center align-middle">
                         <tr>
-                            <th class="text-start">Sales / Admin</th>
+                            <th class="text-start" style="min-width:220px;">Sales / Admin</th>
                             <th>Pendapatan</th>
                             <th>Komisi</th>
                             <th>Pengeluaran</th>
                             <th>Total Bersih</th>
                             <th>Setoran</th>
-                            <th>Selisih</th>
+                            <th>Selisih (Bulan Ini)</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($rekap as $row)
                             @php
-                                // Unik per baris (sales/admin)
                                 $key = $row->jenis . '-' . $row->user_id;
+                                $saldoGlobal = $row->saldo_global ?? 0;
+                                $saldoLabel  = abs($saldoGlobal);
+                                $saldoClass  = $saldoLabel == 0
+                                    ? 'text-muted'
+                                    : ($saldoGlobal > 0 ? 'text-success' : 'text-danger');
+
+                                $selisih = $row->selisih ?? 0;
+                                $selisihClass = $selisih == 0
+                                    ? 'text-muted'
+                                    : ($selisih > 0 ? 'text-success' : 'text-danger');
                             @endphp
                             <tr>
+                                {{-- LABEL + SALDO AKUMULASI --}}
                                 <td class="text-start">
-                                    {{ $row->label }}
+                                    <div>{{ $row->label }}</div>
+                                    <small class="text-muted d-block">
+                                        Saldo akumulasi:
+                                        <span class="{{ $saldoClass }}">
+                                            @if($saldoLabel == 0)
+                                                Pas: Rp 0
+                                            @elseif($saldoGlobal > 0)
+                                                Kelebihan: Rp {{ number_format($saldoLabel, 0, ',', '.') }}
+                                            @else
+                                                Kurang: Rp {{ number_format($saldoLabel, 0, ',', '.') }}
+                                            @endif
+                                        </span>
+                                    </small>
                                 </td>
 
                                 {{-- Pendapatan (klik -> modal pembayaran) --}}
@@ -93,7 +115,7 @@
                                     @endif
                                 </td>
 
-                                {{-- Komisi (klik -> modal komisi, hanya sales) --}}
+                                {{-- Komisi --}}
                                 <td class="text-danger">
                                     @if($row->jenis === 'sales' && ($row->total_komisi ?? 0) > 0)
                                         <button type="button"
@@ -107,7 +129,7 @@
                                     @endif
                                 </td>
 
-                                {{-- Pengeluaran (klik -> modal pengeluaran, hanya sales) --}}
+                                {{-- Pengeluaran --}}
                                 <td class="text-danger">
                                     @if($row->jenis === 'sales' && ($row->total_pengeluaran ?? 0) > 0)
                                         <button type="button"
@@ -126,7 +148,7 @@
                                     Rp {{ number_format($row->total_bersih ?? 0, 0, ',', '.') }}
                                 </td>
 
-                                {{-- Setoran (klik -> modal setoran, hanya sales) --}}
+                                {{-- Setoran --}}
                                 <td class="text-success">
                                     @if($row->jenis === 'sales' && ($row->total_setoran ?? 0) > 0)
                                         <button type="button"
@@ -140,9 +162,9 @@
                                     @endif
                                 </td>
 
-                                {{-- Selisih --}}
-                                <td class="{{ ($row->selisih ?? 0) < 0 ? 'text-danger' : 'text-success' }} fw-semibold">
-                                    Rp {{ number_format($row->selisih ?? 0, 0, ',', '.') }}
+                                {{-- Selisih Bulan Ini --}}
+                                <td class="{{ $selisihClass }} fw-semibold">
+                                    Rp {{ number_format($selisih, 0, ',', '.') }}
                                 </td>
                             </tr>
                         @empty
@@ -367,7 +389,6 @@
             </div>
         </div>
         @endif
-
     @endforeach
 
 </div>

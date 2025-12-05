@@ -18,17 +18,10 @@
     .btn-nalen:hover {
         background: #ffb000;
     }
-    .text-link-yellow {
-        color: #FFC400;
-        font-weight: 600;
-        text-decoration: none;
-    }
 </style>
 
 <div class="container-fluid py-3">
 
-
-    {{-- FLASH ERROR / SUCCESS JIKA ADA --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
@@ -62,7 +55,6 @@
                 @csrf
                 <input type="hidden" name="id_sales" value="{{ $sales->id_sales }}">
 
-                {{-- NOMINAL --}}
                 <div class="mb-3">
                     <label class="form-label">Nominal</label>
                     <div class="input-group input-group-sm">
@@ -80,7 +72,6 @@
                     @enderror
                 </div>
 
-                {{-- CATATAN --}}
                 <div class="mb-3">
                     <label class="form-label">Catatan</label>
                     <textarea name="catatan"

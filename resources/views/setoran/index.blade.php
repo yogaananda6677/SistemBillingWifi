@@ -8,9 +8,6 @@
         box-shadow: 0 6px 20px rgba(0,0,0,.06);
         border: none;
     }
-    .header-strip {
-        border-radius: 0 0 18px 18px;
-    }
     .btn-nalen {
         background: #FFC400;
         border: none;
@@ -60,19 +57,23 @@
                         <tr>
                             <th style="width:60px">No</th>
                             <th>Nama Sales</th>
-                            <th class="text-end">Target Setor</th>
-                            <th class="text-end">Setor</th>
+                            <th class="text-end">Target Setor (Total)</th>
+                            <th class="text-end">Setor (Total)</th>
                             <th class="text-end">Sisa / Kelebihan</th>
                             <th class="text-center" style="width:140px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($sales as $i => $s)
+                            @php
+                                $isKelebihan = $s->sisa < 0;
+                                $jumlah = abs($s->sisa);
+                            @endphp
                             <tr>
                                 <td>{{ sprintf('%03d', $i+1) }}</td>
                                 <td>{{ $s->nama_sales }}</td>
 
-                                {{-- TARGET SETOR (sementara 0 kalau belum ada di DB) --}}
+                                {{-- TARGET SETOR --}}
                                 <td class="text-end">
                                     Rp {{ number_format($s->target_setor ?? 0, 0, ',', '.') }}
                                 </td>
@@ -83,11 +84,6 @@
                                 </td>
 
                                 {{-- SISA / KELEBIHAN --}}
-                                @php
-                                    // sisa = target - total_setor (sudah dihitung di controller)
-                                    $isKelebihan = $s->sisa < 0;   // jika minus berarti kelebihan
-                                    $jumlah = abs($s->sisa);      // hilangkan tanda minus
-                                @endphp
                                 <td class="text-end
                                     @if($jumlah == 0)
                                         text-muted
@@ -110,7 +106,7 @@
                                 <td class="text-center">
                                     <a href="{{ route('admin.setoran.riwayat', $s->id_sales) }}"
                                        class="btn btn-nalen btn-sm">
-                                        Tambah Setoran
+                                        Riwayat & Tambah
                                     </a>
                                 </td>
                             </tr>

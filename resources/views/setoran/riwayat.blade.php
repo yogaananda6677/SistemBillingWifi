@@ -27,16 +27,25 @@
 
 <div class="container-fluid py-3">
 
-    {{-- Bar atas: bulan & admin --}}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="fs-6">
-            <span>Default Mounth: </span>
-            <a href="#" class="text-link-yellow">{{ $namaBulan }}</a>
-        </div>
-        <div class="fw-bold text-uppercase">
-            ADMIN {{ strtoupper(Auth::user()->name ?? 'ADMIN') }}
-        </div>
-    </div>
+    @php
+        $namaBulan = $namaBulan ?? now()->translatedFormat('F');
+
+        // status bulan ini (Sisa / Pas)
+        $sisaNilai   = $sisaBulan ?? 0;
+        $isKelebihan = false; // di desain ini sisa >= 0 (kelebihan dicatat terpisah)
+        $angkaSisa   = abs($sisaNilai);
+        $classSisa   = $angkaSisa == 0
+                        ? 'text-success'
+                        : 'text-danger';
+
+        // saldo global: + = kelebihan, - = masih kurang total
+        $saldo = $saldoGlobal ?? 0;
+        $isKelebihanGlobal = $saldo > 0;
+        $jumlahGlobal = abs($saldo);
+        $classGlobal = $jumlahGlobal == 0
+            ? 'text-muted'
+            : ($isKelebihanGlobal ? 'text-success' : 'text-danger');
+    @endphp
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -45,6 +54,7 @@
         </div>
     @endif
 
+    {{-- KARTU RIWAYAT + MODAL --}}
     <div class="card card-soft mb-3">
         <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center"
              style="border-radius: 18px 18px 0 0;">
@@ -61,19 +71,41 @@
 
         <div class="card-body">
 
-            @php
-                $isKelebihanGlobal = $sisa < 0;
-                $jumlahGlobal = abs($sisa);
-                $classGlobal = $jumlahGlobal == 0
-                    ? 'text-muted'
-                    : ($isKelebihanGlobal ? 'text-success' : 'text-danger');
-            @endphp
-
-            {{-- INFO SALES + STATUS GLOBAL --}}
+            {{-- INFO SALES + REKAP BULAN INI --}}
             <div class="mb-3">
-                <div class="fw-semibold">{{ $sales->nama_sales }}</div>
-                <div>
-                    Status bulan ini:
+                <div class="fw-semibold mb-1">
+                    {{ $sales->nama_sales }}
+                </div>
+
+                <div class="small text-muted">
+                    <div>
+                        Wajib setor bulan ini:
+                        <strong>Rp {{ number_format($wajibBulan, 0, ',', '.') }}</strong>
+                    </div>
+                    <div>
+                        Setoran yang menutup kewajiban bulan ini:
+                        <strong>Rp {{ number_format($alokBulanIni, 0, ',', '.') }}</strong>
+                    </div>
+                    <div>
+                        Sisa kewajiban bulan ini:
+                        <span class="{{ $classSisa }}">
+                            @if($angkaSisa == 0)
+                                Pas: Rp 0
+                            @else
+                                Sisa: Rp {{ number_format($angkaSisa, 0, ',', '.') }}
+                            @endif
+                        </span>
+                    </div>
+                    <div>
+                        Kelebihan yang tercatat di bulan ini:
+                        <span class="{{ $kelebihanBulan > 0 ? 'text-success' : 'text-muted' }}">
+                            Rp {{ number_format($kelebihanBulan, 0, ',', '.') }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-2 small">
+                    Posisi akumulasi (semua bulan):
                     <span class="{{ $classGlobal }}">
                         @if($jumlahGlobal == 0)
                             Pas: Rp 0
@@ -84,12 +116,60 @@
                         @endif
                     </span>
                 </div>
-                <div class="small text-muted">
-                    Total setor bulan ini: Rp {{ number_format($totalSetor, 0, ',', '.') }}
-                </div>
             </div>
 
-            {{-- TABEL RIWAYAT --}}
+            {{-- OPSIONAL: REKAP PER BULAN (dari awal sampai sekarang) --}}
+            @if(!empty($saldoPerBulan))
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Periode</th>
+                                <th class="text-end">Wajib Setor</th>
+                                <th class="text-end">Sudah Dialokasikan</th>
+                                <th class="text-end">Sisa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($saldoPerBulan as $periode => $s)
+                                @php
+                                    $wajib   = $s['wajib']   ?? 0;
+                                    $dibayar = $s['dibayar'] ?? 0;
+                                    $kurang  = $wajib - $dibayar;
+                                    $kurangAbs = abs($kurang);
+                                    $class = $kurangAbs == 0
+                                        ? 'text-success'
+                                        : 'text-danger';
+                                @endphp
+                                <tr>
+                                    <td>{{ $periode }}</td>
+                                    <td class="text-end">
+                                        Rp {{ number_format($wajib, 0, ',', '.') }}
+                                    </td>
+                                    <td class="text-end">
+                                        Rp {{ number_format($dibayar, 0, ',', '.') }}
+                                    </td>
+                                    <td class="text-end {{ $class }}">
+                                        @if($kurangAbs == 0)
+                                            Pas: Rp 0
+                                        @else
+                                            Sisa: Rp {{ number_format($kurangAbs, 0, ',', '.') }}
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        Belum ada kewajiban yang tercatat.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
+            {{-- TABEL SETORAN BULAN INI --}}
             <div class="table-responsive">
                 <table class="table table-sm align-middle">
                     <thead class="table-light">
@@ -97,32 +177,38 @@
                             <th style="width:60px">No</th>
                             <th>Tanggal Setor</th>
                             <th class="text-end">Nominal</th>
-                            <th class="text-end">Sisa/Kelebihan (saat ini)</th>
+                            <th>Dialokasikan ke</th>
                             <th>Diterima</th>
                             <th>Catatan</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @php
-                            // status global dipakai ulang per baris (saat ini)
-                            $labelGlobal = $jumlahGlobal == 0
-                                ? 'Pas'
-                                : ($isKelebihanGlobal ? 'Kelebihan' : 'Sisa');
-                        @endphp
-
-                        @forelse($riwayat as $i => $row)
+                        @forelse($setorans as $i => $row)
+                            @php
+                                $alokasi = $allocDetail[$row->id_setoran] ?? [];
+                            @endphp
                             <tr>
                                 <td>{{ sprintf('%03d', $i+1) }}</td>
                                 <td>{{ \Carbon\Carbon::parse($row->tanggal_setoran)->format('d M Y | H:i') }}</td>
                                 <td class="text-end text-success">
                                     Rp {{ number_format($row->nominal, 0, ',', '.') }}
                                 </td>
-                                <td class="text-end {{ $classGlobal }}">
-                                    @if($jumlahGlobal == 0)
-                                        {{ $labelGlobal }}: Rp 0
-                                    @else
-                                        {{ $labelGlobal }}: Rp {{ number_format($jumlahGlobal, 0, ',', '.') }}
-                                    @endif
+                                <td>
+                                    @forelse($alokasi as $aloc)
+                                        @php
+                                            $label = !empty($aloc['lebih'])
+                                                ? 'Kelebihan di'
+                                                : 'Menutup';
+                                        @endphp
+                                        <div class="small">
+                                            {{ $label }} {{ $aloc['periode'] }} :
+                                            Rp {{ number_format($aloc['nominal'], 0, ',', '.') }}
+                                        </div>
+                                    @empty
+                                        <span class="text-muted small">
+                                            Tidak ada kewajiban yang dialokasikan.
+                                        </span>
+                                    @endforelse
                                 </td>
                                 <td>{{ $row->nama_admin }}</td>
                                 <td>{{ $row->catatan ?? '-' }}</td>
@@ -160,17 +246,14 @@
         <input type="hidden" name="id_sales" value="{{ $sales->id_sales }}">
 
         <div class="modal-body">
-
           <p class="mb-2">
             Sales: <strong>{{ $sales->nama_sales }}</strong><br>
-            <small>Status bulan ini:
-                <span class="{{ $classGlobal }}">
-                    @if($jumlahGlobal == 0)
+            <small>Posisi bulan ini:
+                <span class="{{ $classSisa }}">
+                    @if($angkaSisa == 0)
                         Pas: Rp 0
-                    @elseif($isKelebihanGlobal)
-                        Kelebihan: Rp {{ number_format($jumlahGlobal, 0, ',', '.') }}
                     @else
-                        Sisa: Rp {{ number_format($jumlahGlobal, 0, ',', '.') }}
+                        Sisa: Rp {{ number_format($angkaSisa, 0, ',', '.') }}
                     @endif
                 </span>
             </small>

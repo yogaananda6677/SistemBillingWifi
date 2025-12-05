@@ -2,7 +2,7 @@
 
 @section('content')
     {{-- Load SweetAlert2 CDN (Wajib ada untuk modal) --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <style>
         /* --- CSS UTAMA --- */

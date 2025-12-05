@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminTagihanController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\DashboardController;
+// use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\PaketController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PembayaranController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\TagihanPelangganSalesController;
 use App\Http\Controllers\PembukuanController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\SetoranAdminController;
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Sales\PembukuanSalesController;
 use App\Http\Controllers\Sales\SetoranSalesController;
@@ -35,9 +37,13 @@ Route::get('/', function () {
 // ===== ADMIN ROUTES =====
 Route::middleware(['auth', 'admin'])->group(function () {
     // Dashboard admin
+<<<<<<< HEAD
 
     Route::get('/dashboard/admin', [DashboardController::class, 'index'])
         ->name('dashboard-admin');
+=======
+    Route::get('/dashboard/admin', [DashboardController::class, 'index'])->name('dashboard-admin');
+>>>>>>> f0d7dbacbbec81f9019833cbf6ac5cae35366d78
 
     // Resource pelanggan untuk admin
     Route::resource('pelanggan', PelangganController::class);

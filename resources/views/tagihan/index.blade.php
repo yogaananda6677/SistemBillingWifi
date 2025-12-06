@@ -2,192 +2,226 @@
 
 @section('content')
 <style>
-    .page-title { font-size: 22px; font-weight: 700; color: #222; }
-    .search-box input {
-        border-radius: 10px; border: 1px solid #ddd;
-        padding: 8px 14px; font-size: 14px;
-    }
-    .filter-select {
-        border-radius: 10px; padding: 8px; font-size: 14px;
-        border: 1px solid #ddd; background: white;
-    }
-    .table-card {
-        background: #fff; border-radius: 14px;
-        padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    table thead th {
-        background: #f8f9fa; font-size: 13px;
-        font-weight: 600; padding: 10px;
-    }
-    table tbody td { font-size: 13px; padding: 10px; }
-    table tbody tr:hover { background: #f4f4f4; 
-    }
-    .pagination-wrapper {
-        margin-top: 20px; display: flex; justify-content: center;
-    }
-        .pagination {
-        justify-content: flex-end; /* Posisi di kanan */
-        gap: 6px; /* Jarak antar tombol */
-        margin-bottom: 0;
+    /* --- ADMIN YELLOW THEME (CONSISTENT COMPACT) --- */
+    :root {
+        --theme-yellow: #ffc107;
+        --theme-yellow-dark: #e0a800;
+        --theme-yellow-soft: #fff9e6;
+        --text-dark: #212529;
+        --card-radius: 12px;
     }
 
-    .page-item .page-link {
+    /* 1. Typography */
+    .page-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
+    }
+
+    /* 2. Tombol & Tab Status */
+    .btn-tab-active {
+        background-color: var(--theme-yellow);
+        color: #000;
+        font-weight: 700;
+        border: 1px solid var(--theme-yellow);
+    }
+    .btn-tab-inactive {
+        background-color: #fff;
+        color: #666;
+        border: 1px solid #dee2e6;
+    }
+    .btn-tab-inactive:hover {
+        background-color: var(--theme-yellow-soft);
+        color: #000;
+        border-color: var(--theme-yellow);
+    }
+
+    /* 3. Card Styles */
+    .card-admin {
+        background: #fff;
         border: none;
-        border-radius: 8px; /* Membuat sudut melengkung */
-        color: #64748b;     /* Warna teks abu lembut */
-        font-weight: 600;
-        font-size: 13px;
-        padding: 8px 14px;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan tipis */
-        transition: all 0.2s;
-    }
-
-    /* Efek saat mouse diarahkan */
-    .page-item .page-link:hover {
-        background-color: #f1f5f9;
-        color: #0284c7;
-        transform: translateY(-1px);
-    }
-
-    /* Tombol Aktif (Halaman sekarang) */
-    .page-item.active .page-link {
-        background-color: #0284c7; /* Biru modern */
-        color: white;
-        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); /* Efek glowing biru */
-    }
-
-    /* Tombol Disabled (Panah mati) */
-    .page-item.disabled .page-link {
-        background-color: #f8fafc;
-        color: #cbd5e1;
-        box-shadow: none;
-    }
-
-    div.pagination-wrapper nav .d-none.flex-fill.d-sm-flex .text-muted {
-        display: none !important;
-    }
-    
-    /* Atau penargetan yang lebih agresif jika yang atas tidak mempan */
-    div.pagination-wrapper nav p.small.text-muted {
-        display: none !important;
-    }
-
-    /* Pastikan Pagination Rata Kanan & Rapi */
-    div.pagination-wrapper nav {
-        display: flex;
-        justify-content: center; /* Tombol geser ke kanan */
+        border-radius: var(--card-radius);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid var(--theme-yellow);
         width: 100%;
     }
 
-    /* ... CSS lainnya biarkan ... */
-
-    /* --- PAKSA PAGINATION KE TENGAH & HILANGKAN TEKS --- */
-    
-    /* 1. Sembunyikan teks 'Showing...' (elemen div pertama di dalam nav) */
-    .pagination-wrapper nav .d-none.d-sm-flex > div:first-child {
-        display: none !important;
+    /* 4. Form Inputs */
+    .form-control-admin, .form-select-admin {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    .form-control-admin:focus, .form-select-admin:focus {
+        border-color: var(--theme-yellow);
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
     }
 
-    /* 2. Ubah layout container dari 'Between' menjadi 'Center' */
+    /* 5. Table Styling (COMPACT) */
+    .table-admin {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .table-admin thead th {
+        background-color: var(--theme-yellow-soft);
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--theme-yellow);
+        padding: 12px 10px;
+        white-space: nowrap;
+    }
+
+    .table-admin tbody td {
+        padding: 10px;
+        vertical-align: middle;
+        font-size: 13px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table-admin tbody tr:hover td {
+        background-color: #fffdf5;
+    }
+
+    /* 6. Pagination Styling (Yellow & Consistent) */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center !important;
+        align-items: center;
+        width: 100%;
+        padding: 15px; /* SAMA DENGAN YG LAIN */
+        background: #fff;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .pagination-wrapper nav .d-none.d-sm-flex > div:first-child {
+        display: none !important; 
+    }
     .pagination-wrapper nav .d-none.d-sm-flex {
         justify-content: center !important;
     }
 
-    /* 3. Gaya Tombol (Opsional: Agar lebih cantik seperti sebelumnya) */
     .page-item .page-link {
+        color: #333;
         border: none;
-        border-radius: 8px;
-        color: #64748b;
-        margin: 0 3px; /* Jarak antar tombol */
+        margin: 0 2px;
+        border-radius: 6px;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 12px;
+        padding: 6px 12px;
+        background: #f8f9fa;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    
+
     .page-item.active .page-link {
-        background-color: #0284c7;
-        color: white;
-        box-shadow: 0 4px 8px rgba(2, 132, 199, 0.2);
+        background-color: var(--theme-yellow) !important;
+        border-color: var(--theme-yellow) !important;
+        color: #000 !important;
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.4);
     }
 </style>
 
 <div class="container-fluid p-4" id="tagihan-page-wrapper">
+    
+    {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title">Status Tagihan per Pelanggan</h4>
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="bi bi-receipt text-warning me-2"></i>Status Tagihan
+            </h4>
+            <div class="text-muted small">Cek status pembayaran tagihan pelanggan</div>
+        </div>
     </div>
 
     @php
         $statusFilter = $statusFilter ?? request('status', '');
     @endphp
 
-    {{-- TAB STATUS (bukan dropdown) --}}
-    <div class="d-flex flex-wrap gap-2 mb-3">
-        <a href="{{ route('tagihan.index') }}"
-           class="btn btn-sm {{ $statusFilter === '' ? 'btn-primary' : 'btn-outline-primary' }}">
-            Semua
-        </a>
-
-        <a href="{{ route('tagihan.index', ['status' => 'belum_lunas']) }}"
-           class="btn btn-sm {{ $statusFilter === 'belum_lunas' ? 'btn-primary' : 'btn-outline-warning' }}">
-            Belum Lunas
-        </a>
-
-        <a href="{{ route('tagihan.index', ['status' => 'lunas']) }}"
-           class="btn btn-sm {{ $statusFilter === 'lunas' ? 'btn-primary' : 'btn-outline-success' }}">
-            Lunas
-        </a>
-    </div>
-
-    {{-- SEARCH + FILTER: AJAX (realtime, tanpa tombol) --}}
-    <div class="d-flex gap-3 mb-4 flex-wrap" id="filter-tagihan-wrapper">
-        {{-- simpan status sekarang untuk dipakai di JS --}}
-        <input type="hidden" id="status-tagihan" value="{{ $statusFilter }}">
-
-        <div class="search-box flex-grow-1" style="min-width: 250px;">
-            <input type="text" id="search-tagihan" class="form-control"
-                   value="{{ request('search') }}"
-                   placeholder="Cari pelanggan / paket...">
+    {{-- TAB STATUS (DESIGN BARU) --}}
+    <div class="mb-4">
+        <div class="btn-group shadow-sm" role="group" style="border-radius: 8px; overflow: hidden;">
+            <a href="{{ route('tagihan.index') }}"
+               class="btn btn-sm px-4 py-2 {{ $statusFilter === '' ? 'btn-tab-active' : 'btn-tab-inactive' }}">
+               Semua
+            </a>
+            <a href="{{ route('tagihan.index', ['status' => 'belum_lunas']) }}"
+               class="btn btn-sm px-4 py-2 {{ $statusFilter === 'belum_lunas' ? 'btn-tab-active' : 'btn-tab-inactive' }}">
+               Belum Lunas
+            </a>
+            <a href="{{ route('tagihan.index', ['status' => 'lunas']) }}"
+               class="btn btn-sm px-4 py-2 {{ $statusFilter === 'lunas' ? 'btn-tab-active' : 'btn-tab-inactive' }}">
+               Lunas
+            </a>
         </div>
-
-        {{-- FILTER SALES --}}
-        <select id="sales-tagihan" class="filter-select" style="min-width: 160px;">
-            <option value="">Semua Sales</option>
-            @foreach($dataSales as $s)
-                <option value="{{ $s->id_sales }}"
-                    {{ request('sales') == $s->id_sales ? 'selected' : '' }}>
-                    {{ $s->user->name }}
-                </option>
-            @endforeach
-        </select>
-
-        {{-- FILTER WILAYAH --}}
-        <select id="area-tagihan" class="filter-select" style="min-width: 160px;">
-            <option value="">Semua Wilayah</option>
-            @foreach($dataArea as $area)
-                <option value="{{ $area->id_area }}"
-                    {{ request('area') == $area->id_area ? 'selected' : '' }}>
-                    {{ $area->nama_area }}
-                </option>
-            @endforeach
-        </select>
     </div>
 
-    {{-- TABLE --}}
-    <div class="table-card mt-2">
+    {{-- FILTER CARD --}}
+    <div class="card-admin p-3 mb-3">
+        <div class="row g-2" id="filter-tagihan-wrapper">
+            {{-- HIDDEN INPUT UNTUK STATUS --}}
+            <input type="hidden" id="status-tagihan" value="{{ $statusFilter }}">
+
+            {{-- SEARCH --}}
+            <div class="col-12 col-md-4">
+                <label class="form-label fw-bold text-muted small mb-1">Pencarian</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: 8px 0 0 8px;">
+                        <i class="bi bi-search text-warning" style="font-size: 13px;"></i>
+                    </span>
+                    <input type="text" id="search-tagihan" class="form-control form-control-admin border-start-0"
+                           value="{{ request('search') }}"
+                           style="border-radius: 0 8px 8px 0;"
+                           placeholder="Cari pelanggan / paket...">
+                </div>
+            </div>
+
+            {{-- SALES --}}
+            <div class="col-6 col-md-4">
+                <label class="form-label fw-bold text-muted small mb-1">Sales</label>
+                <select id="sales-tagihan" class="form-select form-select-admin">
+                    <option value="">Semua Sales</option>
+                    @foreach($dataSales as $s)
+                        <option value="{{ $s->id_sales }}" {{ request('sales') == $s->id_sales ? 'selected' : '' }}>
+                            {{ $s->user->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- WILAYAH --}}
+            <div class="col-6 col-md-4">
+                <label class="form-label fw-bold text-muted small mb-1">Wilayah</label>
+                <select id="area-tagihan" class="form-select form-select-admin">
+                    <option value="">Semua Wilayah</option>
+                    @foreach($dataArea as $area)
+                        <option value="{{ $area->id_area }}" {{ request('area') == $area->id_area ? 'selected' : '' }}>
+                            {{ $area->nama_area }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+    </div>
+
+    {{-- TABLE CARD --}}
+    <div class="card-admin p-0" style="overflow: hidden;">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-admin mb-0">
                 <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Nama</th>
-                    <th>Area &amp; Sales</th>
-                    <th>Paket Layanan</th>
-                    <th>IP Address</th>
-                    <th>Tanggal jatuh tempo</th>
-                    <th>Total Tagihan</th>
-                    <th>Status</th>
-                </tr>
+                    <tr>
+                        <th class="ps-4">No</th>
+                        <th>Nama</th>
+                        <th>Area & Sales</th>
+                        <th>Paket Layanan</th>
+                        <th>IP Address</th>
+                        <th>Jatuh Tempo</th>
+                        <th>Total Tagihan</th>
+                        <th>Status</th>
+                    </tr>
                 </thead>
 
                 <tbody id="tagihan-table-body">
@@ -196,8 +230,8 @@
             </table>
         </div>
 
-        <div class="pagination-wrapper p-3 bg-light border-top" id="pagination-wrapper" style="border-radius: 0 0 16px 16px;">
-            {{-- Kita tidak perlu class flex di sini, biarkan CSS di atas yang mengatur 'jeroan' Laravel --}}
+        {{-- PAGINATION CONSISTENT --}}
+        <div class="pagination-wrapper" id="pagination-wrapper">
             {{ $pelanggan->onEachSide(1)->links('pagination::bootstrap-5') }}
         </div>
     </div>
@@ -205,6 +239,7 @@
 @endsection
 
 @push('scripts')
+{{-- SCRIPT ASLI 100% --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function () {
@@ -215,14 +250,13 @@ $(document).ready(function () {
     function loadTagihanData(page = 1) {
         currentPage = page;
 
-        // batalin request sebelumnya biar hasil terakhir yang dipakai
         if (currentAjax !== null) {
             currentAjax.abort();
         }
 
         const status = $('#status-tagihan').val() || '';
         const search = $('#search-tagihan').val();
-        const paket  = $('#paket-tagihan').val();
+        const paket  = $('#paket-tagihan').val(); // (Optional jika ada)
         const sales  = $('#sales-tagihan').val();
         const area   = $('#area-tagihan').val();
 
@@ -246,7 +280,7 @@ $(document).ready(function () {
                 updateUrl(status, search, paket, sales, area, page);
             },
             error: function (xhr, textStatus) {
-                if (textStatus === 'abort') return; // diabaikan kalau karena abort
+                if (textStatus === 'abort') return;
                 console.error(xhr.responseText);
                 alert('Terjadi kesalahan saat memuat data tagihan.');
             },
@@ -272,17 +306,15 @@ $(document).ready(function () {
         window.history.replaceState({}, '', newUrl);
     }
 
-    // 🔹 SEARCH realtime (kayak contoh status pelanggan)
+    // EVENT LISTENERS
     $('#search-tagihan').on('input', function () {
         loadTagihanData(1);
     });
 
-    // 🔹 FILTER realtime juga
-    $('#paket-tagihan, #sales-tagihan, #area-tagihan').on('change', function () {
+    $('#sales-tagihan, #area-tagihan').on('change', function () {
         loadTagihanData(1);
     });
 
-    // 🔹 PAGINATION AJAX
     $(document).on('click', '#pagination-wrapper .pagination a', function (e) {
         e.preventDefault();
         const url  = new URL($(this).attr('href'));
@@ -290,19 +322,16 @@ $(document).ready(function () {
         loadTagihanData(page);
     });
 
-    // 🔹 INISIAL – ambil dari URL kalau ada (biar refresh / share URL tetep sama)
     (function loadInitial() {
         const urlParams = new URLSearchParams(window.location.search);
         const status = urlParams.get('status') ?? $('#status-tagihan').val() ?? '';
         const search = urlParams.get('search');
-        const paket  = urlParams.get('paket');
         const sales  = urlParams.get('sales');
         const area   = urlParams.get('area');
         const page   = urlParams.get('page') || 1;
 
         $('#status-tagihan').val(status);
         if (search) $('#search-tagihan').val(search);
-        if (paket)  $('#paket-tagihan').val(paket);
         if (sales)  $('#sales-tagihan').val(sales);
         if (area)   $('#area-tagihan').val(area);
 

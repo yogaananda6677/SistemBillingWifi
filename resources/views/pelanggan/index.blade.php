@@ -69,6 +69,7 @@
         text-transform: uppercase;
         border-bottom: 2px solid var(--theme-yellow);
         padding: 15px;
+        white-space: nowrap; /* Header satu baris */
     }
 
     .table-admin tbody td {
@@ -98,13 +99,15 @@
         color: var(--theme-yellow) !important; /* Paksa jadi kuning */
     }
 
-    /* 8. PAGINATION KUNING (PENTING) */
+    /* 8. PAGINATION KUNING (CONSISTENT COMPACT) */
     .pagination-wrapper {
         display: flex;
         justify-content: center !important;
         align-items: center;
         width: 100%;
-        padding: 20px;
+        padding: 15px; /* <-- UBAH KE 15px BIAR SAMA DENGAN TAGIHAN */
+        background: #fff; /* Pastikan background putih */
+        border-top: 1px solid #f0f0f0;
     }
 
     .pagination-wrapper nav .d-none.d-sm-flex > div:first-child {
@@ -119,17 +122,20 @@
     .page-item .page-link {
         color: #333;
         border: none;
-        margin: 0 3px;
+        margin: 0 2px; /* <-- UBAH KE 2px BIAR RAPAT */
         border-radius: 6px;
         font-weight: 600;
+        font-size: 12px; /* <-- UKURAN FONT DIKECILKAN */
+        padding: 6px 12px; /* <-- PADDING DIKECILKAN */
         background: #f8f9fa;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .page-item.active .page-link {
         background-color: var(--theme-yellow) !important;
         border-color: var(--theme-yellow) !important;
         color: #000 !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.4);
     }
 </style>
 
@@ -228,7 +234,7 @@
                 </table>
             </div>
 
-            {{-- Pagination Kuning --}}
+            {{-- Pagination Kuning (Compact) --}}
             <div class="pagination-wrapper bg-white border-top" id="pagination-wrapper">
                 {{ $pelanggan->onEachSide(1)->links('pagination::bootstrap-5') }}
             </div>

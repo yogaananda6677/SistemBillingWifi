@@ -7,10 +7,10 @@
                 <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"
                     aria-label="Close"></button>
 
-                {{-- Ikon Bubble Modern (Biru/Indigo Soft) --}}
+                {{-- Ikon Bubble Modern (Kuning Soft) --}}
                 <div class="d-inline-flex align-items-center justify-content-center mb-4"
-                    style="width: 80px; height: 80px; background-color: #e0e7ff; border-radius: 50%;">
-                    <i class="fas fa-sign-out-alt" style="font-size: 30px; color: #4f46e5;"></i>
+                    style="width: 80px; height: 80px; background-color: #fff9e6; border-radius: 50%;">
+                    <i class="fas fa-sign-out-alt" style="font-size: 30px; color: #ffc107;"></i>
                 </div>
 
                 {{-- Judul & Deskripsi --}}
@@ -31,8 +31,8 @@
                     {{-- Form Logout Logic (TIDAK BERUBAH) --}}
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold"
-                            style="border-radius: 12px; min-width: 120px; background-color: #4f46e5; border: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);">
+                        <button type="submit" class="btn px-4 py-2 fw-semibold"
+                            style="border-radius: 12px; min-width: 120px; background-color: #ffc107; color: #000; border: none; box-shadow: 0 4px 6px -1px rgba(255, 193, 7, 0.3);">
                             Ya, Logout
                         </button>
                     </form>

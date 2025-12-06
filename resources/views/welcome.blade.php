@@ -115,7 +115,7 @@
         /* Tombol Login Hitam (Kontras dengan tema kuning) */
         .btn-login {
             background: #000;
-            color: #ffc107; /* Teks Kuning */
+            color: #ffffffff; /* Teks Kuning */
             border: none;
         }
 

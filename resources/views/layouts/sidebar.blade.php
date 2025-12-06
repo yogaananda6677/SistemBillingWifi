@@ -116,16 +116,17 @@
 </a>
 
 
+                {{-- PENGAJUAN PENGELUARAN --}}
+<a href="{{ route('laporan.index') }}"
+   class="sidebar-sublink {{ request()->routeIs('laporan.*') ? 'active-sub' : '' }}">
+    Rekap
+</a>
 
                 {{-- PENGAJUAN PENGELUARAN --}}
 <a href="{{ route('laporan.index') }}"
    class="sidebar-sublink {{ request()->routeIs('laporan.*') ? 'active-sub' : '' }}">
-    Laporan & Rekap
+    Laporan
 </a>
-
-
-
-
             </div>
         </div>
 

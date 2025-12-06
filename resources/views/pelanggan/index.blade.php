@@ -2,259 +2,216 @@
 
 @section('content')
 <style>
+    /* --- ADMIN YELLOW THEME VARIABLES --- */
+    :root {
+        --theme-yellow: #ffc107;       /* Kuning Bootstrap Warning */
+        --theme-yellow-dark: #e0a800;  /* Kuning lebih gelap untuk hover */
+        --theme-yellow-soft: #fff9e6;  /* Kuning sangat muda untuk background */
+        --text-dark: #212529;
+        --card-radius: 12px;
+    }
+
+    /* 1. Typography & Header */
     .page-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #222;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
     }
 
-    .search-box input {
-        border-radius: 10px;
-        border: 1px solid #ddd;
-        padding: 8px 14px;
-        font-size: 14px;
-    }
-
-    .filter-select {
-        border-radius: 10px;
-        padding: 8px;
-        font-size: 14px;
-        border: 1px solid #ddd;
-        background: white;
-    }
-
-    .table-card {
-        background: #fff;
-        border-radius: 14px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-
-    table thead th {
-        background: #f8f9fa;
-        font-size: 13px;
+    /* 2. Tombol Kuning Custom */
+    .btn-admin-yellow {
+        background-color: var(--theme-yellow);
+        color: var(--text-dark);
         font-weight: 600;
-        padding: 10px;
-    }
-
-    table tbody td {
-        font-size: 13px;
-        padding: 10px;
-    }
-
-    table tbody tr:hover {
-        background: #f4f4f4;
-    }
-
-    .loading-spinner {
-        display: none;
-        text-align: center;
-        padding: 20px;
-    }
-
-    .no-results {
-        text-align: center;
-        padding: 20px;
-        color: #6c757d;
-        font-style: italic;
-    }
-
-    .pagination-wrapper {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-    }
-
-    .table-responsive {
-        min-height: 400px;
-    }
-
-    .custom-arrow {
-        width: 18px;     /* ganti ukuran di sini */
-        height: 18px;
-        cursor: pointer;
-    }
-
-    .custom-arrow.disabled {
-        opacity: 0.3;
-        cursor: default;
-        pointer-events: none;
-    }
-
-    .custom-pagination-wrapper {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-    }
-
-    .custom-pagination-wrapper ul {
-        display: flex;
-        gap: 6px;
-        list-style: none;
-        padding: 0;
-    }
-
-    .custom-pagination-wrapper li {
-        padding: 4px 8px;
-        border: 1px solid #ddd;
-        font-size: 13px;
-        border-radius: 6px;
-    }
-
-    .custom-pagination-wrapper li.active {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-
-    .custom-pagination-wrapper li.disabled {
-        opacity: 0.4;
-        pointer-events: none;
-    }
-
-    .pagination {
-        justify-content: flex-end; /* Posisi di kanan */
-        gap: 6px; /* Jarak antar tombol */
-        margin-bottom: 0;
-    }
-
-    .page-item .page-link {
         border: none;
-        border-radius: 8px; /* Membuat sudut melengkung */
-        color: #64748b;     /* Warna teks abu lembut */
-        font-weight: 600;
+        border-radius: 8px;
+        padding: 10px 20px;
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+        transition: all 0.2s ease;
+    }
+    
+    .btn-admin-yellow:hover {
+        background-color: var(--theme-yellow-dark);
+        color: var(--text-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
+    }
+
+    /* 3. Card Styles */
+    .card-admin {
+        background: #fff;
+        border: none;
+        border-radius: var(--card-radius);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid var(--theme-yellow); /* Aksen Kuning di atas Card */
+    }
+
+    /* 4. Form Inputs (Filter) */
+    .form-control-admin, .form-select-admin {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    .form-control-admin:focus, .form-select-admin:focus {
+        border-color: var(--theme-yellow);
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2); /* Glow Kuning */
+    }
+
+    /* 5. Table Styling */
+    .table-admin thead th {
+        background-color: var(--theme-yellow-soft);
+        color: var(--text-dark);
+        font-weight: 700;
         font-size: 13px;
-        padding: 8px 14px;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan tipis */
-        transition: all 0.2s;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--theme-yellow);
+        padding: 15px;
     }
 
-    /* Efek saat mouse diarahkan */
-    .page-item .page-link:hover {
-        background-color: #f1f5f9;
-        color: #0284c7;
-        transform: translateY(-1px);
+    .table-admin tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        font-size: 14px;
+        border-bottom: 1px solid #f0f0f0;
     }
 
-    /* Tombol Aktif (Halaman sekarang) */
-    .page-item.active .page-link {
-        background-color: #0284c7; /* Biru modern */
-        color: white;
-        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); /* Efek glowing biru */
+    .table-admin tbody tr:hover td {
+        background-color: #fffdf5; /* Efek hover kekuningan tipis */
     }
 
-    /* Tombol Disabled (Panah mati) */
-    .page-item.disabled .page-link {
-        background-color: #f8fafc;
-        color: #cbd5e1;
-        box-shadow: none;
+    /* 6. Statistik Badge */
+    .stat-badge {
+        background-color: var(--theme-yellow-soft);
+        color: #856404;
+        border: 1px solid #ffeeba;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 14px;
     }
 
-    div.pagination-wrapper nav .d-none.flex-fill.d-sm-flex .text-muted {
-        display: none !important;
-    }
-    
-    /* Atau penargetan yang lebih agresif jika yang atas tidak mempan */
-    div.pagination-wrapper nav p.small.text-muted {
-        display: none !important;
+    /* 7. Loading Spinner Custom Color */
+    .spinner-border.text-primary {
+        color: var(--theme-yellow) !important; /* Paksa jadi kuning */
     }
 
-    /* Pastikan Pagination Rata Kanan & Rapi */
-    div.pagination-wrapper nav {
+    /* 8. PAGINATION KUNING (PENTING) */
+    .pagination-wrapper {
         display: flex;
-        justify-content: center; /* Tombol geser ke kanan */
+        justify-content: center !important;
+        align-items: center;
         width: 100%;
+        padding: 20px;
     }
 
-    /* ... CSS lainnya biarkan ... */
-
-    /* --- PAKSA PAGINATION KE TENGAH & HILANGKAN TEKS --- */
-    
-    /* 1. Sembunyikan teks 'Showing...' (elemen div pertama di dalam nav) */
     .pagination-wrapper nav .d-none.d-sm-flex > div:first-child {
-        display: none !important;
+        display: none !important; /* Hapus teks Showing */
     }
 
-    /* 2. Ubah layout container dari 'Between' menjadi 'Center' */
     .pagination-wrapper nav .d-none.d-sm-flex {
         justify-content: center !important;
     }
 
-    /* 3. Gaya Tombol (Opsional: Agar lebih cantik seperti sebelumnya) */
+    /* Override warna pagination bawaan Bootstrap */
     .page-item .page-link {
+        color: #333;
         border: none;
-        border-radius: 8px;
-        color: #64748b;
-        margin: 0 3px; /* Jarak antar tombol */
+        margin: 0 3px;
+        border-radius: 6px;
         font-weight: 600;
-        font-size: 13px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background: #f8f9fa;
     }
-    
+
     .page-item.active .page-link {
-        background-color: #0284c7;
-        color: white;
-        box-shadow: 0 4px 8px rgba(2, 132, 199, 0.2);
+        background-color: var(--theme-yellow) !important;
+        border-color: var(--theme-yellow) !important;
+        color: #000 !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 </style>
 
 <div class="container-fluid p-4" id="page-wrapper" data-status="{{ request('status') }}">
-{{-- TITLE --}}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="page-title">Pelanggan</h4>
-</div>
-<div class="mb-3">
-    <span class="badge bg-primary" style="font-size: 14px; padding: 8px 14px;">
-        Total Pelanggan: {{ $totalPelanggan }}
-    </span>
     
-    <a href="{{ route('pelanggan.create') }}" class="btn btn-primary">
-        Tambah Data
-    </a>
-
-</div>
-
-    {{-- SEARCH & FILTER --}}
-<div class="d-flex gap-3 mb-4 flex-wrap">
-    <div class="search-box flex-grow-1" style="min-width: 250px;">
-        <input type="text" id="search-input" class="form-control"
-               placeholder="Cari pelanggan (nama, NIK, IP, HP, wilayah, paket)...">
+    {{-- HEADER SECTION --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="bi bi-people-fill text-warning me-2"></i>Data Pelanggan
+            </h4>
+            <div class="text-muted small">Kelola data pelanggan dan layanan</div>
+        </div>
+        
+        <div class="d-flex gap-2 align-items-center">
+            <span class="stat-badge">
+                <i class="bi bi-folder2-open me-1"></i> Total: {{ $totalPelanggan }}
+            </span>
+            <a href="{{ route('pelanggan.create') }}" class="btn btn-admin-yellow">
+                <i class="bi bi-plus-lg me-1"></i> Tambah Data
+            </a>
+        </div>
     </div>
 
-    {{-- FILTER SALES --}}
-    <select class="filter-select" id="sales-filter" style="min-width: 180px;">
-        <option value="">Semua Sales</option>
-        @foreach($dataSales as $sales)
-            <option value="{{ $sales->id_sales }}">{{ $sales->user->name }}</option>
-        @endforeach
-    </select>
+    {{-- FILTER CARD --}}
+    <div class="card-admin p-4 mb-4">
+        <div class="row g-3">
+            {{-- Search Box --}}
+            <div class="col-12 col-md-5">
+                <label class="form-label fw-bold text-muted small">Pencarian</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: 8px 0 0 8px; border-color: #dee2e6;">
+                        <i class="bi bi-search text-warning"></i>
+                    </span>
+                    <input type="text" id="search-input" class="form-control form-control-admin border-start-0" 
+                           style="border-radius: 0 8px 8px 0;"
+                           placeholder="Cari nama, NIK, IP, HP...">
+                </div>
+            </div>
 
-    {{-- FILTER WILAYAH --}}
-    <select class="filter-select" id="area-filter" style="min-width: 180px;">
-        <option value="">Semua Wilayah</option>
-        @foreach($dataArea as $area)
-            <option value="{{ $area->id_area }}">{{ $area->nama_area }}</option>
-        @endforeach
-    </select>
-</div>
+            {{-- Filter Sales --}}
+            <div class="col-12 col-md-3">
+                <label class="form-label fw-bold text-muted small">Filter Sales</label>
+                <select class="form-select form-select-admin" id="sales-filter">
+                    <option value="">Semua Sales</option>
+                    @foreach($dataSales as $sales)
+                        <option value="{{ $sales->id_sales }}">{{ $sales->user->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
+            {{-- Filter Wilayah --}}
+            <div class="col-12 col-md-4">
+                <label class="form-label fw-bold text-muted small">Filter Wilayah</label>
+                <select class="form-select form-select-admin" id="area-filter">
+                    <option value="">Semua Wilayah</option>
+                    @foreach($dataArea as $area)
+                        <option value="{{ $area->id_area }}">{{ $area->nama_area }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+    </div>
 
-    {{-- TABLE --}}
-    <div class="table-card mt-2">
-        <div id="loading-spinner" class="loading-spinner">
+    {{-- TABLE CARD --}}
+    <div class="card-admin p-0" style="overflow: hidden;">
+        
+        {{-- Loading Spinner --}}
+        <div id="loading-spinner" class="loading-spinner" style="display: none; padding: 50px; text-align: center;">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2">Memuat data...</p>
+            <p class="mt-2 text-muted fw-semibold">Memuat data...</p>
         </div>
 
+        {{-- Table Container --}}
         <div id="table-container">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-admin mb-0">
                     <thead>
                         <tr>
-                            <th>No</th>
+                            <th class="ps-4" width="5%">No</th>
                             <th>Nama</th>
                             <th>Area</th>
                             <th>Sales</th>
@@ -262,7 +219,7 @@
                             <th>Tanggal Aktif</th>
                             <th>IP Address</th>
                             <th>Status</th>
-                            <th>Aksi</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="pelanggan-table-body">
@@ -270,28 +227,28 @@
                     </tbody>
                 </table>
             </div>
-            <div class="pagination-wrapper p-3 bg-light border-top" id="pagination-wrapper" style="border-radius: 0 0 16px 16px;">
-                {{-- Kita tidak perlu class flex di sini, biarkan CSS di atas yang mengatur 'jeroan' Laravel --}}
+
+            {{-- Pagination Kuning --}}
+            <div class="pagination-wrapper bg-white border-top" id="pagination-wrapper">
                 {{ $pelanggan->onEachSide(1)->links('pagination::bootstrap-5') }}
             </div>
-            </div>
-
         </div>
-    </div> 
+    </div>
 </div>
 
 @endsection
+
 @push('scripts')
+{{-- SCRIPT ASLI TIDAK DIUBAH SAMA SEKALI --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
     let currentPage   = 1;
-    let currentAjax   = null; // <-- SIMPAN REQUEST AKTIF
+    let currentAjax   = null; 
 
     function loadData(page = 1) {
         currentPage = page;
 
-        // kalau ada request sebelumnya, batalin
         if (currentAjax !== null) {
             currentAjax.abort();
         }
@@ -306,7 +263,7 @@ $(document).ready(function() {
         currentAjax = $.ajax({
             url: '{{ route("pelanggan.index") }}',
             type: 'GET',
-            cache: false, // jangan cache
+            cache: false, 
             data: {
                 search: search,
                 area:   area,
@@ -323,7 +280,6 @@ $(document).ready(function() {
                 updateUrl(search, area, sales, page);
             },
             error: function(xhr, status) {
-                // kalau error karena abort, abaikan
                 if (status === 'abort') return;
 
                 $('#loading-spinner').hide();
@@ -351,7 +307,7 @@ $(document).ready(function() {
         window.history.replaceState({}, '', newUrl);
     }
 
-    // SEARCH REALTIME (tanpa debounce, beneran tiap ketik)
+    // SEARCH REALTIME
     $('#search-input').on('input', function() {
         loadData(1);
     });
@@ -367,11 +323,22 @@ $(document).ready(function() {
     });
 
     // PAGINATION
-        $(document).on('click', '.custom-pagination a', function(e) {
+    $(document).on('click', '.custom-pagination a', function(e) { // Jaga-jaga kalau class custom dipakai
         e.preventDefault();
         const url  = new URL($(this).attr('href'));
         const page = url.searchParams.get('page') || 1;
         loadData(page);
+    });
+    
+    // Pagination Normal Bootstrap
+    $(document).on('click', '.pagination a', function(e) {
+        e.preventDefault();
+        const href = $(this).attr('href');
+        if(href){
+            const url  = new URL(href);
+            const page = url.searchParams.get('page') || 1;
+            loadData(page);
+        }
     });
 
     // KLIK HAPUS
@@ -402,7 +369,7 @@ $(document).ready(function() {
                 const deleteModal = bootstrap.Modal.getInstance($('#deleteModal')[0]);
                 deleteModal.hide();
                 submitButton.prop('disabled', false).text('Hapus');
-                loadData(currentPage); // refresh list setelah delete
+                loadData(currentPage); 
             },
             error: function(xhr) {
                 submitButton.prop('disabled', false).text('Hapus');

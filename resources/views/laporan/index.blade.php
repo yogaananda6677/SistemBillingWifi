@@ -45,6 +45,37 @@
                             Tampilkan Rincian
                         </button>
                     </div>
+                    <div class="col-md-3 col-6 text-md-end">
+    <div class="btn-group w-100">
+        <button type="button"
+                class="btn btn-success btn-sm"
+                onclick="exportLaporan('excel')">
+            <i class="bi bi-file-earmark-excel me-1"></i> Excel
+        </button>
+        <!-- <a href="{{ route('laporan.exportRekapKeuangan', [
+        'tahun' => $selectedYear,
+        'bulan' => $selectedMonth,
+    ]) }}"
+   class="btn btn-outline-secondary btn-sm"
+   target="_blank">
+    Export Rekap Pengeluaran & Setoran
+</a> -->
+
+<a href="{{ route('laporan.exportRekapHarianBulanan', ['tahun' => $selectedYear]) }}"
+   class="btn btn-outline-secondary btn-sm"
+   target="_blank">
+    Export Rekap Harian / Bulanan
+</a>
+
+
+        <button type="button"
+                class="btn btn-danger btn-sm"
+                onclick="exportLaporan('pdf')">
+            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+        </button>
+    </div>
+</div>
+
                 </div>
             </div>
         </div>
@@ -296,7 +327,64 @@
         document.body.appendChild(tempForm);
         tempForm.submit();
     }
+
+
+
+    
 </script>
+
+{{-- JS kecil untuk centang semua + export --}}
+@push('scripts')
+<script>
+    function toggleAll(state) {
+        document.querySelectorAll('.unit-checkbox').forEach(cb => {
+            cb.checked = !!state;
+        });
+    }
+
+    function exportLaporan(type) {
+        const form = document.getElementById('laporanForm');
+        if (!form) {
+            alert('Form laporan tidak ditemukan');
+            return;
+        }
+
+        const actionBase = type === 'excel'
+            ? "{{ route('laporan.export.excel') }}"
+            : "{{ route('laporan.export.pdf') }}";
+
+        // bikin form sementara utk submit GET dengan query yg sama + units[]
+        const tempForm = document.createElement('form');
+        tempForm.method = 'GET';
+        tempForm.action = actionBase;
+
+        // copy bulan & tahun
+        ['bulan', 'tahun'].forEach(name => {
+            const input = form.querySelector(`[name="${name}"]`);
+            if (input) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = name;
+                hidden.value = input.value;
+                tempForm.appendChild(hidden);
+            }
+        });
+
+        // copy units[]
+        form.querySelectorAll('.unit-checkbox:checked').forEach(cb => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'units[]';
+            hidden.value = cb.value;
+            tempForm.appendChild(hidden);
+        });
+
+        document.body.appendChild(tempForm);
+        tempForm.submit();
+    }
+</script>
+@endpush
+
 @endpush
 
 @endsection

@@ -122,11 +122,12 @@
     Rekap
 </a>
 
-                {{-- PENGAJUAN PENGELUARAN --}}
+{{-- PENGAJUAN PENGELUARAN --}}
 <a href="{{ route('laporan.index') }}"
    class="sidebar-sublink {{ request()->routeIs('laporan.*') ? 'active-sub' : '' }}">
     Laporan
 </a>
+
             </div>
         </div>
 

@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-// Jika nanti sudah pakai Excel & PDF:
-// use Maatwebsite\Excel\Facades\Excel;
-// use App\Exports\LaporanGlobalExport;
-// use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Collection;
+
+use App\Exports\LaporanSalesAreaExport;
+use App\Exports\RekapKeuanganBulananExport;
+use App\Exports\RekapHarianBulananExport;
 
 class LaporanController extends Controller
 {
@@ -20,10 +22,7 @@ class LaporanController extends Controller
         // unit yg dipilih (sales-area key)
         $selectedUnits = $request->input('units', []); // contoh: ['sales-3-area-1', 'sales-5-area-2']
 
-        $awalBulan  = Carbon::create($tahun, $bulan, 1)->startOfDay();
-        $akhirBulan = (clone $awalBulan)->endOfMonth();
-
-        // ====================== STAT GLOBAL ATAS ======================
+        // ====================== STAT GLOBAL ATAS (PER BULAN) ======================
 
         $jumlahPelanggan = DB::table('pembayaran as p')
             ->whereYear('p.tanggal_bayar', $tahun)
@@ -62,10 +61,9 @@ class LaporanController extends Controller
         $rows = collect();
 
         // ======================
-        // REKAP PER SALES + WILAYAH (AREA)
+        // REKAP PER SALES + WILAYAH (AREA) – PER BULAN
         // ======================
 
-        // mapping sales ke area (wilayah)
         $assignments = DB::table('area_sales as asg')
             ->join('sales as s', 's.id_sales', '=', 'asg.id_sales')
             ->join('users as u', 'u.id', '=', 's.user_id')
@@ -94,7 +92,7 @@ class LaporanController extends Controller
                 ->where('pl.id_area', $idArea)
                 ->sum('p.nominal');
 
-            // ---------- KOMISI: transaksi_komisi per sales + area ----------
+            // ---------- KOMISI ----------
             $komisi = DB::table('transaksi_komisi as tk')
                 ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
                 ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
@@ -104,7 +102,7 @@ class LaporanController extends Controller
                 ->whereMonth('p.tanggal_bayar', $bulan)
                 ->sum('tk.nominal_komisi');
 
-            // ---------- PENGELUARAN: pengeluaran approved per sales + area ----------
+            // ---------- PENGELUARAN ----------
             $pengeluaran = DB::table('pengeluaran as pg')
                 ->where('pg.id_sales', $idSales)
                 ->where('pg.id_area', $idArea)
@@ -113,7 +111,7 @@ class LaporanController extends Controller
                 ->whereMonth('pg.tanggal_approve', $bulan)
                 ->sum('pg.nominal');
 
-            // ---------- SETORAN: per sales + area ----------
+            // ---------- SETORAN ----------
             $setoran = DB::table('setoran as st')
                 ->where('st.id_sales', $idSales)
                 ->where('st.id_area', $idArea)
@@ -121,11 +119,10 @@ class LaporanController extends Controller
                 ->whereMonth('st.tanggal_setoran', $bulan)
                 ->sum('st.nominal');
 
-            // perhitungan bersih & lebih/kurang setor (bulan ini saja)
             $totalBersih = $pendapatan - $komisi - $pengeluaran;
-            $selisih     = $setoran - $totalBersih; // >0 = lebih setor, <0 = kurang setor
+            $selisih     = $setoran - $totalBersih; // >0 = lebih setor, <0 = kurang
 
-            // ---------- DETAIL PEMBAYARAN ----------
+            // DETAIL PEMBAYARAN
             $detailPembayaran = DB::table('pembayaran as p')
                 ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
                 ->select(
@@ -141,7 +138,7 @@ class LaporanController extends Controller
                 ->orderBy('p.tanggal_bayar')
                 ->get();
 
-            // ---------- DETAIL KOMISI ----------
+            // DETAIL KOMISI
             $detailKomisi = DB::table('transaksi_komisi as tk')
                 ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
                 ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
@@ -159,7 +156,7 @@ class LaporanController extends Controller
                 ->orderBy('p.tanggal_bayar')
                 ->get();
 
-            // ---------- DETAIL PENGELUARAN ----------
+            // DETAIL PENGELUARAN
             $detailPengeluaran = DB::table('pengeluaran as pg')
                 ->select(
                     'pg.nama_pengeluaran',
@@ -175,7 +172,7 @@ class LaporanController extends Controller
                 ->orderBy('pg.tanggal_approve')
                 ->get();
 
-            // ---------- DETAIL SETORAN ----------
+            // DETAIL SETORAN
             $detailSetoran = DB::table('setoran as st')
                 ->join('admins as a', 'a.id_admin', '=', 'st.id_admin')
                 ->join('users as ua', 'ua.id', '=', 'a.user_id')
@@ -192,7 +189,6 @@ class LaporanController extends Controller
                 ->orderBy('st.tanggal_setoran')
                 ->get();
 
-            // key unik per sales + area
             $key = 'sales-' . $idSales . '-area-' . $idArea;
 
             $rows->push((object) [
@@ -217,7 +213,6 @@ class LaporanController extends Controller
             ]);
         }
 
-        // TIDAK ADA ADMIN DI SINI
         $rekap = $rows->sortBy('label')->values();
 
         return view('laporan.index', [
@@ -229,17 +224,104 @@ class LaporanController extends Controller
         ]);
     }
 
-    // ========== EXPORT (boleh diisi nanti kalau sudah siap package) ==========
-
+    /**
+     * EXPORT EXCEL – JANGKANYA 1 TAHUN PENUH
+     * Tiap sheet = 1 Sales + 1 Wilayah, kolom Jan–Des (diatur di export class).
+     */
     public function exportExcel(Request $request)
     {
-        // Nanti kalau sudah install Maatwebsite/Excel, isi di sini.
-        return back()->with('error', 'Export Excel belum diaktifkan.');
+        $tahun = (int) ($request->input('tahun') ?? now()->year);
+        $selectedUnits = $request->input('units', []);
+
+        $assignments = DB::table('area_sales as asg')
+            ->join('sales as s', 's.id_sales', '=', 'asg.id_sales')
+            ->join('users as u', 'u.id', '=', 's.user_id')
+            ->join('area as a', 'a.id_area', '=', 'asg.id_area')
+            ->select(
+                'asg.id_area',
+                'a.nama_area',
+                's.id_sales',
+                'u.id as user_id',
+                'u.name as nama_sales'
+            )
+            ->orderBy('u.name')
+            ->orderBy('a.nama_area')
+            ->get()
+            ->map(function ($row) {
+                $row->key = 'sales-' . $row->id_sales . '-area-' . $row->id_area;
+                return $row;
+            });
+
+        if (!empty($selectedUnits)) {
+            $targets = $assignments->whereIn('key', $selectedUnits)->values();
+        } else {
+            $targets = $assignments;
+        }
+
+        if ($targets->isEmpty()) {
+            return back()->with('error', 'Tidak ada unit yang dipilih untuk diexport.');
+        }
+
+        $fileName = 'laporan-pembukuan-' . $tahun . '.xlsx';
+
+        return Excel::download(
+            new LaporanSalesAreaExport($tahun, $targets),
+            $fileName
+        );
     }
 
     public function exportPdf(Request $request)
     {
-        // Nanti kalau sudah install dompdf, isi di sini.
         return back()->with('error', 'Export PDF belum diaktifkan.');
+    }
+
+    /**
+     * EXPORT REKAP KEUANGAN BULANAN (1 sheet, semua sales-wilayah)
+     */
+    public function exportRekapKeuangan(Request $request)
+    {
+        $tahun = (int) ($request->input('tahun') ?? now()->year);
+        $bulan = (int) ($request->input('bulan') ?? now()->month);
+
+        $assignments = DB::table('area_sales as asg')
+            ->join('sales as s', 's.id_sales', '=', 'asg.id_sales')
+            ->join('users as u', 'u.id', '=', 's.user_id')
+            ->join('area as a', 'a.id_area', '=', 'asg.id_area')
+            ->select(
+                'asg.id_area',
+                'a.nama_area',
+                's.id_sales',
+                'u.id as user_id',
+                'u.name as nama_sales'
+            )
+            ->orderBy('u.name')
+            ->orderBy('a.nama_area')
+            ->get();
+
+        $fileName = sprintf(
+            'rekap-keuangan-%d-%02d.xlsx',
+            $tahun,
+            $bulan
+        );
+
+        return Excel::download(
+            new RekapKeuanganBulananExport($tahun, $bulan, $assignments),
+            $fileName
+        );
+    }
+
+    /**
+     * EXPORT REKAP HARIAN / BULANAN (per sheet = 1 bulan, format tabel NO/TANGGAL/PEMASUKAN/PENGELUARAN)
+     */
+    public function exportRekapHarianBulanan(Request $request)
+    {
+        $tahun = (int) ($request->input('tahun') ?? now()->year);
+
+        $fileName = 'rekap-harian-bulanan-' . $tahun . '.xlsx';
+
+        return Excel::download(
+            new RekapHarianBulananExport($tahun),
+            $fileName
+        );
     }
 }

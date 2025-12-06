@@ -204,36 +204,28 @@ class PembukuanController extends Controller
 
             $saldoGlobal = $totalSetoranSampaiBulanIni - $totalKewajibanSampaiBulanIni;
 
-// 4. PUSH KE COLLECTION
-$rows->push((object) [
-    'jenis'              => 'sales',
-    'label'              => $asg->nama_sales . ' – ' . $asg->nama_area,
-    'user_id'            => $asg->user_id,
-    'id_sales'           => $asg->id_sales,
-    'id_area'            => $asg->id_area,
+            // 4. PUSH KE COLLECTION
+            $rows->push((object) [
+                'jenis'              => 'sales',
+                'label'              => $asg->nama_sales . ' – ' . $asg->nama_area,
+                'user_id'            => $asg->user_id,
+                'id_sales'           => $asg->id_sales,
+                'id_area'            => $asg->id_area,
 
-    // TAMBAHAN
-    'nama_sales'         => $asg->nama_sales,
-    'nama_area'          => $asg->nama_area,
+                'pendapatan'         => $pendapatan,
+                'total_komisi'       => $totalKomisi,
+                'total_pengeluaran'  => $totalPengeluaran,
+                'total_bersih'       => $totalBersih,
 
-    // KEY UNIK UNTUK MODAL (per sales+area)
-    'modal_key'          => 'sales-' . $asg->id_sales . '-area-' . $asg->id_area,
+                'total_setoran'      => $totalSetoranBulanIni,
+                'selisih'            => $selisihBulanIni,
+                'saldo_global'       => $saldoGlobal,
 
-    'pendapatan'         => $pendapatan,
-    'total_komisi'       => $totalKomisi,
-    'total_pengeluaran'  => $totalPengeluaran,
-    'total_bersih'       => $totalBersih,
-
-    'total_setoran'      => $totalSetoranBulanIni,
-    'selisih'            => $selisihBulanIni,
-    'saldo_global'       => $saldoGlobal,
-
-    'detail_pembayaran'  => $detailPembayaran,
-    'detail_komisi'      => $detailKomisi,
-    'detail_pengeluaran' => $detailPengeluaran,
-    'detail_setoran'     => $detailSetoran,
-]);
-
+                'detail_pembayaran'  => $detailPembayaran,
+                'detail_komisi'      => $detailKomisi,
+                'detail_pengeluaran' => $detailPengeluaran,
+                'detail_setoran'     => $detailSetoran,
+            ]);
         }
 
         // ==========================
@@ -267,32 +259,26 @@ $rows->push((object) [
                 ->get();
 
             $pendapatanAdmin = (float) $detailPembayaranAdmin->sum('nominal');
-$rows->push((object) [
-    'jenis'              => 'admin',
-    'label'              => $ad->name . ' (admin)',
-    'user_id'            => $ad->user_id,
-    'id_admin'           => $ad->id_admin,
 
-    'nama_sales'         => $ad->name,
-    'nama_area'          => null,
+            $rows->push((object) [
+                'jenis'              => 'admin',
+                'label'              => $ad->name . ' (admin)',
+                'user_id'            => $ad->user_id,
+                'id_admin'           => $ad->id_admin,
 
-    // KEY UNIK MODAL UNTUK ADMIN
-    'modal_key'          => 'admin-' . $ad->id_admin,
+                'pendapatan'         => $pendapatanAdmin,
+                'total_komisi'       => 0,
+                'total_pengeluaran'  => 0,
+                'total_bersih'       => $pendapatanAdmin,
+                'total_setoran'      => 0,
+                'selisih'            => 0,
+                'saldo_global'       => 0,
 
-    'pendapatan'         => $pendapatanAdmin,
-    'total_komisi'       => 0,
-    'total_pengeluaran'  => 0,
-    'total_bersih'       => $pendapatanAdmin,
-    'total_setoran'      => 0,
-    'selisih'            => 0,
-    'saldo_global'       => 0,
-
-    'detail_pembayaran'  => $detailPembayaranAdmin,
-    'detail_komisi'      => collect(),
-    'detail_pengeluaran' => collect(),
-    'detail_setoran'     => collect(),
-]);
-
+                'detail_pembayaran'  => $detailPembayaranAdmin,
+                'detail_komisi'      => collect(),
+                'detail_pengeluaran' => collect(),
+                'detail_setoran'     => collect(),
+            ]);
         }
 
         $rekap = $rows->sortBy('label')->values();

@@ -2,250 +2,266 @@
 
 @section('content')
 <style>
-    .page-title { font-size: 22px; font-weight: 700; color: #222; }
-    .search-box input {
-        border-radius: 10px; border: 1px solid #ddd;
-        padding: 8px 14px; font-size: 14px;
-    }
-    .filter-select {
-        border-radius: 10px; padding: 8px; font-size: 14px;
-        border: 1px solid #ddd; background: white;
-    }
-    .table-card {
-        background: #fff; border-radius: 14px;
-        padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    table thead th {
-        background: #f8f9fa; font-size: 13px;
-        font-weight: 600; padding: 10px;
-    }
-    table tbody td { font-size: 13px; padding: 10px; }
-    table tbody tr:hover { background: #f4f4f4; }
-    .pagination-wrapper {
-        margin-top: 20px; display: flex; justify-content: center;
-    }
-    
-    .pagination {
-        justify-content: flex-end; /* Posisi di kanan */
-        gap: 6px; /* Jarak antar tombol */
-        margin-bottom: 0;
+    /* --- ADMIN YELLOW THEME (CONSISTENT COMPACT) --- */
+    :root {
+        --theme-yellow: #ffc107;
+        --theme-yellow-dark: #e0a800;
+        --theme-yellow-soft: #fff9e6;
+        --text-dark: #212529;
+        --card-radius: 12px;
     }
 
-    .page-item .page-link {
+    /* 1. Typography */
+    .page-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
+    }
+
+    /* 2. Tombol & Tab Status */
+    .btn-tab-active {
+        background-color: var(--theme-yellow);
+        color: #000;
+        font-weight: 700;
+        border: 1px solid var(--theme-yellow);
+    }
+    .btn-tab-inactive {
+        background-color: #fff;
+        color: #666;
+        border: 1px solid #dee2e6;
+    }
+    .btn-tab-inactive:hover {
+        background-color: var(--theme-yellow-soft);
+        color: #000;
+        border-color: var(--theme-yellow);
+    }
+
+    /* 3. Card Styles */
+    .card-admin {
+        background: #fff;
         border: none;
-        border-radius: 8px; /* Membuat sudut melengkung */
-        color: #64748b;     /* Warna teks abu lembut */
-        font-weight: 600;
-        font-size: 13px;
-        padding: 8px 14px;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Bayangan tipis */
-        transition: all 0.2s;
-    }
-
-    /* Efek saat mouse diarahkan */
-    .page-item .page-link:hover {
-        background-color: #f1f5f9;
-        color: #0284c7;
-        transform: translateY(-1px);
-    }
-
-    /* Tombol Aktif (Halaman sekarang) */
-    .page-item.active .page-link {
-        background-color: #0284c7; /* Biru modern */
-        color: white;
-        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); /* Efek glowing biru */
-    }
-
-    /* Tombol Disabled (Panah mati) */
-    .page-item.disabled .page-link {
-        background-color: #f8fafc;
-        color: #cbd5e1;
-        box-shadow: none;
-    }
-
-    div.pagination-wrapper nav .d-none.flex-fill.d-sm-flex .text-muted {
-        display: none !important;
-    }
-    
-    /* Atau penargetan yang lebih agresif jika yang atas tidak mempan */
-    div.pagination-wrapper nav p.small.text-muted {
-        display: none !important;
-    }
-
-    /* Pastikan Pagination Rata Kanan & Rapi */
-    div.pagination-wrapper nav {
-        display: flex;
-        justify-content: center; /* Tombol geser ke kanan */
+        border-radius: var(--card-radius);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid var(--theme-yellow);
         width: 100%;
     }
 
-    /* ... CSS lainnya biarkan ... */
-
-    /* --- PAKSA PAGINATION KE TENGAH & HILANGKAN TEKS --- */
-    
-    /* 1. Sembunyikan teks 'Showing...' (elemen div pertama di dalam nav) */
-    .pagination-wrapper nav .d-none.d-sm-flex > div:first-child {
-        display: none !important;
+    /* 4. Form Inputs */
+    .form-control-admin, .form-select-admin {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    .form-control-admin:focus, .form-select-admin:focus {
+        border-color: var(--theme-yellow);
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
     }
 
-    /* 2. Ubah layout container dari 'Between' menjadi 'Center' */
+    /* 5. Table Styling (COMPACT) */
+    .table-admin {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .table-admin thead th {
+        background-color: var(--theme-yellow-soft);
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--theme-yellow);
+        padding: 12px 10px;
+        white-space: nowrap;
+    }
+
+    .table-admin tbody td {
+        padding: 10px;
+        vertical-align: middle;
+        font-size: 13px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table-admin tbody tr:hover td {
+        background-color: #fffdf5;
+    }
+
+    /* 6. Pagination Styling (Yellow & Consistent) */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center !important;
+        align-items: center;
+        width: 100%;
+        padding: 15px; 
+        background: #fff;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .pagination-wrapper nav .d-none.d-sm-flex > div:first-child {
+        display: none !important; 
+    }
     .pagination-wrapper nav .d-none.d-sm-flex {
         justify-content: center !important;
     }
 
-    /* 3. Gaya Tombol (Opsional: Agar lebih cantik seperti sebelumnya) */
     .page-item .page-link {
+        color: #333;
         border: none;
-        border-radius: 8px;
-        color: #64748b;
-        margin: 0 3px; /* Jarak antar tombol */
+        margin: 0 2px;
+        border-radius: 6px;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 12px;
+        padding: 6px 12px;
+        background: #f8f9fa;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    
+
     .page-item.active .page-link {
-        background-color: #0284c7;
-        color: white;
-        box-shadow: 0 4px 8px rgba(2, 132, 199, 0.2);
+        background-color: var(--theme-yellow) !important;
+        border-color: var(--theme-yellow) !important;
+        color: #000 !important;
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.4);
     }
-   
+    
+    /* Label Filter Kecil */
+    .filter-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 4px;
+        display: block;
+    }
 </style>
 
 <div class="container-fluid p-4" id="page-wrapper">
-    {{-- TITLE --}}
+    
+    {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="page-title">Status Pelanggan</h4>
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="bi bi-person-lines-fill text-warning me-2"></i>Status Pelanggan
+            </h4>
+            <div class="text-muted small">Pantau status aktif, isolir, atau berhenti</div>
+        </div>
     </div>
 
     @php
         $statusHalaman = $status ?? 'aktif';
-
-        if ($statusHalaman === 'isolir') {
-            $colTanggalLabel = 'Tanggal Isolir';
-        } elseif ($statusHalaman === 'berhenti') {
-            $colTanggalLabel = 'Tanggal Berhenti';
-        } elseif ($statusHalaman === 'baru') {
-            $colTanggalLabel = 'Tanggal Daftar';
-        } else {
-            $colTanggalLabel = 'Tanggal Aktif';
-        }
-
         $totalBaru     = $statusCounts['baru']     ?? 0;
         $totalAktif    = $statusCounts['aktif']    ?? 0;
         $totalBerhenti = $statusCounts['berhenti'] ?? 0;
         $totalIsolir   = $statusCounts['isolir']   ?? 0;
     @endphp
 
-    {{-- TOMBOL STATUS SEBAGAI LINK --}}
-    <div class="d-flex flex-wrap gap-2 mb-3">
-        <a href="{{ route('pelanggan.status', ['status' => 'baru']) }}"
-           class="btn btn-sm {{ $statusHalaman === 'baru' ? 'btn-primary' : 'btn-outline-primary' }}">
-            Baru ({{ $totalBaru }})
-        </a>
-
-        <a href="{{ route('pelanggan.status', ['status' => 'aktif']) }}"
-           class="btn btn-sm {{ $statusHalaman === 'aktif' ? 'btn-primary' : 'btn-outline-primary' }}">
-            Aktif ({{ $totalAktif }})
-        </a>
-
-        <a href="{{ route('pelanggan.status', ['status' => 'berhenti']) }}"
-           class="btn btn-sm {{ $statusHalaman === 'berhenti' ? 'btn-primary' : 'btn-outline-primary' }}">
-            Berhenti ({{ $totalBerhenti }})
-        </a>
-
-        <a href="{{ route('pelanggan.status', ['status' => 'isolir']) }}"
-           class="btn btn-sm {{ $statusHalaman === 'isolir' ? 'btn-primary' : 'btn-outline-primary' }}">
-            Isolir ({{ $totalIsolir }})
-        </a>
+    {{-- TAB STATUS (DESIGN BARU) --}}
+    <div class="mb-4">
+        <div class="btn-group shadow-sm" role="group" style="border-radius: 8px; overflow: hidden;">
+            <a href="{{ route('pelanggan.status', ['status' => 'baru']) }}"
+               class="btn btn-sm px-4 py-2 {{ $statusHalaman === 'baru' ? 'btn-tab-active' : 'btn-tab-inactive' }}">
+               Baru ({{ $totalBaru }})
+            </a>
+            <a href="{{ route('pelanggan.status', ['status' => 'aktif']) }}"
+               class="btn btn-sm px-4 py-2 {{ $statusHalaman === 'aktif' ? 'btn-tab-active' : 'btn-tab-inactive' }}">
+               Aktif ({{ $totalAktif }})
+            </a>
+            <a href="{{ route('pelanggan.status', ['status' => 'isolir']) }}"
+               class="btn btn-sm px-4 py-2 {{ $statusHalaman === 'isolir' ? 'btn-tab-active' : 'btn-tab-inactive' }}">
+               Isolir ({{ $totalIsolir }})
+            </a>
+            <a href="{{ route('pelanggan.status', ['status' => 'berhenti']) }}"
+               class="btn btn-sm px-4 py-2 {{ $statusHalaman === 'berhenti' ? 'btn-tab-active' : 'btn-tab-inactive' }}">
+               Berhenti ({{ $totalBerhenti }})
+            </a>
+        </div>
     </div>
 
-    {{-- SEARCH & FILTER: AJAX (search & filter realtime) --}}
-    <div class="d-flex gap-3 mb-4 flex-wrap">
-        {{-- tetap simpan status yang lagi dipilih (dipakai di JS & URL) --}}
+    {{-- FILTER CARD --}}
+    <div class="card-admin p-3 mb-3">
+        {{-- HIDDEN INPUT STATUS --}}
         <input type="hidden" id="status-hidden" value="{{ $statusHalaman }}">
 
-        <div class="search-box flex-grow-1" style="min-width: 250px;">
-            <input type="text" id="search-input-status" class="form-control"
-                   value="{{ request('search') }}"
-                   placeholder="Cari pelanggan (nama, NIK, IP, HP, wilayah, paket)...">
+        <div class="row g-2">
+            <div class="col-12 col-md-5">
+                <span class="filter-label">Pencarian</span>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0" style="border-radius: 8px 0 0 8px;">
+                        <i class="bi bi-search text-warning" style="font-size: 13px;"></i>
+                    </span>
+                    <input type="text" id="search-input-status" class="form-control form-control-admin border-start-0" 
+                           value="{{ request('search') }}"
+                           style="border-radius: 0 8px 8px 0;"
+                           placeholder="Cari pelanggan / paket...">
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <span class="filter-label">Sales</span>
+                <select id="sales-filter-status" class="form-select form-select-admin">
+                    <option value="">Semua Sales</option>
+                    @foreach($dataSales as $s)
+                        <option value="{{ $s->id_sales }}" {{ request('sales') == $s->id_sales ? 'selected' : '' }}>
+                            {{ $s->user->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <span class="filter-label">Wilayah</span>
+                <select id="area-filter-status" class="form-select form-select-admin">
+                    <option value="">Semua Wilayah</option>
+                    @foreach($dataArea as $area)
+                        <option value="{{ $area->id_area }}" {{ request('area') == $area->id_area ? 'selected' : '' }}>
+                            {{ $area->nama_area }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
-
-        {{-- FILTER SALES --}}
-        <select class="filter-select" id="sales-filter-status" style="min-width: 160px;">
-            <option value="">Semua Sales</option>
-            @foreach($dataSales as $s)
-                <option value="{{ $s->id_sales }}"
-                    {{ request('sales') == $s->id_sales ? 'selected' : '' }}>
-                    {{ $s->user->name }}
-                </option>
-            @endforeach
-        </select>
-
-        {{-- FILTER WILAYAH --}}
-        <select class="filter-select" id="area-filter-status" style="min-width: 160px;">
-            <option value="">Semua Wilayah</option>
-            @foreach($dataArea as $area)
-                <option value="{{ $area->id_area }}"
-                    {{ request('area') == $area->id_area ? 'selected' : '' }}>
-                    {{ $area->nama_area }}
-                </option>
-            @endforeach
-        </select>
     </div>
 
-
-    {{-- TABLE --}}
-    <div class="table-card mt-2">
+    {{-- TABLE CARD --}}
+    <div class="card-admin p-0" style="overflow: hidden;">
         <div class="table-responsive">
-            <table class="table table-hover">
-@php
-    $statusHalaman = request('status', 'aktif');
-@endphp
-
-<thead>
-    <tr>
-        <th>No</th>
-        <th>Nama</th>
-        <th>Area</th>
-        <th>Sales</th>
-        <th>Paket harga total</th>
-        <th>
-            @if($statusHalaman === 'baru')
-                Tanggal Registrasi
-            @elseif($statusHalaman === 'aktif')
-                Tanggal Aktif
-            @elseif($statusHalaman === 'berhenti')
-                Tanggal Berhenti
-            @elseif($statusHalaman === 'isolir')
-                Tanggal Isolir
-            @else
-                Tanggal
-            @endif
-        </th>
-        <th>IP</th>
-        <th>Status</th>
-        <th>Aksi</th>
-    </tr>
-</thead>
-
-<tbody id="pelanggan-status-body">
-    @include('pelanggan.partials.table_rows_status', ['pelanggan' => $pelanggan])
-</tbody>
-
+            <table class="table table-admin mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">No</th>
+                        <th>Nama</th>
+                        <th>Area</th>
+                        <th>Sales</th>
+                        <th>Paket & Harga</th>
+                        <th>
+                            @if($statusHalaman === 'baru') Tgl Registrasi
+                            @elseif($statusHalaman === 'aktif') Tgl Aktif
+                            @elseif($statusHalaman === 'berhenti') Tgl Berhenti
+                            @elseif($statusHalaman === 'isolir') Tgl Isolir
+                            @else Tanggal
+                            @endif
+                        </th>
+                        <th>IP</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="pelanggan-status-body">
+                    @include('pelanggan.partials.table_rows_status', ['pelanggan' => $pelanggan])
+                </tbody>
             </table>
         </div>
 
-<div class="pagination-wrapper p-3 bg-light border-top" id="pagination-wrapper" style="border-radius: 0 0 16px 16px;">
-    {{-- Kita tidak perlu class flex di sini, biarkan CSS di atas yang mengatur 'jeroan' Laravel --}}
-    {{ $pelanggan->onEachSide(1)->links('pagination::bootstrap-5') }}
-</div>
-
+        {{-- PAGINATION CONSISTENT --}}
+        <div class="pagination-wrapper" id="status-pagination">
+            {{ $pelanggan->onEachSide(1)->links('pagination::bootstrap-5') }}
+        </div>
     </div>
+
 </div>
 @endsection
+
 @push('scripts')
+{{-- SCRIPT ASLI TETAP JALAN --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function () {
@@ -256,7 +272,6 @@ $(document).ready(function () {
     function loadStatusData(page = 1) {
         currentPage = page;
 
-        // batalin request sebelumnya biar hasil terakhir yang dipakai
         if (currentAjax !== null) {
             currentAjax.abort();
         }
@@ -276,17 +291,15 @@ $(document).ready(function () {
                 area:   area,
                 sales:  sales,
                 page:   page,
-                ajax:   true    // penanda ke controller: ini request AJAX
+                ajax:   true
             },
             success: function (response) {
                 $('#pelanggan-status-body').html(response.html);
                 $('#status-pagination').html(response.pagination);
-
-                // update URL (biar bisa di-refresh / share)
                 updateUrl(status, search, area, sales, page);
             },
             error: function (xhr, textStatus) {
-                if (textStatus === 'abort') return; // diabaikan kalau karena abort
+                if (textStatus === 'abort') return;
                 console.error(xhr.responseText);
                 alert('Terjadi kesalahan saat memuat data.');
             },
@@ -311,21 +324,15 @@ $(document).ready(function () {
         window.history.replaceState({}, '', newUrl);
     }
 
-    // 🔹 SEARCH realtime
+    // EVENT LISTENERS
     $('#search-input-status').on('input', function () {
         loadStatusData(1);
     });
 
-    // 🔹 FILTER area & sales
-    $('#area-filter-status').on('change', function () {
+    $('#area-filter-status, #sales-filter-status').on('change', function () {
         loadStatusData(1);
     });
 
-    $('#sales-filter-status').on('change', function () {
-        loadStatusData(1);
-    });
-
-    // 🔹 PAGINATION AJAX
     $(document).on('click', '#status-pagination .pagination a', function (e) {
         e.preventDefault();
         const url  = new URL($(this).attr('href'));
@@ -333,7 +340,6 @@ $(document).ready(function () {
         loadStatusData(page);
     });
 
-    // 🔹 INISIAL – ambil dari URL kalau ada
     (function loadInitial() {
         const urlParams = new URLSearchParams(window.location.search);
         const status = urlParams.get('status') || $('#status-hidden').val() || 'aktif';
@@ -350,45 +356,25 @@ $(document).ready(function () {
         loadStatusData(page);
     })();
 
-    // 🔹 HAPUS (modal) – tetap pakai event delegation vanilla
+    // Script Delete Modal (Jika ada)
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('.btn-delete');
         if (!btn) return;
-
         e.preventDefault();
-
         const url = btn.dataset.url;
-        if (!url) {
-            console.error('data-url tidak ditemukan di tombol delete');
-            return;
-        }
-
         const deleteForm = document.getElementById('deleteForm');
-        if (!deleteForm) {
-            console.error('#deleteForm tidak ditemukan');
-            return;
-        }
         deleteForm.action = url;
-
         const modalEl = document.getElementById('deleteModal');
-        if (!modalEl) {
-            console.error('#deleteModal tidak ditemukan');
-            return;
-        }
-
         const deleteModal = bootstrap.Modal.getOrCreateInstance(modalEl);
         deleteModal.show();
     });
 
-    // 🔹 SUBMIT FORM HAPUS via AJAX (kalau mau sekalian refresh tabel status)
     $('#deleteForm').on('submit', function (e) {
         e.preventDefault();
         const form = $(this);
         const url  = form.attr('action');
         const btn  = form.find('button[type="submit"]');
-
         btn.prop('disabled', true).text('Menghapus...');
-
         $.ajax({
             url: url,
             type: 'POST',
@@ -398,8 +384,7 @@ $(document).ready(function () {
                 const deleteModal = bootstrap.Modal.getInstance(modalEl);
                 deleteModal.hide();
                 btn.prop('disabled', false).text('Hapus');
-
-                loadStatusData(currentPage); // refresh tabel sesuai filter & halaman sekarang
+                loadStatusData(currentPage);
             },
             error: function (xhr) {
                 console.error(xhr.responseText);

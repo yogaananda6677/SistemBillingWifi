@@ -2,627 +2,381 @@
 
 @section('content')
 
+{{-- =================================================================== --}}
+{{-- 1. LOGIKA PHP & CSS MINIMALIS                                       --}}
+{{-- =================================================================== --}}
+@php
+    $monthNames = [
+        '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+        '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+        '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
+    ];
+    
+    // Default Tanggal
+    $dateObj = $startDate ?? now();
+    $currMon = $dateObj->format('m');
+    $currYear = $dateObj->format('Y');
+    $currMonName = $monthNames[$currMon] ?? 'Bulan';
+
+    // Filter
+    $selMonth = $selectedMonth ?? $currMon;
+    $selYear  = $selectedYear  ?? $currYear;
+    $yearNow  = now()->year;
+@endphp
+
 <style>
-    .progress-bar-custom {
-        height: 10px;
+    /* --- TEMA MINIMALIS (CLEAN & CRISP) --- */
+    :root {
+        --acc-gold: #fbbf24;    /* Kuning Emas */
+        --acc-green: #10b981;   /* Hijau Sukses */
+        --acc-red: #ef4444;     /* Merah Error */
+        --bg-body: #f9fafb;     /* Abu sangat muda */
+        --border: #e5e7eb;      /* Garis tipis */
+        --text-main: #1f2937;   /* Hitam lembut */
+        --text-sub: #6b7280;    /* Abu teks */
+    }
+
+    body { background-color: var(--bg-body); }
+
+    /* CARD STYLE: Flat, Bordered, No Shadow */
+    .card-clean {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        height: 100%;
+        transition: border-color 0.2s;
+    }
+    .card-clean:hover {
+        border-color: var(--acc-gold); /* Efek hover simpel */
+    }
+
+    /* TYPOGRAPHY */
+    .label-k {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 700;
+        color: var(--text-sub);
+        display: block;
+        margin-bottom: 8px;
+    }
+    .angka-besar {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+    }
+    
+    /* INPUT FILTER */
+    .input-clean {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 14px;
+        color: var(--text-main);
+        cursor: pointer;
+    }
+    .btn-clean {
+        background: var(--acc-gold);
+        color: #000;
+        font-weight: 600;
+        border: none;
+        padding: 7px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    /* ICON BULAT */
+    .icon-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+    .ic-green { background: #d1fae5; color: var(--acc-green); }
+    .ic-red { background: #fee2e2; color: var(--acc-red); }
+    .ic-blue { background: #dbeafe; color: #3b82f6; }
+    .ic-gold { background: #fef3c7; color: #d97706; }
+    
+    /* PROGRESS BAR */
+    .progress-thin {
+        height: 6px;
+        background: #f3f4f6;
         border-radius: 10px;
-        transition: width 0.8s ease-in-out;
-        position: relative;
         overflow: hidden;
     }
-    .progress-bar-custom::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background-image: linear-gradient(
-            -45deg,
-            rgba(255, 255, 255, 0.2) 25%,
-            transparent 25%,
-            transparent 50%,
-            rgba(255, 255, 255, 0.2) 50%,
-            rgba(255, 255, 255, 0.2) 75%,
-            transparent 75%,
-            transparent
-        );
-        background-size: 50px 50px;
-        animation: move 2s linear infinite;
-        border-radius: 10px;
-        opacity: 0;
-    }
-    .progress-bar-custom.animated::after {
-        opacity: 1;
-    }
-    @keyframes move {
-        0% { background-position: 0 0; }
-        100% { background-position: 50px 50px; }
-    }
-
-    .progress-label { font-size: 13px; font-weight: 600; }
-
-    .card { transition: all 0.3s ease; }
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-    }
-
-    .fade-in {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.6s ease;
-    }
-    .fade-in.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    .bi { transition: all 0.3s ease; }
-    .card:hover .bi { transform: scale(1.1); }
-
-    .table tbody tr { transition: all 0.3s ease; }
-    .table tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.05);
-        transform: scale(1.01);
-    }
-
-    .dropdown-menu { animation: slideDown 0.3s ease; }
-    @keyframes slideDown {
-        from { opacity: 0; transform: translateY(-10px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .counter-animate { font-variant-numeric: tabular-nums; }
-
-    .chart-loading { position: relative; overflow: hidden; }
-    .chart-loading::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
+    .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        animation: loading 1.5s infinite;
+        background: var(--acc-gold);
+        width: 0%;
+        transition: width 1s ease;
     }
-    @keyframes loading {
-        0%   { left: -100%; }
-        100% { left: 100%; }
-    }
-
-    .pulse { animation: pulse 2s infinite; }
-    @keyframes pulse {
-        0%   { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-        70%  { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-    }
-
-    .text-primary { transition: all 0.3s ease; }
-    .text-primary:hover { letter-spacing: 0.5px; }
 </style>
 
-<div class="container-fluid p-4" style="max-height: 100vh; overflow-y: auto;">
+<div class="container-fluid p-4">
 
-    {{-- =================== TITLE + FILTER BULAN =================== --}}
-    <div class="d-flex justify-content-between align-items-center mb-3 fade-in">
-    <h4 class="fw-bold">Dashboard</h4>
+    {{-- =================================================================== --}}
+    {{-- 2. HEADER & FILTER                                                  --}}
+    {{-- =================================================================== --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-end mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Dashboard</h3>
+            <p class="text-muted small mb-0">Laporan periode <strong>{{ $monthNames[$selMonth] }} {{ $selYear }}</strong></p>
+        </div>
 
-    @php
-        $monthNames = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember',
-        ];
+        <form action="{{ route('dashboard-admin') }}" method="GET" class="d-flex gap-2 mt-3 mt-md-0">
+            <select name="bulan" class="input-clean">
+                @foreach($monthNames as $num => $name)
+                    <option value="{{ $num }}" {{ $num == $selMonth ? 'selected' : '' }}>{{ $name }}</option>
+                @endforeach
+            </select>
+            <select name="tahun" class="input-clean">
+                @foreach(range($yearNow - 2, $yearNow + 1) as $y)
+                    <option value="{{ $y }}" {{ $y == $selYear ? 'selected' : '' }}>{{ $y }}</option>
+                @endforeach
+            </select>
+            <button type="submit" class="btn-clean">Filter</button>
+        </form>
+    </div>
 
-        $currentMonthNumber = $startDate->format('m');
-        $currentYear        = $startDate->format('Y');
-        $currentMonthName   = $monthNames[$currentMonthNumber] ?? 'Bulan';
+    {{-- =================================================================== --}}
+    {{-- 3. KARTU KEUANGAN (MONEY STATS)                                     --}}
+    {{-- =================================================================== --}}
+    <div class="row g-3 mb-4">
+        {{-- Uang Masuk --}}
+        <div class="col-md-6">
+            <div class="card-clean d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="label-k">PEMBAYARAN DITERIMA</span>
+                    <div class="angka-besar text-success counter-anim">
+                        {{ rupiah($totalPembayaranTerima) }}
+                    </div>
+                </div>
+                <div class="icon-circle ic-green"><i class="bi bi-wallet2"></i></div>
+            </div>
+        </div>
+        
+        {{-- Uang Macet --}}
+        <div class="col-md-6">
+            <div class="card-clean d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="label-k">TAGIHAN TERLAMBAT</span>
+                    <div class="angka-besar text-danger counter-anim">
+                        {{ rupiah($totalPembayaranTerlambat) }}
+                    </div>
+                </div>
+                <div class="icon-circle ic-red"><i class="bi bi-exclamation-lg"></i></div>
+            </div>
+        </div>
+    </div>
 
-        // nilai terpilih dari controller
-        $selMonth = $selectedMonth ?? $currentMonthNumber;
-        $selYear  = $selectedYear  ?? $currentYear;
+    {{-- =================================================================== --}}
+    {{-- 4. KARTU STATISTIK PELANGGAN (FIXED: 5 KOLOM 1 BARIS)               --}}
+    {{-- =================================================================== --}}
+    {{-- Menggunakan row-cols-md-5 untuk membagi layar menjadi 5 bagian rata --}}
+    <div class="row row-cols-2 row-cols-md-5 g-3 mb-4">
+        @foreach($counters as $c)
+            @php
+                $icColor = 'ic-blue';
+                if(str_contains($c['color'], 'success')) $icColor = 'ic-green';
+                if(str_contains($c['color'], 'warning')) $icColor = 'ic-gold';
+                if(str_contains($c['color'], 'danger'))  $icColor = 'ic-red';
+            @endphp
+            <div class="col">
+                <div class="card-clean p-3 h-100">
+                    <div class="icon-circle {{ $icColor }}" style="width: 36px; height: 36px; font-size: 16px;">
+                        <i class="bi {{ $c['icon'] }}"></i>
+                    </div>
+                    <div class="mt-2">
+                        <div class="fs-4 fw-bold text-dark counter-anim">{{ $c['value'] }}</div>
+                        <div class="text-muted small text-truncate" style="font-size: 12px;" title="{{ $c['label'] }}">
+                            {{ $c['label'] }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
 
-        // range tahun (silakan sesuaikan)
-        $yearNow = now()->year;
-        $years   = range($yearNow - 5, $yearNow + 1);
-    @endphp
-
-    <form method="GET" action="{{ route('dashboard-admin') }}"
-          class="d-flex align-items-center flex-wrap gap-2">
-        <span class="text-secondary">Periode:</span>
-
-        {{-- PILIH BULAN --}}
-        <select name="bulan" class="form-select form-select-sm" style="width:auto;">
-            @foreach($monthNames as $num => $name)
-                <option value="{{ $num }}" {{ $num == $selMonth ? 'selected' : '' }}>
-                    {{ $name }}
-                </option>
-            @endforeach
-        </select>
-
-        {{-- PILIH TAHUN --}}
-        <select name="tahun" class="form-select form-select-sm" style="width:auto;">
-            @foreach($years as $y)
-                <option value="{{ $y }}" {{ $y == $selYear ? 'selected' : '' }}>
-                    {{ $y }}
-                </option>
-            @endforeach
-        </select>
-
-        <button class="btn btn-sm btn-primary" type="submit">
-            Terapkan
-        </button>
-
-        <a href="{{ route('dashboard-admin') }}" class="btn btn-sm btn-outline-secondary">
-            Reset
-        </a>
-    </form>
-</div>
-
-
-
-    {{-- =================== TOTAL PEMBAYARAN =================== --}}
+    {{-- =================================================================== --}}
+    {{-- 5. GRAFIK & LIST (2 KOLOM)                                          --}}
+    {{-- =================================================================== --}}
     <div class="row g-3">
-        <div class="col-12 col-lg-6 fade-in">
-            <div class="card shadow-sm border-0 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-secondary fw-semibold">
-                            Total Pembayaran Diterima ({{ $currentMonthName }} {{ $currentYear }})
-                        </small>
-
-                        <h5 class="fw-bold text-success mt-1 counter-animate">
-                            {{ rupiah($totalPembayaranTerima) }}
-                        </h5>
-                    </div>
-                    <i class="bi bi-receipt-cutoff fs-2 text-warning"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6 fade-in">
-            <div class="card shadow-sm border-0 p-3 pulse">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-secondary fw-semibold">
-                            Total Pembayaran Terlambat ({{ $currentMonthName }} {{ $currentYear }})
-                        </small>
-
-                        <h5 class="fw-bold text-danger mt-1 counter-animate">
-                            {{ rupiah($totalPembayaranTerlambat) }}
-                        </h5>
-                    </div>
-                    <i class="bi bi-exclamation-octagon fs-2 text-danger"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- =================== MINI COUNTERS =================== --}}
-<div class="row g-3 mt-3">
-    @foreach($counters as $index => $c)
-        <div class="col-6 col-lg-2 fade-in" style="transition-delay: {{ $index * 0.1 }}s">
-            <div class="card p-3 shadow-sm border-0">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi {{ $c['icon'] }} fs-3 {{ $c['color'] }}"></i>
-                    <div>
-                        <small>{{ $c['label'] }}</small>
-                        <h6 class="fw-bold counter-animate">{{ number_format($c['value'], 0, ',', '.') }}</h6>
+        
+        {{-- KIRI: Grafik & Progress --}}
+        <div class="col-lg-8">
+            <div class="row g-3">
+                {{-- Grafik Pembayaran --}}
+                <div class="col-md-6">
+                    <div class="card-clean text-center">
+                        <span class="label-k mb-3">STATUS PEMBAYARAN</span>
+                        <div style="height: 180px; display: flex; justify-content: center;">
+                            @if(($statusPembayaran['lunas'] ?? 0) == 0 && ($statusPembayaran['belum_lunas'] ?? 0) == 0)
+                                <span class="text-muted align-self-center small">Tidak ada data.</span>
+                            @else
+                                <canvas id="chartBayar"></canvas>
+                            @endif
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    @endforeach
-</div>
 
-
-    {{-- =================== CHART STATUS (STATIC IMG) =================== --}}
-<div class="row mt-4 g-4">
-    {{-- PIE STATUS PEMBAYARAN --}}
-<div class="col-12 col-lg-6 fade-in">
-    <div class="card p-3 shadow-sm border-0">
-        <h6 class="fw-bold">Status Pembayaran ({{ $currentMonthName }} {{ $currentYear }})</h6>
-
-        @if(($statusPembayaran['lunas'] ?? 0) == 0 && ($statusPembayaran['belum_lunas'] ?? 0) == 0)
-            <div class="text-center text-muted py-5">
-                Tidak ada data pembayaran.
-            </div>
-        @else
-            <div class="d-flex justify-content-center">
-                <div style="position: relative; width: 260px; height: 260px;">
-                    <canvas id="statusPembayaranChart"></canvas>
+                {{-- Grafik Pelanggan --}}
+                <div class="col-md-6">
+                    <div class="card-clean text-center">
+                        <span class="label-k mb-3">STATUS PELANGGAN</span>
+                        <div style="height: 180px; display: flex; justify-content: center;">
+                            <canvas id="chartPelanggan"></canvas>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        @endif
-    </div>
-</div>
 
-
-    {{-- PIE STATUS PELANGGAN --}}
-<div class="col-12 col-lg-6 fade-in">
-    <div class="card p-3 shadow-sm border-0">
-        <h6 class="fw-bold">Status Pelanggan</h6>
-
-        @if(
-            ($statusCounts['aktif'] ?? 0) == 0 &&
-            ($statusCounts['isolir'] ?? 0) == 0 &&
-            ($statusCounts['berhenti'] ?? 0) == 0 &&
-            ($statusCounts['baru'] ?? 0) == 0
-        )
-            <div class="text-center text-muted py-5">
-                Tidak ada data pelanggan.
-            </div>
-        @else
-            <div class="d-flex justify-content-center">
-                <div style="position: relative; width: 260px; height: 260px;">
-                    <canvas id="statusPelangganChart"></canvas>
-                </div>
-            </div>
-        @endif
-    </div>
-</div>
-
-</div>
-
-
-
-    {{-- =================== PROGRES SALES =================== --}}
-    <div class="card p-4 shadow-sm mt-4 border-0 fade-in">
- <h6 class="fw-bold">Progres Penarikan Pembayaran Per Sales ({{ $currentMonthName }} {{ $currentYear }})</h6>
-
-@forelse($salesProgress as $index => $s)
-    <div class="row my-2 progress-item"
-         data-percent="{{ $s['percent'] }}"
-         data-done="{{ $s['done'] }}"
-         data-total="{{ $s['total'] }}">
-        <div class="col-4">
-            <span class="progress-label">{{ $s['nama'] }}</span>
-        </div>
-        <div class="col-6">
-            <div class="bg-light rounded">
-                <div class="bg-primary progress-bar-custom" style="width: 0%;"></div>
-            </div>
-        </div>
-        <div class="col-2 text-end">
-            <small class="fw-bold">
-                <span class="percent-text">0%</span>
-                <span class="text-secondary">
-                    (<span class="done-text">0</span>/{{ $s['total'] }} Tagihan)
-                </span>
-            </small>
-        </div>
-    </div>
-@empty
-    <p class="text-muted mt-3">Belum ada data sales.</p>
-@endforelse
-
-    </div>
-
-    {{-- =================== TABEL PELANGGAN =================== --}}
-    <div class="row mt-4 g-3">
-        {{-- BELUM BAYAR --}}
-        <div class="col-12 col-lg-6 fade-in">
-            <div class="card p-3 shadow-sm border-0">
-                <h6 class="fw-bold">Pelanggan Belum Bayar (Top 5)</h6>
-                <table class="table table-sm mt-2">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama</th>
-                            <th>Wilayah</th>
-                            <th>Tagihan</th>
-                            <th>Sales</th>
-                            <th>Jatuh Tempo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($tagihanBelumBayar as $index => $t)
-                            @php
-                                $pelanggan = $t->langganan->pelanggan ?? null;
-                            @endphp
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $pelanggan->nama ?? '-' }}</td>
-                                <td>{{ optional($pelanggan->area)->nama_area ?? '-' }}</td>
-                                <td>{{ rupiah($t->total_tagihan) }}</td>
-                                <td>{{ optional(optional($pelanggan->sales)->user)->name ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($t->jatuh_tempo)->format('d-m-Y') }}</td>
-                            </tr>
+                {{-- Progress Sales --}}
+                <div class="col-12">
+                    <div class="card-clean">
+                        <span class="label-k mb-4">PERFORMA SALES (PENAGIHAN)</span>
+                        
+                        @forelse($salesProgress as $s)
+                            <div class="mb-3 item-progress" data-percent="{{ $s['percent'] }}">
+                                <div class="d-flex justify-content-between mb-1" style="font-size: 13px;">
+                                    <span class="fw-bold">{{ $s['nama'] }}</span>
+                                    <span class="text-muted">{{ $s['done'] }} / {{ $s['total'] }}</span>
+                                </div>
+                                <div class="progress-thin">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
                         @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">Tidak ada data.</td>
-                            </tr>
+                            <p class="text-muted small">Belum ada data sales.</p>
                         @endforelse
-                    </tbody>
-                </table>
-                {{-- Bisa diarahkan ke halaman detail kalau sudah ada --}}
-                {{-- <a href="{{ route('tagihan.index') }}" class="text-primary fw-semibold text-decoration-none">Detail →</a> --}}
+                    </div>
+                </div>
             </div>
         </div>
 
-        {{-- SUDAH BAYAR --}}
-        <div class="col-12 col-lg-6 fade-in">
-            <div class="card p-3 shadow-sm border-0">
-                <h6 class="fw-bold">Pelanggan Sudah Bayar (Top 5)</h6>
-                <table class="table table-sm mt-2">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama</th>
-                            <th>Wilayah</th>
-                            <th>Tagihan</th>
-                            <th>Sales</th>
-                            <th>Jatuh Tempo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($tagihanSudahBayar as $index => $t)
-                            @php
-                                $pelanggan = $t->langganan->pelanggan ?? null;
-                            @endphp
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $pelanggan->nama ?? '-' }}</td>
-                                <td>{{ optional($pelanggan->area)->nama_area ?? '-' }}</td>
-                                <td>{{ rupiah($t->total_tagihan) }}</td>
-                                <td>{{ optional(optional($pelanggan->sales)->user)->name ?? '-' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($t->jatuh_tempo)->format('d-m-Y') }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">Tidak ada data.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        {{-- KANAN: List Tagihan (Top 5) --}}
+        <div class="col-lg-4">
+            <div class="card-clean h-100">
+                <span class="label-k mb-3 text-danger">BELUM BAYAR TERBESAR</span>
+                
+                <div class="d-flex flex-column gap-3">
+                    @forelse($tagihanBelumBayar as $t)
+                        @php $p = $t->langganan->pelanggan ?? null; @endphp
+                        <div class="pb-2 border-bottom">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold" style="font-size: 13px;">{{ $p->nama ?? '-' }}</span>
+                                <span class="text-danger fw-bold" style="font-size: 13px;">{{ rupiah($t->total_tagihan) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted" style="font-size: 11px;">
+                                <span>{{ optional($p->area)->nama_area }}</span>
+                                <span>Jatuh Tempo: {{ \Carbon\Carbon::parse($t->jatuh_tempo)->format('d/m') }}</span>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-muted small">Tidak ada tunggakan.</div>
+                    @endforelse
+                </div>
+
+                <div class="mt-4 pt-2">
+                    <a href="{{ route('tagihan.index', ['status' => 'belum_lunas']) }}" 
+                       class="btn btn-light btn-sm w-100 text-muted" style="font-size: 12px;">Lihat Semua</a>
+                </div>
             </div>
         </div>
-    </div>
 
-    {{-- =================== GRAFIK BAR (MASIH GAMBAR STATIS) =================== --}}
-    <div class="card p-4 shadow-sm border-0 mt-4 fade-in">
-        <div class="d-flex justify-content-between">
-            <h6 class="fw-bold">Pendapatan Bulanan</h6>
-            <button class="btn btn-sm btn-light">Filter <i class="bi bi-chevron-down"></i></button>
-        </div>
-        <div class="text-center mt-3 chart-loading">
-            <img src="/img/chart-bar.png" class="img-fluid"
-                 onload="this.parentElement.classList.remove('chart-loading')">
-        </div>
     </div>
-
 </div>
 
+{{-- =================================================================== --}}
+{{-- 6. JAVASCRIPT LOGIC (Chart & Animation)                             --}}
+{{-- =================================================================== --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
-    // ==== DATA DARI LARAVEL ====
-    const statusPembayaran = @json($statusPembayaran ?? []);
-    const statusCounts     = @json($statusCounts ?? []);
-
-    // ================================
-    // PIE CHART STATUS PEMBAYARAN
-    // ================================
-    const ctxPembayaran = document.getElementById('statusPembayaranChart');
-
-    if (ctxPembayaran && statusPembayaran) {
-        const lunas       = Number(statusPembayaran.lunas ?? 0);
-        const belumLunas  = Number(statusPembayaran.belum_lunas ?? 0);
-        const totalPemb   = lunas + belumLunas;
-
-        if (totalPemb > 0) {
-            // Ada data -> render chart
-            new Chart(ctxPembayaran.getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: ['Lunas', 'Belum Lunas'],
-                    datasets: [{
-                        data: [lunas, belumLunas],
-                        backgroundColor: ['#28a745', '#dc3545'], // hijau, merah
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // penting biar ikut 260x260
-                    plugins: {
-                        legend: { position: 'bottom' },
-                    }
-                }
-            });
-        } else {
-            // Tidak ada data -> ganti canvas dengan teks
-            const wrapper = ctxPembayaran.parentElement; // div 260x260
-            if (wrapper) {
-                wrapper.innerHTML = `
-                    <div class="text-muted py-5 text-center">
-                        Tidak ada data pembayaran.
-                    </div>
-                `;
+    
+    // 1. CHART: Status Pembayaran
+    const dataBayar = @json($statusPembayaran ?? []);
+    const ctxBayar = document.getElementById('chartBayar');
+    if (ctxBayar && (dataBayar.lunas || dataBayar.belum_lunas)) {
+        new Chart(ctxBayar, {
+            type: 'doughnut',
+            data: {
+                labels: ['Lunas', 'Belum'],
+                datasets: [{
+                    data: [dataBayar.lunas, dataBayar.belum_lunas],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 11 } } } },
+                cutout: '75%'
             }
-        }
-    }
-
-    // ================================
-    // PIE CHART STATUS PELANGGAN
-    // ================================
-    const ctxPelanggan = document.getElementById('statusPelangganChart');
-
-    if (ctxPelanggan && statusCounts) {
-        const aktif    = Number(statusCounts.aktif    ?? 0);
-        const isolir   = Number(statusCounts.isolir   ?? 0);
-        const berhenti = Number(statusCounts.berhenti ?? 0);
-        const baru     = Number(statusCounts.baru     ?? 0);
-        const totalPel = aktif + isolir + berhenti + baru;
-
-        if (totalPel > 0) {
-            // Ada data -> render chart
-            new Chart(ctxPelanggan.getContext('2d'), {
-                type: 'pie',
-                data: {
-                    labels: ['Aktif', 'Isolir', 'Berhenti', 'Baru (bulan ini)'],
-                    datasets: [{
-                        data: [aktif, isolir, berhenti, baru],
-                        backgroundColor: [
-                            '#0d6efd', // biru
-                            '#ffc107', // kuning
-                            '#dc3545', // merah
-                            '#20c997'  // hijau tosca
-                        ],
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                    }
-                }
-            });
-        } else {
-            // Tidak ada data -> ganti canvas dengan teks
-            const wrapper = ctxPelanggan.parentElement; // div 260x260
-            if (wrapper) {
-                wrapper.innerHTML = `
-                    <div class="text-muted py-5 text-center">
-                        Tidak ada data pelanggan.
-                    </div>
-                `;
-            }
-        }
-    }
-
-    // === FILTER BULAN: RELOAD DENGAN ?bulan=YYYY-MM ===
-    document.querySelectorAll('.month-item').forEach(item => {
-        item.addEventListener('click', function (e) {
-            e.preventDefault();
-
-            const month = this.dataset.month; // "01", "02", ...
-            const year  = this.dataset.year;  // "2025"
-
-            const label = this.textContent.trim();
-            const selectedLabel = document.getElementById('selectedMonth');
-            if (selectedLabel) {
-                selectedLabel.innerText = label;
-            }
-
-            const url = new URL(window.location.href);
-            url.searchParams.set('bulan', `${year}-${month}`);
-            window.location.href = url.toString();
         });
+    }
+
+    // 2. CHART: Status Pelanggan
+    const dataPel = @json($statusCounts ?? []);
+    const ctxPel = document.getElementById('chartPelanggan');
+    if (ctxPel) {
+        new Chart(ctxPel, {
+            type: 'doughnut',
+            data: {
+                labels: ['Aktif', 'Isolir', 'Stop', 'Baru'],
+                datasets: [{
+                    data: [dataPel.aktif, dataPel.isolir, dataPel.berhenti, dataPel.baru],
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }, // Sembunyikan legend biar bersih
+                cutout: '75%'
+            }
+        });
+    }
+
+    // 3. ANIMASI ANGKA (Counter)
+    document.querySelectorAll('.counter-anim').forEach(el => {
+        const txt = el.innerText.replace(/[^0-9]/g, '');
+        const target = parseInt(txt) || 0;
+        if(target === 0) return;
+        
+        let start = 0;
+        const duration = 800;
+        const step = 20;
+        const inc = target / (duration / step);
+
+        const timer = setInterval(() => {
+            start += inc;
+            if(start >= target) {
+                el.innerText = el.innerText.includes('Rp') 
+                    ? 'Rp ' + target.toLocaleString('id-ID') 
+                    : target.toLocaleString('id-ID');
+                clearInterval(timer);
+            } else {
+                el.innerText = el.innerText.includes('Rp') 
+                    ? 'Rp ' + Math.floor(start).toLocaleString('id-ID') 
+                    : Math.floor(start).toLocaleString('id-ID');
+            }
+        }, step);
     });
 
-    // Fade in animation
-    const fadeElements = document.querySelectorAll('.fade-in');
-    fadeElements.forEach(element => element.classList.add('visible'));
-
-    // Animate progress bars (pakai data-* dari progress-item)
-    const progressItems = document.querySelectorAll('.progress-item');
-    const progressObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-
-            const item        = entry.target;
-            const progressBar = item.querySelector('.progress-bar-custom');
-            const percentText = item.querySelector('.percent-text');
-            const doneText    = item.querySelector('.done-text');
-
-            const targetPercent = parseInt(item.dataset.percent || '0', 10);
-            const targetDone    = parseInt(item.dataset.done || '0', 10);
-
-            let currentPercent = 0;
-
-            const animateProgress = () => {
-                if (currentPercent < targetPercent) {
-                    currentPercent++;
-
-                    const currentDone = targetPercent > 0
-                        ? Math.round((currentPercent / targetPercent) * targetDone)
-                        : 0;
-
-                    progressBar.style.width   = currentPercent + '%';
-                    percentText.textContent   = currentPercent + '%';
-                    doneText.textContent      = currentDone.toString();
-
-                    progressBar.classList.add('animated');
-                    setTimeout(animateProgress, 20);
-                } else {
-                    setTimeout(() => progressBar.classList.remove('animated'), 500);
-                }
-            };
-
-            animateProgress();
-            progressObserver.unobserve(item);
-        });
-    }, { threshold: 0.5 });
-
-    progressItems.forEach(item => progressObserver.observe(item));
-
-    // Number counting animation for counters
-    const counters = document.querySelectorAll('.counter-animate');
-    const counterObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-
-            const element = entry.target;
-            const text    = element.textContent;
-
-            if (text.includes('Rp')) {
-                element.style.opacity = '0';
-                setTimeout(() => {
-                    element.style.opacity = '1';
-                    element.style.transform = 'scale(1.1)';
-                    setTimeout(() => {
-                        element.style.transform = 'scale(1)';
-                    }, 300);
-                }, 200);
-            } else {
-                const target = parseInt(text.replace(/\./g, ''), 10) || 0;
-                let current  = 0;
-                const increment = target / 50;
-
-                const timer = setInterval(() => {
-                    current += increment;
-                    if (current >= target) {
-                        element.textContent = formatNumber(target);
-                        clearInterval(timer);
-                    } else {
-                        element.textContent = formatNumber(Math.floor(current));
-                    }
-                }, 30);
-            }
-
-            counterObserver.unobserve(element);
-        });
-    }, { threshold: 0.5 });
-
-    counters.forEach(counter => counterObserver.observe(counter));
-
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    }
-
-    // Hover effect untuk cards (backup)
-    const cards = document.querySelectorAll('.card');
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px)';
-            this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '';
-        });
+    // 4. ANIMASI PROGRESS BAR
+    document.querySelectorAll('.item-progress').forEach(el => {
+        const pct = el.dataset.percent + '%';
+        const bar = el.querySelector('.progress-fill');
+        setTimeout(() => { bar.style.width = pct; }, 300);
     });
 });
 </script>

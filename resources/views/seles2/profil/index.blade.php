@@ -8,12 +8,10 @@
         .profile-bg-header {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             padding: 20px 20px 35px;
-            /* Padding bawah besar untuk space avatar */
             border-bottom-left-radius: 30px;
             border-bottom-right-radius: 30px;
             color: white;
             margin: -16px -16px 20px -16px;
-            /* Negatif margin agar full width */
             position: relative;
         }
 
@@ -22,7 +20,7 @@
             margin-top: -0px;
             display: flex;
             justify-content: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .profile-avatar {
@@ -37,7 +35,8 @@
             justify-content: center;
             font-size: 2.5rem;
             font-weight: 700;
-            color: #d97706;
+            color: #ffffff;
+            /* Dikembalikan ke warna oren agar kontras */
         }
 
         /* Card Styling */
@@ -118,6 +117,36 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            text-decoration: none;
+            /* Hapus garis bawah jika pakai <a> */
+            cursor: pointer;
+        }
+
+        /* --- STYLE UNTUK KOMISI --- */
+        .commission-card {
+            background: linear-gradient(to right, #fffbeb, #fff);
+            border: 1px dashed #f59e0b;
+            border-radius: 15px;
+            padding: 12px;
+            margin-top: 15px;
+            display: inline-block;
+            min-width: 200px;
+        }
+
+        .commission-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #b45309;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .commission-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #d97706;
+            font-family: 'Courier New', monospace;
         }
     </style>
 
@@ -141,14 +170,37 @@
                 {{ substr(auth()->user()->name, 0, 1) }}
             </div>
         </div>
+
         <div class="text-center mb-4">
-            <h5 class="fw-bold mb-0 text-dark">{{ auth()->user()->name }}</h5>
+            <h5 class="fw-bold mb-1 text-dark">{{ auth()->user()->name }}</h5>
+
             <span class="badge bg-warning text-dark bg-opacity-25 border border-warning">
                 Sales Representative
             </span>
+
+            {{-- === LOGIC KOMISI (TIDAK DIUBAH) === --}}
+            <div class="mt-2">
+                @php
+                    $komisi = 0;
+                    if (auth()->user()->sales) {
+                        $komisi = auth()->user()->sales->komisi;
+                    }
+                @endphp
+
+                <div class="commission-card">
+                    <div class="commission-label">
+                        <i class="bi bi-wallet2 me-1"></i> Komisi
+                    </div>
+                    <div class="commission-value">
+                        Rp {{ number_format($komisi, 0, ',', '.') }}
+                    </div>
+                </div>
+            </div>
+            {{-- === AKHIR LOGIC KOMISI === --}}
+
         </div>
 
-        {{-- 3. FORM UPDATE PROFIL (Nama, Email, HP) --}}
+        {{-- 3. FORM UPDATE PROFIL --}}
         <div class="settings-card">
             <h6 class="card-title-custom">
                 <i class="bi bi-person-lines-fill text-warning"></i> Data Diri
@@ -161,20 +213,32 @@
                 <div class="form-group">
                     <label class="form-label-sm">Nama Lengkap</label>
                     <input type="text" name="name" value="{{ old('name', auth()->user()->name) }}"
-                        class="form-control form-control-mobile" required>
+                        class="form-control form-control-mobile @error('name') is-invalid @enderror" required>
+                    {{-- Validasi Error --}}
+                    @error('name')
+                        <span class="text-danger small">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label-sm">Alamat Email</label>
                     <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}"
-                        class="form-control form-control-mobile" required>
+                        class="form-control form-control-mobile @error('email') is-invalid @enderror" required>
+                    {{-- Validasi Error --}}
+                    @error('email')
+                        <span class="text-danger small">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label class="form-label-sm">Nomor WhatsApp / HP</label>
-                    {{-- Pastikan kolom 'no_hp' ada di database user Anda --}}
                     <input type="text" name="no_hp" value="{{ old('no_hp', auth()->user()->no_hp ?? '') }}"
-                        class="form-control form-control-mobile" placeholder="0812xxxx">
+                        class="form-control form-control-mobile @error('no_hp') is-invalid @enderror"
+                        placeholder="0812xxxx">
+                    {{-- Validasi Error --}}
+                    @error('no_hp')
+                        <span class="text-danger small">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <button type="submit" class="btn-save mt-2">
@@ -195,7 +259,8 @@
 
                 <div class="form-group">
                     <label class="form-label-sm">Password Saat Ini</label>
-                    <input type="password" name="current_password" class="form-control form-control-mobile"
+                    <input type="password" name="current_password"
+                        class="form-control form-control-mobile @error('current_password', 'updatePassword') is-invalid @enderror"
                         placeholder="•••••••">
                     @error('current_password', 'updatePassword')
                         <span class="text-danger small">{{ $message }}</span>
@@ -204,7 +269,8 @@
 
                 <div class="form-group">
                     <label class="form-label-sm">Password Baru</label>
-                    <input type="password" name="password" class="form-control form-control-mobile"
+                    <input type="password" name="password"
+                        class="form-control form-control-mobile @error('password', 'updatePassword') is-invalid @enderror"
                         placeholder="Minimal 8 karakter">
                     @error('password', 'updatePassword')
                         <span class="text-danger small">{{ $message }}</span>
@@ -225,11 +291,39 @@
 
         {{-- 5. TOMBOL LOGOUT --}}
         <div class="mb-5">
+            {{-- Tombol Trigger Modal --}}
             <button type="button" class="btn-logout-mobile" data-bs-toggle="modal" data-bs-target="#logoutModal">
                 <i class="bi bi-box-arrow-right"></i> Keluar Aplikasi
             </button>
             <p class="text-center text-muted small mt-3 mb-0">Versi Aplikasi 1.0.0</p>
         </div>
 
+    </div>
+
+    {{-- MODAL LOGOUT (PENTING AGAR TOMBOL BERFUNGSI) --}}
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="logoutModalLabel">Konfirmasi Keluar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-circle text-warning fs-1 mb-3 d-block"></i>
+                    <p class="mb-0 text-muted">Apakah Anda yakin ingin keluar dari aplikasi?</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-light px-4 py-2" style="border-radius: 10px;"
+                        data-bs-dismiss="modal">Batal</button>
+                    {{-- Form Logout Laravel --}}
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-danger px-4 py-2" style="border-radius: 10px;">
+                            Ya, Keluar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection

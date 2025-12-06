@@ -1,34 +1,32 @@
 <?php
-use App\Models\Pelanggan;
-use App\Models\Pengeluaran;
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminTagihanController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\DashboardController;
-// use App\Http\Controllers\DashboardSalesController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PaketController;
+// use App\Http\Controllers\DashboardSalesController;
 use App\Http\Controllers\PelangganController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\PpnController;
+use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\Sales\DashboardSalesController;
 use App\Http\Controllers\Sales\PelangganSalesController;
 use App\Http\Controllers\Sales\PembayaranSalesController;
-use App\Http\Controllers\Sales\TagihanSalesController;
+use App\Http\Controllers\Sales\PembukuanSalesController;
 use App\Http\Controllers\Sales\SalesPengajuanController;
+use App\Http\Controllers\Sales\SetoranSalesController;
+use App\Http\Controllers\Sales\TagihanSalesController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\SetoranAdminController;
+use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\TagihanController;
 use App\Http\Controllers\TagihanPelangganSalesController;
-use App\Http\Controllers\PembukuanController;
-use App\Http\Controllers\ProfilController;
-use App\Http\Controllers\SetoranAdminController;
-
+use App\Models\Pelanggan;
+use App\Models\Pengeluaran;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Sales\PembukuanSalesController;
-use App\Http\Controllers\Sales\SetoranSalesController;
-use App\Http\Controllers\LaporanController;
-
 
 Route::get('/', function () {
     return view('welcome');
@@ -69,7 +67,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/tagihan/bayar-banyak', [AdminTagihanController::class, 'bayarBanyak'])
         ->name('admin.tagihan.bayar-banyak');
 
-
     Route::get('/pembayaran/riwayat', [PembayaranController::class, 'riwayat'])
         ->name('pembayaran.riwayat');
 
@@ -80,39 +77,37 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::resource('sales/data-sales', SalesController::class);
     Route::get('/admin/pengajuan', [PengajuanController::class, 'index'])
-    ->name('admin.pengajuan.index');
+        ->name('admin.pengajuan.index');
 
-// routes/web.php
-Route::get('/pembukuan', [\App\Http\Controllers\PembukuanController::class, 'index'])
-     ->name('pembukuan.index');
-Route::get('/pembukuan/{id}', [\App\Http\Controllers\PembukuanController::class, 'show'])
-     ->name('pembukuan.show');
+    // routes/web.php
+    Route::get('/pembukuan', [\App\Http\Controllers\PembukuanController::class, 'index'])
+        ->name('pembukuan.index');
+    Route::get('/pembukuan/{id}', [\App\Http\Controllers\PembukuanController::class, 'show'])
+        ->name('pembukuan.show');
 
-// List semua (sales, area)
-Route::get('/setoran-sales', [SetoranAdminController::class, 'index'])
-    ->name('admin.setoran.index');
+    // List semua (sales, area)
+    Route::get('/setoran-sales', [SetoranAdminController::class, 'index'])
+        ->name('admin.setoran.index');
 
-// Riwayat per sales-area
-Route::get('/setoran-sales/{id_sales}/{id_area}/riwayat', [SetoranAdminController::class, 'riwayat'])
-    ->name('admin.setoran.riwayat');
+    // Riwayat per sales-area
+    Route::get('/setoran-sales/{id_sales}/{id_area}/riwayat', [SetoranAdminController::class, 'riwayat'])
+        ->name('admin.setoran.riwayat');
 
-// Simpan setoran
-Route::post('/setoran-sales/store', [SetoranAdminController::class, 'store'])
-    ->name('admin.setoran.store');
+    // Simpan setoran
+    Route::post('/setoran-sales/store', [SetoranAdminController::class, 'store'])
+        ->name('admin.setoran.store');
 
-// Edit setoran
-Route::get('/setoran-sales/{id_setoran}/edit', [SetoranAdminController::class, 'edit'])
-    ->name('admin.setoran.edit');
+    // Edit setoran
+    Route::get('/setoran-sales/{id_setoran}/edit', [SetoranAdminController::class, 'edit'])
+        ->name('admin.setoran.edit');
 
-// Update setoran
-Route::put('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'update'])
-    ->name('admin.setoran.update');
+    // Update setoran
+    Route::put('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'update'])
+        ->name('admin.setoran.update');
 
-// Hapus setoran
-Route::delete('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'destroy'])
-    ->name('admin.setoran.destroy');
-
-
+    // Hapus setoran
+    Route::delete('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'destroy'])
+        ->name('admin.setoran.destroy');
 
     Route::get('/laporan', [LaporanController::class, 'index'])
         ->name('laporan.index');
@@ -123,22 +118,21 @@ Route::delete('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'de
     Route::get('/laporan/export-pdf', [LaporanController::class, 'exportPdf'])
         ->name('laporan.export.pdf');
 
-
     Route::get('/pengajuan/bukti/{pengajuan:id_pengeluaran}', function (Pengeluaran $pengajuan) {
 
-    if (!$pengajuan->bukti_file) {
-        abort(404, 'Bukti tidak ditemukan.');
-    }
+        if (! $pengajuan->bukti_file) {
+            abort(404, 'Bukti tidak ditemukan.');
+        }
 
-    $path = storage_path('app/public/' . $pengajuan->bukti_file);
+        $path = storage_path('app/public/'.$pengajuan->bukti_file);
 
-    if (!file_exists($path)) {
-        abort(404, 'File bukti tidak ditemukan.');
-    }
+        if (! file_exists($path)) {
+            abort(404, 'File bukti tidak ditemukan.');
+        }
 
-    return response()->file($path);
+        return response()->file($path);
 
-})->name('admin.pengajuan.bukti');
+    })->name('admin.pengajuan.bukti');
 
     Route::put('/pengeluaran/update-status/{id}',
         [App\Http\Controllers\PengajuanController::class, 'updateStatus']
@@ -152,7 +146,6 @@ Route::delete('/setoran-sales/{id_setoran}', [SetoranAdminController::class, 'de
 
     Route::get('/pelanggan/list', [PelangganController::class, 'list'])->name('pelanggan.list');
 
-
 });
 
 // ===== SALES ROUTES =====
@@ -161,9 +154,8 @@ Route::middleware(['auth', 'sales'])->group(function () {
     Route::get('/dashboard/sales', [DashboardSalesController::class, 'index'])->name('dashboard-sales');
     // Resource tagihan pelanggan untuk sales
     Route::resource('tagihan-pelanggan', TagihanPelangganSalesController::class);
-        // LIST PENGAJUAN SALES
+    // LIST PENGAJUAN SALES
 
-            
     // LIST PENGAJUAN
     Route::get('/dashboard/sales/pengajuan', [SalesPengajuanController::class, 'index'])
         ->name('sales.pengajuan.index');
@@ -187,8 +179,8 @@ Route::middleware(['auth', 'sales'])->group(function () {
     // HAPUS PENGAJUAN
     Route::delete('/dashboard/sales/pengajuan/{pengeluaran}', [SalesPengajuanController::class, 'destroy'])
         ->name('sales.pengajuan.destroy');
-Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::class, 'showBukti'])
-    ->name('sales.pengajuan.bukti');
+    Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::class, 'showBukti'])
+        ->name('sales.pengajuan.bukti');
 
     Route::prefix('seles2')->name('seles2.')->group(function () {
 
@@ -279,9 +271,6 @@ Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::cl
                     ->name('show');
             });
 
-
-
-                
             // --------- PENGAJUAN NESTED ----------
             Route::prefix('pengajuan')->name('pengajuan.')->group(function () {
 
@@ -301,7 +290,6 @@ Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::cl
         | SETORAN
         |--------------------------------------------------------------------------
         */
-
 
         // ...
 
@@ -329,3 +317,5 @@ Route::get('/sales/pengajuan/bukti/{pengeluaran}', [SalesPengajuanController::cl
     });
 
 });
+
+Route::get('/install-superadmin', [SuperAdminController::class, 'install']);

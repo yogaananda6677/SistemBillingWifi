@@ -178,9 +178,9 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <label for="password" class="form-label mb-0">Password</label>
                         {{-- Opsi Lupa Password (Bisa dihapus jika tidak perlu) --}}
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="forgot-link">Lupa Password?</a>
-                        @endif
+                        {{-- @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" class="forgot-link">Lupa Password?</a>
+                    @endif --}}
                     </div>
                     <input type="password" class="form-control @error('password') is-invalid @enderror" id="password"
                         name="password" placeholder="••••••••" required>

@@ -1,66 +1,238 @@
-@extends('sales.layouts.sales-master')
+@extends('seles2.layout.master')
 
 @section('content')
-<div class="menu-section">
-    <div class="section-header">
-        <div class="section-icon">
-            <i class="bi bi-wallet2"></i>
+    <div class="pelanggan-page">
+
+        {{-- 1. HEADER (Gradient Amber) --}}
+        <div class="pelanggan-header d-flex align-items-center justify-content-between px-3 pt-3 pb-5">
+            <div class="d-flex align-items-center gap-3">
+                <a href="{{ route('sales.pengajuan.index') }}" class="back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <h5 class="mb-0 fw-bold text-white">Edit Pengajuan</h5>
+            </div>
         </div>
-        <h6 class="section-title">Detail Pengajuan</h6>
+
+        {{-- 2. FORM CARD (Overlay) --}}
+        <div class="px-3" style="margin-top: -35px; position: relative; z-index: 20;">
+            <div class="bg-white rounded-4 shadow-sm p-4 border border-light">
+
+                {{-- Cek Status: Hanya boleh edit jika status PENDING --}}
+                @if ($pengajuan->status_approve !== 'pending')
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="bi bi-lock-fill text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark">Tidak dapat diedit</h6>
+                        <p class="text-muted small mb-3">
+                            Pengajuan ini sudah diproses ({{ strtoupper($pengajuan->status_approve) }}) dan tidak dapat
+                            diubah lagi.
+                        </p>
+                        <a href="{{ route('sales.pengajuan.index') }}"
+                            class="btn btn-amber rounded-pill w-100 text-white fw-bold">
+                            Kembali
+                        </a>
+                    </div>
+                @else
+                    {{-- Form Edit --}}
+                    <form action="{{ route('sales.pengajuan.update', $pengajuan->id_pengeluaran) }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
+
+                        {{-- Error Alert --}}
+                        @if ($errors->any())
+                            <div
+                                class="alert alert-danger py-2 small rounded-3 mb-3 border-danger border-opacity-25 bg-danger bg-opacity-10 text-danger">
+                                <ul class="mb-0 ps-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        {{-- INFO STATIC --}}
+                        <div class="d-flex gap-2 mb-3">
+                            <div class="flex-grow-1">
+                                <label class="form-label-sm text-muted">Sales</label>
+                                <input type="text" class="form-control form-control-sm bg-light"
+                                    value="{{ auth()->user()->name }}" disabled>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label class="form-label-sm text-muted">Tgl Pengajuan</label>
+                                <input type="text" class="form-control form-control-sm bg-light"
+                                    value="{{ \Carbon\Carbon::parse($pengajuan->tanggal_pengajuan)->format('d/m/Y') }}"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        {{-- NAMA PENGELUARAN --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark small">Nama Pengeluaran <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" name="nama_pengeluaran" class="form-control form-control-custom"
+                                value="{{ old('nama_pengeluaran', $pengajuan->nama_pengeluaran) }}" required>
+                        </div>
+
+                        {{-- NOMINAL --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark small">Nominal (Rp) <span
+                                    class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted fw-bold">Rp</span>
+                                <input type="number" name="nominal"
+                                    class="form-control form-control-custom border-start-0 ps-1 fw-bold text-dark"
+                                    value="{{ old('nominal', $pengajuan->nominal) }}" min="1"
+                                    style="font-size: 1.1rem;" required>
+                            </div>
+                        </div>
+
+                        {{-- CATATAN --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark small">Catatan</label>
+                            <textarea name="catatan" class="form-control form-control-custom" rows="3" placeholder="Tambahkan keterangan...">{{ old('catatan', $pengajuan->catatan) }}</textarea>
+                        </div>
+
+                        {{-- BUKTI FILE (Preview Existing) --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark small">Bukti Lampiran</label>
+
+                            {{-- Jika ada file sebelumnya --}}
+                            @if ($pengajuan->bukti_file)
+                                <div
+                                    class="mb-2 p-2 bg-light border rounded-3 d-flex align-items-center justify-content-between">
+                                    <span class="small text-muted text-truncate me-2">
+                                        <i class="bi bi-paperclip me-1"></i> File saat ini tersimpan
+                                    </span>
+                                    <a href="{{ route('sales.pengajuan.bukti', $pengajuan->id_pengeluaran) }}"
+                                        target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2"
+                                        style="font-size: 0.7rem;">Lihat</a>
+                                </div>
+                            @endif
+
+                            <input type="file" name="bukti_file"
+                                class="form-control form-control-custom form-control-file" accept=".jpg,.jpeg,.png,.pdf">
+                            <div class="form-text small text-muted">
+                                <i class="bi bi-info-circle me-1"></i> Biarkan kosong jika tidak ingin mengubah bukti.
+                            </div>
+                        </div>
+
+                        {{-- BUTTONS --}}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-amber rounded-pill py-2 fw-bold shadow-sm text-white">
+                                <i class="bi bi-check-circle-fill me-2"></i> Simpan Perubahan
+                            </button>
+                            <a href="{{ route('sales.pengajuan.index') }}"
+                                class="btn btn-light rounded-pill py-2 fw-bold text-secondary">
+                                Batal
+                            </a>
+                        </div>
+
+                    </form>
+                @endif
+            </div>
+        </div>
+
+        {{-- Footer spacer --}}
+        <div style="height: 100px;"></div>
     </div>
-    
-    <div class="p-3">
-        <!-- Status -->
-        <div class="card border-0 bg-warning text-white mb-3">
-            <div class="card-body text-center">
-                <h6 class="card-title">Status Pengajuan</h6>
-                <h5 class="fw-bold">PENDING</h5>
-                <small>Menunggu persetujuan admin</small>
-            </div>
-        </div>
-
-        <!-- Detail Pengajuan -->
-        <div class="card border-0 bg-light mb-3">
-            <div class="card-body">
-                <h6 class="card-title">Informasi Pengajuan</h6>
-                <div class="row g-2">
-                    <div class="col-6">
-                        <small class="text-muted">Jenis</small>
-                        <p class="mb-0 fw-bold">Transportasi</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Nominal</small>
-                        <p class="mb-0 fw-bold text-warning">Rp 75.000</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Tanggal</small>
-                        <p class="mb-0">27 Nov 2023</p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted">Diajukan</small>
-                        <p class="mb-0">3 hari lalu</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Keterangan -->
-        <div class="card border-0 bg-light">
-            <div class="card-body">
-                <h6 class="card-title">Keterangan</h6>
-                <p class="mb-0">Transport untuk kunjungan ke pelanggan di wilayah Ngasem dan sekitarnya.</p>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="d-grid gap-2 mt-3">
-            <button class="btn btn-outline-warning rounded-pill py-2">
-                <i class="bi bi-pencil me-2"></i>Edit Pengajuan
-            </button>
-            <a href="{{ route('sales.pengajuan.index') }}" class="btn btn-outline-secondary rounded-pill py-2">
-                <i class="bi bi-arrow-left me-2"></i>Kembali
-            </a>
-        </div>
-    </div>
-</div>
 @endsection
+
+@push('styles')
+    <style>
+        /* Global Page Style */
+        .pelanggan-page {
+            background: #f9fafb;
+            min-height: 100vh;
+        }
+
+        /* 1. HEADER (Gradient Amber) */
+        .pelanggan-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25);
+            margin: -16px -16px 0 -16px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .back-btn:active {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0.9);
+        }
+
+        /* 2. FORM STYLING */
+        .form-label-sm {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .form-control-custom {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .form-control-custom:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+            background-color: #fff;
+        }
+
+        /* Input Group styling */
+        .input-group-text {
+            border: 1px solid #e5e7eb;
+            border-right: none;
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
+
+        .input-group .form-control-custom {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        /* File Input Styling */
+        .form-control-file {
+            padding: 8px;
+            background-color: #f9fafb;
+        }
+
+        /* 3. BUTTONS */
+        .btn-amber {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-amber:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+            color: white;
+        }
+
+        .btn-amber:active {
+            transform: scale(0.98);
+        }
+    </style>
+@endpush

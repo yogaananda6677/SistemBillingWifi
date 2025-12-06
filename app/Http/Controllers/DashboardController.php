@@ -181,21 +181,40 @@ $statusPembayaran = [
             ->limit(5)
             ->get();
 
+            
+            // ============================================
+// PROGRES PENARIKAN PEMBAYARAN PER SALES–WILAYAH
 // ============================================
-// PROGRES PENARIKAN PEMBAYARAN PER SALES (BERDASARKAN TAGIHAN)
-// ============================================
-$salesProgress = Sales::with(['user'])->get()->map(function ($sales) use ($startDate, $endDate) {
 
-    // Total tagihan milik sales ini di bulan terpilih
-    $totalTagihan = Tagihan::whereHas('langganan.pelanggan', function ($q) use ($sales) {
-            $q->where('id_sales', $sales->id_sales);
+// Ambil semua pasangan sales–area yang aktif
+$assignments = DB::table('area_sales as asg')
+    ->join('sales as s', 's.id_sales', '=', 'asg.id_sales')
+    ->join('users as u', 'u.id', '=', 's.user_id')
+    ->join('area as a', 'a.id_area', '=', 'asg.id_area')
+    ->select(
+        'asg.id_area',
+        'a.nama_area',
+        's.id_sales',
+        'u.name as nama_sales'
+    )
+    ->orderBy('u.name')
+    ->orderBy('a.nama_area')
+    ->get();
+
+$salesProgress = $assignments->map(function ($asg) use ($startDate, $endDate) {
+
+    // Total tagihan milik sales–area ini di bulan terpilih
+    $totalTagihan = Tagihan::whereHas('langganan.pelanggan', function ($q) use ($asg) {
+            $q->where('id_sales', $asg->id_sales)
+              ->where('id_area',  $asg->id_area);
         })
         ->whereBetween('jatuh_tempo', [$startDate, $endDate])
         ->count();
 
-    // Tagihan yang sudah lunas milik sales ini di bulan terpilih
-    $tagihanLunas = Tagihan::whereHas('langganan.pelanggan', function ($q) use ($sales) {
-            $q->where('id_sales', $sales->id_sales);
+    // Tagihan yang sudah lunas milik sales–area ini di bulan terpilih
+    $tagihanLunas = Tagihan::whereHas('langganan.pelanggan', function ($q) use ($asg) {
+            $q->where('id_sales', $asg->id_sales)
+              ->where('id_area',  $asg->id_area);
         })
         ->whereBetween('jatuh_tempo', [$startDate, $endDate])
         ->where('status_tagihan', 'lunas')
@@ -206,13 +225,16 @@ $salesProgress = Sales::with(['user'])->get()->map(function ($sales) use ($start
         : 0;
 
     return [
-        'nama'    => $sales->user->name ?? 'Sales #' . $sales->id_sales,
+        // Label: "Nama Sales – Nama Area"
+        'nama'    => ($asg->nama_sales ?? 'Sales #' . $asg->id_sales) . ' – ' . ($asg->nama_area ?? 'Tanpa area'),
         'percent' => $percent,
-        'done'    => $tagihanLunas,   // banyak tagihan lunas
-        'total'   => $totalTagihan,   // total tagihan
+        'done'    => $tagihanLunas,
+        'total'   => $totalTagihan,
     ];
 });
 
+// (opsional) kalau mau, bisa filter yang totalTagihan > 0 biar nggak rame bar 0/0
+$salesProgress = $salesProgress->filter(fn ($row) => $row['total'] > 0)->values();
 
     return view('admin.dashboard', [
         // data2 lama...

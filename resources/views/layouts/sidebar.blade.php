@@ -119,10 +119,26 @@
                     Rekap
                 </a>
 
-                <a href="{{ route('laporan.index') }}"
-                   class="sidebar-sublink {{ request()->routeIs('laporan.*') && !request()->fullUrlIs('*type=rekap*') ? 'active-sub' : '' }}">
-                    Laporan
-                </a>
+                {{-- DATA SALES --}}
+<a href="{{ route('pembukuan.index') }}"
+   class="sidebar-link {{ request()->routeIs('pembukuan.*') ? 'active' : '' }}">
+    <i class="bi bi-journal-text"></i>
+    <span class="link-text">Pembukuan</span>
+</a>
+
+
+                {{-- PENGAJUAN PENGELUARAN --}}
+<a href="{{ route('laporan.index') }}"
+   class="sidebar-sublink {{ request()->routeIs('laporan.*') ? 'active-sub' : '' }}">
+    Rekap
+</a>
+
+{{-- PENGAJUAN PENGELUARAN --}}
+<a href="{{ route('laporan.index') }}"
+   class="sidebar-sublink {{ request()->routeIs('laporan.*') ? 'active-sub' : '' }}">
+    Laporan
+</a>
+
             </div>
         </div>
 

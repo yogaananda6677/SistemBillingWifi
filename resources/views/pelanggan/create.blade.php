@@ -224,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const today = new Date();
             today.setHours(0,0,0,0);
             const tgl = new Date(value);
-            if (tgl > today) return 'Tanggal registrasi tidak boleh lebih dari hari ini.';
             return '';
         },
         id_paket(value) {

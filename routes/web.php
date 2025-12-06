@@ -112,10 +112,20 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])
         ->name('laporan.index');
 
-    Route::get('/laporan/export-excel', [LaporanController::class, 'exportExcel'])
+    // Export Excel (multi-sheet)
+    Route::get('/laporan/export/excel', [LaporanController::class, 'exportExcel'])
         ->name('laporan.export.excel');
 
-    Route::get('/laporan/export-pdf', [LaporanController::class, 'exportPdf'])
+Route::get('/laporan/export/rekap-harian-bulanan', [LaporanController::class, 'exportRekapHarianBulanan'])
+    ->name('laporan.exportRekapHarianBulanan');
+
+
+Route::get('/laporan/export/rekap-keuangan', [LaporanController::class, 'exportRekapKeuangan'])
+    ->name('laporan.exportRekapKeuangan');
+
+
+    // Export PDF (opsional nanti)
+    Route::get('/laporan/export/pdf', [LaporanController::class, 'exportPdf'])
         ->name('laporan.export.pdf');
 
     Route::get('/pengajuan/bukti/{pengajuan:id_pengeluaran}', function (Pengeluaran $pengajuan) {

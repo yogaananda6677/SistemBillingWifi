@@ -6,449 +6,458 @@
     use Carbon\Carbon;
 @endphp
 
-<div class="container-fluid py-4">
+<style>
+    /* --- ADMIN YELLOW THEME (CONSISTENT COMPACT) --- */
+    :root {
+        --theme-yellow: #ffc107;
+        --theme-yellow-dark: #e0a800;
+        --theme-yellow-soft: #fff9e6;
+        --text-dark: #212529;
+        --card-radius: 12px;
+    }
 
-    <h3 class="mb-4 fw-bold">Pembukuan Global (Sales & Admin)</h3>
+    /* 1. Typography */
+    .page-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
+    }
 
-    {{-- FILTER BULAN & TAHUN --}}
-    <form method="GET" class="row g-3 mb-4 align-items-end">
-        <div class="col-md-3 col-6">
-            <label class="form-label mb-1">Bulan</label>
-            <select name="bulan" class="form-select form-select-sm">
-                @foreach(range(1,12) as $m)
-                    <option value="{{ $m }}" {{ (int)$selectedMonth === $m ? 'selected' : '' }}>
-                        {{ Carbon::create()->month($m)->translatedFormat('F') }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+    /* 2. Tombol Kuning Custom */
+    .btn-admin-yellow {
+        background-color: var(--theme-yellow);
+        color: var(--text-dark);
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+        transition: all 0.2s ease;
+    }
+    .btn-admin-yellow:hover {
+        background-color: var(--theme-yellow-dark);
+        color: var(--text-dark);
+        transform: translateY(-2px);
+    }
 
-        <div class="col-md-3 col-6">
-            <label class="form-label mb-1">Tahun</label>
-            <select name="tahun" class="form-select form-select-sm">
-                @foreach(range(now()->year - 3, now()->year + 1) as $y)
-                    <option value="{{ $y }}" {{ (int)$selectedYear === $y ? 'selected' : '' }}>
-                        {{ $y }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+    /* 3. Card Styles */
+    .card-admin {
+        background: #fff;
+        border: none;
+        border-radius: var(--card-radius);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid var(--theme-yellow);
+        width: 100%;
+    }
 
-        <div class="col-md-3 col-12">
-            <button class="btn btn-primary btn-sm w-100">
-                Tampilkan
-            </button>
-        </div>
-    </form>
+    /* 4. Form Inputs */
+    .form-control-admin {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    .form-control-admin:focus {
+        border-color: var(--theme-yellow);
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
+    }
 
-    {{-- INFO PERIODE + STATISTIK ATAS --}}
-    <div class="mb-3 text-muted d-flex justify-content-between flex-wrap gap-2">
+    /* 5. Table Styling (COMPACT) */
+    .table-admin {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .table-admin thead th {
+        background-color: var(--theme-yellow-soft);
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--theme-yellow);
+        padding: 12px 10px;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .table-admin tbody td {
+        padding: 10px;
+        vertical-align: middle;
+        font-size: 13px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table-admin tbody tr:hover td {
+        background-color: #fffdf5;
+    }
+    
+    /* Label Filter Kecil */
+    .filter-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    /* Additional: Modal Header Match Theme */
+    .modal-header-yellow {
+        background-color: var(--theme-yellow-soft);
+        border-bottom: 2px solid var(--theme-yellow);
+    }
+</style>
+
+<div class="container-fluid p-4">
+
+    {{-- HEADER SECTION --}}
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            Periode:
-            <strong>{{ Carbon::create($selectedYear, $selectedMonth, 1)->translatedFormat('F Y') }}</strong>
+            <h4 class="page-title mb-1">
+                <i class="bi bi-journal-bookmark-fill text-warning me-2"></i>Pembukuan Global
+            </h4>
+            <div class="text-muted small">Laporan Sales & Admin</div>
         </div>
-        @isset($stat)
-        <div class="small">
-            <span class="me-3">Pelanggan: <strong>{{ $stat['jumlah_pelanggan'] ?? 0 }}</strong></span>
-            <span class="me-3">Pembayaran: <strong>Rp {{ number_format($stat['jumlah_pembayaran'] ?? 0,0,',','.') }}</strong></span>
-            <span>Pengeluaran: <strong>Rp {{ number_format($stat['jumlah_pengeluaran'] ?? 0,0,',','.') }}</strong></span>
-        </div>
-        @endisset
     </div>
 
-    {{-- TABEL REKAP --}}
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered mb-0 align-middle text-end">
-                    <thead class="table-light text-center align-middle">
+    {{-- FILTER CARD --}}
+    <div class="card-admin p-3 mb-3">
+        <form method="GET">
+            <div class="row g-2 align-items-end">
+                <div class="col-6 col-md-3">
+                    <span class="filter-label">Bulan</span>
+                    <select name="bulan" class="form-select form-control-admin">
+                        @foreach(range(1,12) as $m)
+                            <option value="{{ $m }}" {{ (int)$selectedMonth === $m ? 'selected' : '' }}>
+                                {{ Carbon::create()->month($m)->translatedFormat('F') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <span class="filter-label">Tahun</span>
+                    <select name="tahun" class="form-select form-control-admin">
+                        @foreach(range(now()->year - 3, now()->year + 1) as $y)
+                            <option value="{{ $y }}" {{ (int)$selectedYear === $y ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <button class="btn btn-admin-yellow w-100">
+                        <i class="bi bi-search me-1"></i> Tampilkan
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <hr class="my-3 text-muted" style="opacity: 0.1">
+
+        {{-- INFO STATISTIK --}}
+        <div class="d-flex flex-wrap gap-4 align-items-center">
+            <div>
+                <span class="filter-label">Periode</span>
+                <span class="fw-bold text-dark" style="font-size: 14px;">
+                    {{ Carbon::create($selectedYear, $selectedMonth, 1)->translatedFormat('F Y') }}
+                </span>
+            </div>
+            @isset($stat)
+                <div class="vr opacity-25 d-none d-md-block"></div>
+                <div>
+                    <span class="filter-label">Total Pelanggan</span>
+                    <span class="fw-bold text-dark">{{ $stat['jumlah_pelanggan'] ?? 0 }}</span>
+                </div>
+                <div class="vr opacity-25 d-none d-md-block"></div>
+                <div>
+                    <span class="filter-label">Total Pembayaran</span>
+                    <span class="fw-bold text-success">Rp {{ number_format($stat['jumlah_pembayaran'] ?? 0,0,',','.') }}</span>
+                </div>
+                <div class="vr opacity-25 d-none d-md-block"></div>
+                <div>
+                    <span class="filter-label">Total Pengeluaran</span>
+                    <span class="fw-bold text-danger">Rp {{ number_format($stat['jumlah_pengeluaran'] ?? 0,0,',','.') }}</span>
+                </div>
+            @endisset
+        </div>
+    </div>
+
+    {{-- TABLE CARD --}}
+    <div class="card-admin p-0" style="overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-admin mb-0 text-end">
+                <thead class="text-center">
+                    <tr>
+                        <th class="text-start ps-3" style="min-width:200px;">Sales / Admin</th>
+                        <th>Pendapatan</th>
+                        <th>Komisi</th>
+                        <th>Pengeluaran</th>
+                        <th>Total Bersih<br><small class="fw-normal opacity-75" style="text-transform: none; font-size: 10px;">(kewajiban bulan ini)</small></th>
+                        <th>Setoran<br><small class="fw-normal opacity-75" style="text-transform: none; font-size: 10px;">(bulan ini)</small></th>
+                        <th class="pe-3">Selisih</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if($rekap->isEmpty())
                         <tr>
-                            <th class="text-start" style="min-width:220px;">Sales / Admin</th>
-                            <th>Pendapatan</th>
-                            <th>Komisi</th>
-                            <th>Pengeluaran</th>
-                            <th>Total Bersih (kewajiban bulan ini)</th>
-                            <th>Setoran (bulan ini)</th>
-                            <th>Selisih Bulan Ini</th>
+                            <td colspan="7" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-warning opacity-50"></i>
+                                Belum ada data pembukuan untuk periode ini.
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @if($rekap->isEmpty())
+                    @else
+                        @foreach($rekap as $idx => $row)
+                            @php
+                                $key = $row->modal_key ?? ('row-' . $idx);
+                                $saldoGlobal = $row->saldo_global ?? 0;
+                                $saldoLabel  = abs($saldoGlobal);
+                                $saldoClass  = $saldoLabel == 0 ? 'text-muted' : ($saldoGlobal > 0 ? 'text-success' : 'text-danger');
+
+                                $selisih      = $row->selisih ?? 0;
+                                $selisihAbs   = abs($selisih);
+                                $selisihClass = $selisihAbs == 0 ? 'text-muted' : ($selisih > 0 ? 'text-success' : 'text-danger');
+                            @endphp
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-3">
-                                    Belum ada data pembukuan untuk periode ini.
+                                {{-- LABEL + SALDO --}}
+                                <td class="text-start ps-3">
+                                    <div class="fw-bold text-dark">{{ $row->label }}</div>
+                                    <small class="text-muted d-block" style="font-size: 11px;">
+                                        Saldo akumulasi: 
+                                        <span class="{{ $saldoClass }}">
+                                            @if($saldoLabel == 0) Pas
+                                            @elseif($saldoGlobal > 0) Lebih: {{ number_format($saldoLabel, 0, ',', '.') }}
+                                            @else Kurang: {{ number_format($saldoLabel, 0, ',', '.') }}
+                                            @endif
+                                        </span>
+                                    </small>
+                                </td>
+
+                                {{-- Pendapatan --}}
+                                <td>
+                                    @if(($row->pendapatan ?? 0) > 0)
+                                        <a href="#" class="fw-bold text-dark text-decoration-none" data-bs-toggle="modal" data-bs-target="#pendapatanModal-{{ $key }}">
+                                            Rp {{ number_format($row->pendapatan ?? 0, 0, ',', '.') }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">Rp 0</span>
+                                    @endif
+                                </td>
+
+                                {{-- Komisi --}}
+                                <td>
+                                    @if($row->jenis === 'sales' && ($row->total_komisi ?? 0) > 0)
+                                        <a href="#" class="fw-bold text-danger text-decoration-none" data-bs-toggle="modal" data-bs-target="#komisiModal-{{ $key }}">
+                                            Rp {{ number_format($row->total_komisi ?? 0, 0, ',', '.') }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">Rp {{ number_format($row->total_komisi ?? 0, 0, ',', '.') }}</span>
+                                    @endif
+                                </td>
+
+                                {{-- Pengeluaran --}}
+                                <td>
+                                    @if($row->jenis === 'sales' && ($row->total_pengeluaran ?? 0) > 0)
+                                        <a href="#" class="fw-bold text-danger text-decoration-none" data-bs-toggle="modal" data-bs-target="#pengeluaranModal-{{ $key }}">
+                                            Rp {{ number_format($row->total_pengeluaran ?? 0, 0, ',', '.') }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">Rp {{ number_format($row->total_pengeluaran ?? 0, 0, ',', '.') }}</span>
+                                    @endif
+                                </td>
+
+                                {{-- Total Bersih --}}
+                                <td class="bg-light fw-bold text-success">
+                                    Rp {{ number_format($row->total_bersih ?? 0, 0, ',', '.') }}
+                                </td>
+
+                                {{-- Setoran --}}
+                                <td>
+                                    @if($row->jenis === 'sales' && ($row->total_setoran ?? 0) > 0)
+                                        <a href="#" class="fw-bold text-success text-decoration-none" data-bs-toggle="modal" data-bs-target="#setoranModal-{{ $key }}">
+                                            Rp {{ number_format($row->total_setoran ?? 0, 0, ',', '.') }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">Rp {{ number_format($row->total_setoran ?? 0, 0, ',', '.') }}</span>
+                                    @endif
+                                </td>
+
+                                {{-- Selisih --}}
+                                <td class="{{ $selisihClass }} fw-bold pe-3">
+                                    @if($selisihAbs == 0)
+                                        <span class="badge bg-light text-secondary border">Pas</span>
+                                    @elseif($selisih > 0)
+                                        Lebih: {{ number_format($selisihAbs, 0, ',', '.') }}
+                                    @else
+                                        Kurang: {{ number_format($selisihAbs, 0, ',', '.') }}
+                                    @endif
                                 </td>
                             </tr>
-                        @else
-                            @foreach($rekap as $idx => $row)
-                                @php
-                                    // key UNIK untuk BARIS & MODAL
-                                    // kalau controller sudah kirim modal_key, pakai itu. Kalau belum, fallback ke index.
-                                    $key = $row->modal_key ?? ('row-' . $idx);
-
-                                    $saldoGlobal = $row->saldo_global ?? 0;
-                                    $saldoLabel  = abs($saldoGlobal);
-                                    $saldoClass  = $saldoLabel == 0
-                                        ? 'text-muted'
-                                        : ($saldoGlobal > 0 ? 'text-success' : 'text-danger');
-
-                                    $selisih      = $row->selisih ?? 0;
-                                    $selisihAbs   = abs($selisih);
-                                    $selisihClass = $selisihAbs == 0
-                                        ? 'text-muted'
-                                        : ($selisih > 0 ? 'text-success' : 'text-danger');
-                                @endphp
-
-                                <tr>
-                                    {{-- LABEL + SALDO AKUMULASI --}}
-                                    <td class="text-start">
-                                        <div>{{ $row->label }}</div>
-                                        <small class="text-muted d-block">
-                                            Saldo akumulasi:
-                                            <span class="{{ $saldoClass }}">
-                                                @if($saldoLabel == 0)
-                                                    Pas: Rp 0
-                                                @elseif($saldoGlobal > 0)
-                                                    Kelebihan: Rp {{ number_format($saldoLabel, 0, ',', '.') }}
-                                                @else
-                                                    Kurang: Rp {{ number_format($saldoLabel, 0, ',', '.') }}
-                                                @endif
-                                            </span>
-                                        </small>
-                                    </td>
-
-                                    {{-- Pendapatan (klik -> modal pembayaran) --}}
-                                    <td>
-                                        @if(($row->pendapatan ?? 0) > 0)
-                                            <button type="button"
-                                                class="btn btn-link btn-sm p-0 text-end w-100"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#pendapatanModal-{{ $key }}">
-                                                Rp {{ number_format($row->pendapatan ?? 0, 0, ',', '.') }}
-                                            </button>
-                                        @else
-                                            Rp {{ number_format(0, 0, ',', '.') }}
-                                        @endif
-                                    </td>
-
-                                    {{-- Komisi --}}
-                                    <td class="text-danger">
-                                        @if($row->jenis === 'sales' && ($row->total_komisi ?? 0) > 0)
-                                            <button type="button"
-                                                class="btn btn-link btn-sm p-0 text-danger text-end w-100"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#komisiModal-{{ $key }}">
-                                                Rp {{ number_format($row->total_komisi ?? 0, 0, ',', '.') }}
-                                            </button>
-                                        @else
-                                            Rp {{ number_format($row->total_komisi ?? 0, 0, ',', '.') }}
-                                        @endif
-                                    </td>
-
-                                    {{-- Pengeluaran --}}
-                                    <td class="text-danger">
-                                        @if($row->jenis === 'sales' && ($row->total_pengeluaran ?? 0) > 0)
-                                            <button type="button"
-                                                class="btn btn-link btn-sm p-0 text-danger text-end w-100"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#pengeluaranModal-{{ $key }}">
-                                                Rp {{ number_format($row->total_pengeluaran ?? 0, 0, ',', '.') }}
-                                            </button>
-                                        @else
-                                            Rp {{ number_format($row->total_pengeluaran ?? 0, 0, ',', '.') }}
-                                        @endif
-                                    </td>
-
-                                    {{-- Total Bersih --}}
-                                    <td class="text-success fw-semibold">
-                                        Rp {{ number_format($row->total_bersih ?? 0, 0, ',', '.') }}
-                                    </td>
-
-                                    {{-- Setoran BULAN INI --}}
-                                    <td class="text-success">
-                                        @if($row->jenis === 'sales' && ($row->total_setoran ?? 0) > 0)
-                                            <button type="button"
-                                                class="btn btn-link btn-sm p-0 text-success text-end w-100"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#setoranModal-{{ $key }}">
-                                                Rp {{ number_format($row->total_setoran ?? 0, 0, ',', '.') }}
-                                            </button>
-                                        @else
-                                            Rp {{ number_format($row->total_setoran ?? 0, 0, ',', '.') }}
-                                        @endif
-                                    </td>
-
-                                    {{-- Selisih Bulan Ini --}}
-                                    <td class="{{ $selisihClass }} fw-semibold">
-                                        @if($selisihAbs == 0)
-                                            Pas: Rp 0
-                                        @elseif($selisih > 0)
-                                            Kelebihan: Rp {{ number_format($selisihAbs, 0, ',', '.') }}
-                                        @else
-                                            Kurang: Rp {{ number_format($selisihAbs, 0, ',', '.') }}
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @endif
-                    </tbody>
-                </table>
-            </div>
+                        @endforeach
+                    @endif
+                </tbody>
+            </table>
         </div>
     </div>
 
-    {{-- MODALS UNTUK SEMUA BARIS (SALES & ADMIN) --}}
+    {{-- MODALS SECTION --}}
     @foreach($rekap as $idx => $row)
-        @php
-            $key = $row->modal_key ?? ('row-' . $idx);
-        @endphp
+        @php $key = $row->modal_key ?? ('row-' . $idx); @endphp
 
-        {{-- PENDAPATAN --}}
+        {{-- Modal Pendapatan --}}
         <div class="modal fade" id="pendapatanModal-{{ $key }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Detail Pendapatan – {{ $row->label }}</h5>
+                    <div class="modal-header modal-header-yellow">
+                        <h5 class="modal-title fw-bold" style="font-size: 16px;">Detail Pendapatan – {{ $row->label }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        @php
-                            $detailPembayaran = $row->detail_pembayaran ?? collect();
-                        @endphp
-
-                        @if($row->jenis === 'sales')
-                            <p class="small text-muted mb-2">
-                                Sales: <strong>{{ $row->nama_sales ?? '-' }}</strong><br>
-                                Wilayah: <strong>{{ $row->nama_area ?? '-' }}</strong>
-                            </p>
-                        @endif
-
-                        @if($detailPembayaran->isEmpty())
-                            <p class="text-muted mb-0">
-                                Tidak ada pembayaran pada periode ini.
-                            </p>
-                        @else
-                            <div class="table-responsive">
-                                <table class="table table-sm table-striped align-middle">
-                                    <thead class="table-light">
+                    <div class="modal-body p-0">
+                        @php $detailPembayaran = $row->detail_pembayaran ?? collect(); @endphp
+                        <div class="table-responsive">
+                            <table class="table table-admin table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Tanggal</th>
+                                        <th>No. Bayar</th>
+                                        <th>Pelanggan</th>
+                                        <th class="text-end pe-3">Nominal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($detailPembayaran as $item)
                                         <tr>
-                                            <th>Tanggal</th>
-                                            <th>No. Pembayaran</th>
-                                            <th>Pelanggan</th>
-                                            <th class="text-end">Nominal</th>
+                                            <td class="ps-3">{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') : '-' }}</td>
+                                            <td><span class="badge bg-white border text-dark">{{ $item->no_pembayaran }}</span></td>
+                                            <td>{{ $item->nama_pelanggan ?? '-' }}</td>
+                                            <td class="text-end pe-3 fw-bold">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($detailPembayaran as $item)
-                                            <tr>
-                                                <td>{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') : '-' }}</td>
-                                                <td>{{ $item->no_pembayaran }}</td>
-                                                <td>{{ $item->nama_pelanggan ?? '-' }}</td>
-                                                <td class="text-end">
-                                                    Rp {{ number_format($item->nominal, 0, ',', '.') }}
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot>
-                                        <tr class="fw-bold">
-                                            <td colspan="3" class="text-end">Total</td>
-                                            <td class="text-end">
-                                                Rp {{ number_format($row->pendapatan ?? 0, 0, ',', '.') }}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        @endif
+                                    @empty
+                                        <tr><td colspan="4" class="text-center text-muted py-3">Tidak ada data.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         @if($row->jenis === 'sales')
-            {{-- KOMISI --}}
+            {{-- Modal Komisi --}}
             <div class="modal fade" id="komisiModal-{{ $key }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Detail Komisi – {{ $row->label }}</h5>
+                        <div class="modal-header modal-header-yellow">
+                            <h5 class="modal-title fw-bold" style="font-size: 16px;">Detail Komisi – {{ $row->label }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body">
-                            @php
-                                $detailKomisi = $row->detail_komisi ?? collect();
-                            @endphp
-
-                            <p class="small text-muted mb-2">
-                                Sales: <strong>{{ $row->nama_sales ?? '-' }}</strong><br>
-                                Wilayah: <strong>{{ $row->nama_area ?? '-' }}</strong>
-                            </p>
-
-                            @if($detailKomisi->isEmpty())
-                                <p class="text-muted mb-0">Tidak ada komisi pada periode ini.</p>
-                            @else
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-striped align-middle">
-                                        <thead class="table-light">
+                        <div class="modal-body p-0">
+                            @php $detailKomisi = $row->detail_komisi ?? collect(); @endphp
+                            <div class="table-responsive">
+                                <table class="table table-admin table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-3">Tanggal</th>
+                                            <th>Pelanggan</th>
+                                            <th class="text-end">Jumlah</th>
+                                            <th class="text-end pe-3">Nominal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($detailKomisi as $item)
                                             <tr>
-                                                <th>Tanggal Bayar</th>
-                                                <th>No. Pembayaran</th>
-                                                <th>Pelanggan</th>
-                                                <th class="text-end">Jumlah</th>
-                                                <th class="text-end">Nominal Komisi</th>
+                                                <td class="ps-3">{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y') : '-' }}</td>
+                                                <td>{{ $item->nama_pelanggan ?? '-' }}</td>
+                                                <td class="text-end">{{ $item->jumlah_komisi }}</td>
+                                                <td class="text-end pe-3">Rp {{ number_format($item->nominal_komisi, 0, ',', '.') }}</td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($detailKomisi as $item)
-                                                <tr>
-                                                    <td>{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') : '-' }}</td>
-                                                    <td>{{ $item->no_pembayaran }}</td>
-                                                    <td>{{ $item->nama_pelanggan ?? '-' }}</td>
-                                                    <td class="text-end">{{ $item->jumlah_komisi }}</td>
-                                                    <td class="text-end">
-                                                        Rp {{ number_format($item->nominal_komisi, 0, ',', '.') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr class="fw-bold">
-                                                <td colspan="4" class="text-end">Total Komisi</td>
-                                                <td class="text-end">
-                                                    Rp {{ number_format($row->total_komisi ?? 0, 0, ',', '.') }}
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            @endif
+                                        @empty
+                                            <tr><td colspan="4" class="text-center text-muted py-3">Tidak ada data.</td></tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- PENGELUARAN --}}
+            {{-- Modal Pengeluaran --}}
             <div class="modal fade" id="pengeluaranModal-{{ $key }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Detail Pengeluaran – {{ $row->label }}</h5>
+                        <div class="modal-header modal-header-yellow">
+                            <h5 class="modal-title fw-bold" style="font-size: 16px;">Detail Pengeluaran – {{ $row->label }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body">
-                            @php
-                                $detailPengeluaran = $row->detail_pengeluaran ?? collect();
-                            @endphp
-
-                            <p class="small text-muted mb-2">
-                                Sales: <strong>{{ $row->nama_sales ?? '-' }}</strong><br>
-                                Wilayah: <strong>{{ $row->nama_area ?? '-' }}</strong>
-                            </p>
-
-                            @if($detailPengeluaran->isEmpty())
-                                <p class="text-muted mb-0">Tidak ada pengeluaran approved pada periode ini.</p>
-                            @else
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-striped align-middle">
-                                        <thead class="table-light">
+                        <div class="modal-body p-0">
+                            @php $detailPengeluaran = $row->detail_pengeluaran ?? collect(); @endphp
+                            <div class="table-responsive">
+                                <table class="table table-admin table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-3">Tanggal</th>
+                                            <th>Nama</th>
+                                            <th>Catatan</th>
+                                            <th class="text-end pe-3">Nominal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($detailPengeluaran as $item)
                                             <tr>
-                                                <th>Tanggal Approve</th>
-                                                <th>Nama Pengeluaran</th>
-                                                <th>Catatan</th>
-                                                <th class="text-end">Nominal</th>
+                                                <td class="ps-3">{{ $item->tanggal_approve ? Carbon::parse($item->tanggal_approve)->format('d/m/Y') : '-' }}</td>
+                                                <td>{{ $item->nama_pengeluaran }}</td>
+                                                <td>{{ $item->catatan ?? '-' }}</td>
+                                                <td class="text-end pe-3 fw-bold text-danger">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($detailPengeluaran as $item)
-                                                <tr>
-                                                    <td>{{ $item->tanggal_approve ? Carbon::parse($item->tanggal_approve)->format('d/m/Y H:i') : '-' }}</td>
-                                                    <td>{{ $item->nama_pengeluaran }}</td>
-                                                    <td>{{ $item->catatan ?? '-' }}</td>
-                                                    <td class="text-end">
-                                                        Rp {{ number_format($item->nominal, 0, ',', '.') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr class="fw-bold">
-                                                <td colspan="3" class="text-end">Total Pengeluaran</td>
-                                                <td class="text-end">
-                                                    Rp {{ number_format($row->total_pengeluaran ?? 0, 0, ',', '.') }}
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            @endif
+                                        @empty
+                                            <tr><td colspan="4" class="text-center text-muted py-3">Tidak ada data.</td></tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- SETORAN BULAN INI --}}
+            {{-- Modal Setoran --}}
             <div class="modal fade" id="setoranModal-{{ $key }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Detail Setoran (Bulan Ini) – {{ $row->label }}</h5>
+                        <div class="modal-header modal-header-yellow">
+                            <h5 class="modal-title fw-bold" style="font-size: 16px;">Detail Setoran – {{ $row->label }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body">
-                            @php
-                                $detailSetoran = $row->detail_setoran ?? collect();
-                                $totalNominalSetor = $detailSetoran->sum('nominal');
-                            @endphp
-
-                            <p class="small text-muted mb-2">
-                                Sales: <strong>{{ $row->nama_sales ?? '-' }}</strong><br>
-                                Wilayah: <strong>{{ $row->nama_area ?? '-' }}</strong><br>
-                                Periode: <strong>{{ Carbon::create($selectedYear, $selectedMonth, 1)->translatedFormat('F Y') }}</strong>
-                            </p>
-
-                            @if($detailSetoran->isEmpty())
-                                <p class="text-muted mb-0">
-                                    Belum ada setoran pada periode ini.
-                                </p>
-                            @else
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-striped align-middle">
-                                        <thead class="table-light">
+                        <div class="modal-body p-0">
+                            @php $detailSetoran = $row->detail_setoran ?? collect(); @endphp
+                            <div class="table-responsive">
+                                <table class="table table-admin table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-3">Tanggal</th>
+                                            <th>Admin</th>
+                                            <th>Catatan</th>
+                                            <th class="text-end pe-3">Nominal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($detailSetoran as $item)
                                             <tr>
-                                                <th>Tanggal Setoran</th>
-                                                <th>Admin Penerima</th>
-                                                <th>Catatan</th>
-                                                <th class="text-end">Nominal</th>
+                                                <td class="ps-3">{{ $item->tanggal_setoran ? Carbon::parse($item->tanggal_setoran)->format('d/m/Y H:i') : '-' }}</td>
+                                                <td>{{ $item->nama_admin ?? '-' }}</td>
+                                                <td>{{ $item->catatan ?? '-' }}</td>
+                                                <td class="text-end pe-3 fw-bold text-success">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($detailSetoran as $item)
-                                                <tr>
-                                                    <td>
-                                                        {{ $item->tanggal_setoran
-                                                            ? Carbon::parse($item->tanggal_setoran)->format('d/m/Y H:i')
-                                                            : '-' }}
-                                                    </td>
-                                                    <td>{{ $item->nama_admin ?? '-' }}</td>
-                                                    <td>{{ $item->catatan ?? '-' }}</td>
-                                                    <td class="text-end">
-                                                        Rp {{ number_format($item->nominal ?? 0, 0, ',', '.') }}
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                        <tfoot>
-                                            <tr class="fw-bold">
-                                                <td colspan="3" class="text-end">Total setoran bulan ini</td>
-                                                <td class="text-end">
-                                                    Rp {{ number_format($totalNominalSetor, 0, ',', '.') }}
-                                                </td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            @endif
+                                        @empty
+                                            <tr><td colspan="4" class="text-center text-muted py-3">Tidak ada data.</td></tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

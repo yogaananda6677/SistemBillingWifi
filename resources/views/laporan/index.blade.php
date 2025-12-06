@@ -1,100 +1,175 @@
 @extends('layouts.master')
-@section('title', 'Pembukuan Global')
+@section('title', 'Laporan & Rekap')
 
 @section('content')
-@php use Carbon\Carbon; @endphp
 
-<div class="container-fluid py-4">
+{{-- Style tetap sama --}}
+<style>
+    /* --- ADMIN YELLOW THEME --- */
+    :root {
+        --theme-yellow: #ffc107;
+        --theme-yellow-dark: #e0a800;
+        --theme-yellow-soft: #fff9e6;
+        --text-dark: #212529;
+        --card-radius: 12px;
+    }
+    .page-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
+    }
+    .card-admin {
+        background: #fff;
+        border: none;
+        border-radius: var(--card-radius);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border-top: 4px solid var(--theme-yellow);
+        width: 100%;
+    }
+    .form-control-admin {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    .form-control-admin:focus {
+        border-color: var(--theme-yellow);
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
+    }
+    .btn-admin-yellow {
+        background-color: var(--theme-yellow);
+        color: var(--text-dark);
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+        transition: all 0.2s ease;
+    }
+    .btn-admin-yellow:hover {
+        background-color: var(--theme-yellow-dark);
+        color: var(--text-dark);
+        transform: translateY(-2px);
+    }
+    .filter-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #6c757d;
+        margin-bottom: 4px;
+        display: block;
+    }
+    .selectable-card {
+        transition: all 0.2s;
+        border: 1px solid #eee;
+    }
+    .selectable-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .selectable-card.selected {
+        border-color: var(--theme-yellow);
+        background-color: #fffdf5;
+    }
+</style>
 
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h3 class="fw-bold mb-0">Pembukuan Global (Sales & Admin)</h3>
-        <div class="text-muted small">
-            Data per: <strong>{{ ($stat['last_updated'] ?? now())->format('d/m/Y H:i') }}</strong>
+<div class="container-fluid p-4">
+
+    {{-- HEADER SECTION --}}
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="bi bi-clipboard-data-fill text-warning me-2"></i>Laporan & Rekap
+            </h4>
+            <div class="text-muted small">
+                Data per: <strong>{{ ($stat['last_updated'] ?? now())->format('d/m/Y H:i') }}</strong>
+            </div>
         </div>
     </div>
 
-    {{-- FORM UTAMA : FILTER + PILIH CARD + EXPORT --}}
     <form id="laporanForm" method="GET" action="{{ route('laporan.index') }}">
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-3 col-6">
-                        <label class="form-label mb-1">Bulan</label>
-                        <select name="bulan" class="form-select form-select-sm">
-                            @foreach(range(1,12) as $m)
-                                <option value="{{ $m }}" {{ (int)$selectedMonth === $m ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+        
+        {{-- FILTER CARD --}}
+        <div class="card-admin p-3 mb-3">
+            <div class="row g-2 align-items-end">
+                {{-- Bagian Select Bulan (DIPERBAIKI) --}}
+                <div class="col-6 col-md-3">
+                    <span class="filter-label">Bulan</span>
+                    <select name="bulan" class="form-select form-control-admin">
+                        @foreach(range(1, 12) as $m)
+                            <option value="{{ $m }}" @if((int)$selectedMonth == $m) selected @endif>
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                    <div class="col-md-3 col-6">
-                        <label class="form-label mb-1">Tahun</label>
-                        <select name="tahun" class="form-select form-select-sm">
-                            @foreach(range(now()->year - 3, now()->year + 1) as $y)
-                                <option value="{{ $y }}" {{ (int)$selectedYear === $y ? 'selected' : '' }}>
-                                    {{ $y }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                {{-- Bagian Select Tahun (DIPERBAIKI) --}}
+                <div class="col-6 col-md-3">
+                    <span class="filter-label">Tahun</span>
+                    <select name="tahun" class="form-select form-control-admin">
+                        @foreach(range(now()->year - 3, now()->year + 1) as $y)
+                            <option value="{{ $y }}" @if((int)$selectedYear == $y) selected @endif>
+                                {{ $y }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                    <div class="col-md-3 col-6">
-                        <button type="submit" class="btn btn-primary btn-sm w-100">
-                            Tampilkan Rincian
-                        </button>
-                    </div>
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn btn-admin-yellow w-100">
+                        <i class="bi bi-filter me-1"></i> Tampilkan Rincian
+                    </button>
                 </div>
             </div>
-        </div>
 
-        {{-- INFO PERIODE + STAT KECIL --}}
-        <div class="mb-3 text-muted d-flex justify-content-between flex-wrap gap-2">
-            <div>
-                Periode:
-                <strong>{{ \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->translatedFormat('F Y') }}</strong>
+            <hr class="my-3 text-muted" style="opacity: 0.1">
+
+            {{-- INFO STATISTIK --}}
+            <div class="d-flex flex-wrap gap-4 align-items-center small text-muted">
+                <div>
+                    <span class="filter-label">Periode</span>
+                    <span class="fw-bold text-dark">{{ \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->translatedFormat('F Y') }}</span>
+                </div>
+                @isset($stat)
+                    <div class="vr opacity-25 d-none d-md-block"></div>
+                    <div>
+                        <span class="filter-label">Pelanggan Bayar</span>
+                        <strong class="text-dark">{{ number_format($stat['jumlah_pelanggan'] ?? 0,0,',','.') }}</strong>
+                    </div>
+                    <div class="vr opacity-25 d-none d-md-block"></div>
+                    <div>
+                        <span class="filter-label">Pembayaran</span>
+                        <strong class="text-success">Rp {{ number_format($stat['jumlah_pembayaran'] ?? 0,0,',','.') }}</strong>
+                    </div>
+                    <div class="vr opacity-25 d-none d-md-block"></div>
+                    <div>
+                        <span class="filter-label">Pengeluaran</span>
+                        <strong class="text-danger">Rp {{ number_format($stat['jumlah_pengeluaran'] ?? 0,0,',','.') }}</strong>
+                    </div>
+                    <div class="vr opacity-25 d-none d-md-block"></div>
+                    <div>
+                        <span class="filter-label">Komisi</span>
+                        <strong class="text-danger">Rp {{ number_format($stat['jumlah_komisi'] ?? 0,0,',','.') }}</strong>
+                    </div>
+                @endisset
             </div>
-            @isset($stat)
-            <div class="small">
-                <span class="me-3">
-                    Pelanggan Bayar:
-                    <strong>{{ number_format($stat['jumlah_pelanggan'] ?? 0,0,',','.') }}</strong>
-                </span>
-                <span class="me-3">
-                    Pembayaran:
-                    <strong>Rp {{ number_format($stat['jumlah_pembayaran'] ?? 0,0,',','.') }}</strong>
-                </span>
-                <span class="me-3">
-                    Pengeluaran:
-                    <strong>Rp {{ number_format($stat['jumlah_pengeluaran'] ?? 0,0,',','.') }}</strong>
-                </span>
-                <span class="me-3">
-                    Komisi:
-                    <strong>Rp {{ number_format($stat['jumlah_komisi'] ?? 0,0,',','.') }}</strong>
-                </span>
-                <span>
-                    Laba Kotor:
-                    <strong>Rp {{ number_format($stat['laba_kotor'] ?? 0,0,',','.') }}</strong>
-                </span>
-            </div>
-            @endisset
         </div>
 
         {{-- GRID CARD REKAP --}}
-        <div class="card mb-4">
-            <div class="card-header py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">Pilih Sales / Admin</span>
-                    <div class="small">
-                        <a href="javascript:void(0)" onclick="toggleAll(true)">Centang semua</a> •
-                        <a href="javascript:void(0)" onclick="toggleAll(false)">Kosongkan</a>
-                    </div>
+        <div class="card-admin p-0 mb-4" style="overflow: hidden;">
+            <div class="bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark"><i class="bi bi-check2-square me-2 text-warning"></i>Pilih Sales / Admin</span>
+                <div class="small">
+                    <a href="javascript:void(0)" onclick="toggleAll(true)" class="text-decoration-none fw-bold text-warning me-2">Centang semua</a>
+                    <a href="javascript:void(0)" onclick="toggleAll(false)" class="text-decoration-none text-muted">Kosongkan</a>
                 </div>
             </div>
-            <div class="card-body">
+            
+            <div class="p-3">
                 @if($rekap->isEmpty())
-                    <p class="text-muted mb-0">Belum ada data untuk periode ini.</p>
+                    <p class="text-muted text-center py-4 mb-0">Belum ada data untuk periode ini.</p>
                 @else
                     <div class="row g-3">
                         @foreach($rekap as $row)
@@ -102,37 +177,45 @@
                                 $checked = in_array($row->key, $selectedUnits ?? []);
                             @endphp
                             <div class="col-md-3 col-sm-6">
-                                <div class="card h-100 shadow-sm border-{{ $checked ? 'primary' : 'light' }} selectable-card">
-                                    <div class="card-body">
-                                        <div class="form-check mb-1">
-                                            <input  class="form-check-input unit-checkbox"
-                                                    type="checkbox"
-                                                    name="units[]"
-                                                    id="unit-{{ $row->key }}"
-                                                    value="{{ $row->key }}"
-                                                    {{ $checked ? 'checked' : '' }}>
-                                            <label class="form-check-label fw-semibold" for="unit-{{ $row->key }}">
+                                <div class="card h-100 shadow-sm selectable-card {{ $checked ? 'selected' : '' }}">
+                                    <div class="card-body p-3">
+                                        <div class="form-check mb-2">
+                                            {{-- Perbaikan cara checked agar aman --}}
+                                            <input class="form-check-input unit-checkbox"
+                                                   type="checkbox"
+                                                   name="units[]"
+                                                   id="unit-{{ $row->key }}"
+                                                   value="{{ $row->key }}"
+                                                   @if($checked) checked @endif
+                                                   onchange="this.closest('.card').classList.toggle('selected', this.checked)">
+                                            <label class="form-check-label fw-bold text-dark" for="unit-{{ $row->key }}" style="font-size: 13px;">
                                                 {{ $row->label }}
                                             </label>
                                         </div>
-                                        <hr class="my-2">
-                                        <div class="small">
-                                            <div>Pendapatan:
-                                                <strong>Rp {{ number_format($row->pendapatan,0,',','.') }}</strong>
+                                        <hr class="my-2 opacity-10">
+                                        <div style="font-size: 11px;">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted">Pendapatan</span>
+                                                <strong class="text-dark">Rp {{ number_format($row->pendapatan,0,',','.') }}</strong>
                                             </div>
-                                            <div>Komisi:
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted">Komisi</span>
                                                 <strong class="text-danger">Rp {{ number_format($row->total_komisi,0,',','.') }}</strong>
                                             </div>
-                                            <div>Pengeluaran:
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted">Pengeluaran</span>
                                                 <strong class="text-danger">Rp {{ number_format($row->total_pengeluaran,0,',','.') }}</strong>
                                             </div>
-                                            <div>Total Bersih:
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted">Total Bersih</span>
                                                 <strong class="text-success">Rp {{ number_format($row->total_bersih,0,',','.') }}</strong>
                                             </div>
-                                            <div>Setoran:
-                                                <strong class="text-success">Rp {{ number_format($row->total_setoran,0,',','.') }}</strong>
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <span class="text-muted">Setoran</span>
+                                                <strong class="text-primary">Rp {{ number_format($row->total_setoran,0,',','.') }}</strong>
                                             </div>
-                                            <div>Selisih:
+                                            <div class="d-flex justify-content-between pt-1 border-top mt-1">
+                                                <span class="text-muted">Selisih</span>
                                                 <strong class="{{ $row->selisih < 0 ? 'text-danger' : 'text-success' }}">
                                                     Rp {{ number_format($row->selisih,0,',','.') }}
                                                 </strong>
@@ -147,156 +230,85 @@
             </div>
         </div>
 
-        {{-- RINCIAN UNTUK UNIT YANG DIPILIH --}}
-{{-- ========== RINCIAN SIMPLE TOTAL GABUNGAN UNTUK UNIT TERPILIH ========== --}}
-@if(!empty($selectedUnits))
-    @php
-        $selectedRows = $rekap->whereIn('key', $selectedUnits);
+        {{-- RINCIAN GABUNGAN (JIKA ADA YG DIPILIH) --}}
+        @if(!empty($selectedUnits))
+            @php
+                $selectedRows = $rekap->whereIn('key', $selectedUnits);
+                $totalPendapatan  = $selectedRows->sum('pendapatan');
+                $totalKomisi      = $selectedRows->sum('total_komisi');
+                $totalPengeluaran = $selectedRows->sum('total_pengeluaran');
+                $totalSetoran     = $selectedRows->sum('total_setoran');
+                $totalBersih      = $selectedRows->sum('total_bersih'); 
+                
+                $selisihGabungan  = $totalSetoran - $totalBersih;
+                $isKurangSetor    = $selisihGabungan < 0;
+                $isLebihSetor     = $selisihGabungan > 0;
+                $nominalSelisih   = abs($selisihGabungan);
+            @endphp
 
-        $totalPendapatan  = $selectedRows->sum('pendapatan');
-        $totalKomisi      = $selectedRows->sum('total_komisi');
-        $totalPengeluaran = $selectedRows->sum('total_pengeluaran');
-        $totalSetoran     = $selectedRows->sum('total_setoran');
+            <div class="card-admin p-0">
+                <div class="bg-warning bg-opacity-10 p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark"><i class="bi bi-calculator me-2"></i>Rincian Gabungan</span>
+                    <span class="badge bg-warning text-dark">{{ $selectedRows->count() }} unit dipilih</span>
+                </div>
 
-        // total bersih gabungan
-        $totalBersih      = $selectedRows->sum('total_bersih'); 
-        // atau bisa juga: $totalPendapatan - $totalKomisi - $totalPengeluaran
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 border-end">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Total Pemasukan</span>
+                                <span class="fw-bold text-success">Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Total Komisi</span>
+                                <span class="fw-bold text-danger">Rp {{ number_format($totalKomisi, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Total Pengeluaran</span>
+                                <span class="fw-bold text-danger">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
 
-        // posisi setoran gabungan
-        // + = lebih setor, - = masih kurang
-        $selisihGabungan  = $totalSetoran - $totalBersih;
-        $isKurangSetor    = $selisihGabungan < 0;
-        $isLebihSetor     = $selisihGabungan > 0;
-        $nominalSelisih   = abs($selisihGabungan);
-    @endphp
-
-    <div class="card">
-        <div class="card-header py-2 d-flex justify-content-between align-items-center">
-            <span class="fw-semibold">Rincian Gabungan</span>
-            <small class="text-muted">
-                {{ $selectedRows->count() }} unit dipilih
-            </small>
-        </div>
-
-        <div class="card-body fs-6">
-
-            {{-- Rincian Dasar --}}
-            <div class="d-flex justify-content-between mb-2">
-                <span>Total Pemasukan</span>
-                <span class="fw-bold text-success">
-                    Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
-                </span>
+                        <div class="col-md-6 ps-md-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Bersih <small class="text-muted" style="font-size: 10px;">(Pemasukan - Komisi - Pengeluaran)</small></span>
+                                <span class="fw-bold {{ $totalBersih >= 0 ? 'text-success' : 'text-danger' }}">Rp {{ number_format($totalBersih, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Sudah Disetor</span>
+                                <span class="fw-bold text-primary">Rp {{ number_format($totalSetoran, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-3 pt-2 border-top bg-light p-2 rounded">
+                                @if($isKurangSetor)
+                                    <span class="fw-bold text-muted">Status: <span class="text-danger">Kurang Setor</span></span>
+                                    <span class="fw-bold text-danger fs-5">Rp {{ number_format($nominalSelisih, 0, ',', '.') }}</span>
+                                @elseif($isLebihSetor)
+                                    <span class="fw-bold text-muted">Status: <span class="text-success">Lebih Setor</span></span>
+                                    <span class="fw-bold text-success fs-5">Rp {{ number_format($nominalSelisih, 0, ',', '.') }}</span>
+                                @else
+                                    <span class="fw-bold text-muted">Status: Pas</span>
+                                    <span class="fw-bold text-success fs-5">Rp 0</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="d-flex justify-content-between mb-2">
-                <span>Total Komisi</span>
-                <span class="fw-bold text-danger">
-                    Rp {{ number_format($totalKomisi, 0, ',', '.') }}
-                </span>
-            </div>
-
-            <div class="d-flex justify-content-between mb-2">
-                <span>Total Pengeluaran</span>
-                <span class="fw-bold text-danger">
-                    Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
-                </span>
-            </div>
-
-            <hr class="my-2">
-
-            {{-- Total Bersih --}}
-            <div class="d-flex justify-content-between mb-2">
-                <span>Total Bersih<br>
-                    <small class="text-muted">
-                        (Pemasukan - Komisi - Pengeluaran)
-                    </small>
-                </span>
-                <span class="fw-bold {{ $totalBersih >= 0 ? 'text-success' : 'text-danger' }}">
-                    Rp {{ number_format($totalBersih, 0, ',', '.') }}
-                </span>
-            </div>
-
-            {{-- Sudah Disetor --}}
-            <div class="d-flex justify-content-between mb-2">
-                <span>Sudah Disetor</span>
-                <span class="fw-bold text-primary">
-                    Rp {{ number_format($totalSetoran, 0, ',', '.') }}
-                </span>
-            </div>
-
-            {{-- Uang Belum / Lebih Disetor --}}
-            <div class="d-flex justify-content-between mt-2 pt-2 border-top">
-                @if($isKurangSetor)
-                    <span class="fw-semibold text-muted">Uang Belum Disetor</span>
-                    <span class="fw-bold text-warning">
-                        Rp {{ number_format($nominalSelisih, 0, ',', '.') }}
-                    </span>
-                @elseif($isLebihSetor)
-                    <span class="fw-semibold text-muted">Lebih Setor</span>
-                    <span class="fw-bold text-success">
-                        Rp {{ number_format($nominalSelisih, 0, ',', '.') }}
-                    </span>
-                @else
-                    <span class="fw-semibold text-muted">Posisi Setoran</span>
-                    <span class="fw-bold text-muted">
-                        Rp 0 (pas)
-                    </span>
-                @endif
-            </div>
-
-        </div>
-    </div>
-@endif
-
+        @endif
 
     </form>
 </div>
 
-{{-- JS kecil untuk centang semua + export --}}
+@endsection
+
 @push('scripts')
 <script>
     function toggleAll(state) {
-        document.querySelectorAll('.unit-checkbox').forEach(cb => {
+        const checkboxes = document.querySelectorAll('.unit-checkbox');
+        checkboxes.forEach(cb => {
             cb.checked = !!state;
+            cb.closest('.card').classList.toggle('selected', cb.checked);
         });
-    }
-
-    function exportLaporan(type) {
-        const form = document.getElementById('laporanForm');
-        const actionBase = type === 'excel'
-            ? "{{ route('laporan.export.excel') }}"
-            : "{{ route('laporan.export.pdf') }}";
-
-        // bikin form sementara utk submit GET dengan query yg sama + units[]
-        const tempForm = document.createElement('form');
-        tempForm.method = 'GET';
-        tempForm.action = actionBase;
-
-        // copy bulan & tahun
-        ['bulan', 'tahun'].forEach(name => {
-            const input = form.querySelector(`[name="${name}"]`);
-            if (input) {
-                const hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = name;
-                hidden.value = input.value;
-                tempForm.appendChild(hidden);
-            }
-        });
-
-        // copy units[]
-        form.querySelectorAll('.unit-checkbox:checked').forEach(cb => {
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'units[]';
-            hidden.value = cb.value;
-            tempForm.appendChild(hidden);
-        });
-
-        document.body.appendChild(tempForm);
-        tempForm.submit();
     }
 </script>
 @endpush
-
-@endsection

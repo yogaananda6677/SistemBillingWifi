@@ -13,9 +13,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <style>
+        :root {
+            --nalendra-gold: #ffc107;
+            --nalendra-gold-hover: #e0a800;
+            --nalendra-dark: #212529;
+        }
+
         body {
             font-family: 'Instrument Sans', sans-serif;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,7 +30,7 @@
             position: relative;
         }
 
-        /* Dekorasi Background (Lingkaran halus) */
+        /* Dekorasi Background (Kuning) */
         .bg-shape {
             position: absolute;
             border-radius: 50%;
@@ -36,8 +42,7 @@
         .shape-1 {
             width: 400px;
             height: 400px;
-            background: #6366f1;
-            /* Indigo */
+            background: var(--nalendra-gold);
             top: -100px;
             right: -50px;
         }
@@ -45,8 +50,7 @@
         .shape-2 {
             width: 300px;
             height: 300px;
-            background: #ec4899;
-            /* Pink/Rose */
+            background: #fd7e14; /* Oranye lembut */
             bottom: -50px;
             left: -50px;
         }
@@ -64,28 +68,29 @@
             text-align: center;
             position: relative;
             margin: 20px;
-            /* Jarak aman di HP */
+            border-top: 4px solid var(--nalendra-gold);
         }
 
         .brand-icon {
             width: 70px;
             height: 70px;
-            background: linear-gradient(135deg, #4f46e5, #818cf8);
-            color: white;
+            background: linear-gradient(135deg, #ffc107, #ffca2c);
+            color: #000;
             border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 32px;
             margin: 0 auto 25px;
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 10px 20px rgba(255, 193, 7, 0.3);
         }
 
         .welcome-title {
             font-size: 26px;
-            font-weight: 700;
+            font-weight: 800;
             color: #111827;
             margin-bottom: 10px;
+            letter-spacing: -0.5px;
         }
 
         .welcome-subtitle {
@@ -101,45 +106,48 @@
             width: 100%;
             padding: 14px;
             border-radius: 12px;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 16px;
             transition: all 0.3s ease;
             text-decoration: none;
         }
 
+        /* Tombol Login Hitam (Kontras dengan tema kuning) */
         .btn-login {
-            background: #111827;
-            color: #ffffff;
+            background: #000;
+            color: #ffc107; /* Teks Kuning */
             border: none;
         }
 
         .btn-login:hover {
-            background: #000000;
+            background: #212529;
+            color: #ffca2c;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
         }
 
+        /* Tombol Dashboard (Kuning) */
         .btn-dashboard {
-            background: #4f46e5;
-            color: #ffffff;
+            background: var(--nalendra-gold);
+            color: #000;
             border: none;
             margin-bottom: 12px;
         }
 
         .btn-dashboard:hover {
-            background: #4338ca;
-            color: white;
+            background: var(--nalendra-gold-hover);
+            color: #000;
         }
 
         .btn-logout {
             background: #fee2e2;
-            color: #ef4444;
+            color: #dc2626;
             border: none;
         }
 
         .btn-logout:hover {
             background: #fecaca;
-            color: #dc2626;
+            color: #b91c1c;
         }
 
         .footer-copy {
@@ -148,15 +156,9 @@
             color: #9ca3af;
         }
 
-        /* Responsiveness tambahan jika diperlukan */
         @media (max-width: 576px) {
             .welcome-card {
                 padding: 30px 20px;
-            }
-
-            .shape-1,
-            .shape-2 {
-                opacity: 0.4;
             }
         }
     </style>
@@ -180,10 +182,10 @@
 
         @auth
             {{-- TAMPILAN JIKA SUDAH LOGIN --}}
-            <div class="p-3 bg-light rounded-3 mb-4 border">
+            <div class="p-3 bg-warning bg-opacity-10 rounded-3 mb-4 border border-warning border-opacity-25">
                 <p class="mb-1 text-muted small">Halo, kembali lagi!</p>
                 <h5 class="fw-bold text-dark mb-0">{{ Auth::user()->name }}</h5>
-                <span class="badge bg-success mt-2">
+                <span class="badge bg-warning text-dark mt-2">
                     {{ ucfirst(Auth::user()->role ?? 'User') }}
                 </span>
             </div>
@@ -207,7 +209,7 @@
 
             <div class="mt-4 pt-3 border-top">
                 <p class="small text-muted mb-0">
-                    <i class="bi bi-info-circle me-1"></i>
+                    <i class="bi bi-info-circle me-1 text-warning"></i>
                     Akses terbatas hanya untuk karyawan & staf.
                 </p>
             </div>

@@ -1,43 +1,196 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Register - Nalendra ISP</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --nalendra-gold: #ffc107;
+            --nalendra-gold-hover: #e0a800;
+            --nalendra-dark: #212529;
+        }
+
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px 0; /* Add padding for scroll on small screens */
+        }
+
+        /* Dekorasi Background */
+        .bg-shape {
+            position: fixed; /* Fixed agar tidak ikut scroll */
+            border-radius: 50%;
+            filter: blur(90px);
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--nalendra-gold);
+            top: -10%;
+            left: -10%;
+        }
+
+        .shape-2 {
+            width: 350px;
+            height: 350px;
+            background: #fd7e14;
+            bottom: -10%;
+            right: -10%;
+        }
+
+        /* Card Register */
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px; /* Sedikit lebih lebar dari login */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid var(--nalendra-gold);
+        }
+
+        .brand-logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ffc107, #ffca2c);
+            color: #000;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3);
+        }
+
+        .title-text {
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle-text {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        /* Form Styles */
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            background-color: #f9fafb;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #fff;
+            border-color: var(--nalendra-gold);
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.2);
+        }
+
+        /* Tombol Kuning */
+        .btn-register {
+            background: var(--nalendra-gold);
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(255, 193, 7, 0.2);
+        }
+
+        .btn-register:hover {
+            background: var(--nalendra-gold-hover);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
+        }
+
+        .login-link {
+            color: #d9a406;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link:hover {
+            text-decoration: underline;
+            color: #b38600;
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container d-flex justify-content-center align-items-center vh-100">
-        <div class="card p-4 shadow" style="width: 100%; max-width: 500px;">
-            <h3 class="card-title text-center mb-3">Register</h3>
+
+<body>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="container d-flex justify-content-center">
+        <div class="register-card">
+            <div class="d-flex flex-column align-items-center text-center">
+                <div class="brand-logo">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <h3 class="title-text">Registrasi Akun</h3>
+                <p class="subtitle-text">Buat akun baru untuk mengakses sistem Nalendra.</p>
+            </div>
 
             <form method="POST" action="{{ route('register') }}">
                 @csrf
 
-                <!-- Name -->
                 <div class="mb-3">
-                    <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
+                    <label for="name" class="form-label">Nama Lengkap</label>
+                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" placeholder="Masukkan nama lengkap" required>
                     @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <!-- Email -->
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
+                    <label for="email" class="form-label">Alamat Email</label>
+                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" placeholder="nama@email.com" required>
                     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <!-- No HP -->
                 <div class="mb-3">
-                    <label for="no_hp" class="form-label">No HP</label>
-                    <input type="text" class="form-control @error('no_hp') is-invalid @enderror" id="no_hp" name="no_hp" value="{{ old('no_hp') }}" required>
+                    <label for="no_hp" class="form-label">Nomor HP / WhatsApp</label>
+                    <input type="text" class="form-control @error('no_hp') is-invalid @enderror" id="no_hp" name="no_hp" value="{{ old('no_hp') }}" placeholder="08xxxxxxxxxx" required>
                     @error('no_hp') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <!-- Role -->
                 <div class="mb-3">
-                    <label for="role" class="form-label">Role</label>
+                    <label for="role" class="form-label">Role Akses</label>
                     <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
                         <option value="" disabled selected>-- Pilih Role --</option>
                         <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
@@ -46,24 +199,27 @@
                     @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <!-- Password -->
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" placeholder="Minimal 8 karakter" required>
                     @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <!-- Confirm Password -->
                 <div class="mb-3">
-                    <label for="password_confirmation" class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                    <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
+                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Ulangi password" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Register</button>
+                <button type="submit" class="btn btn-register">
+                    Daftar Sekarang <i class="bi bi-arrow-right ms-2"></i>
+                </button>
             </form>
 
-            <p class="mt-3 text-center">Already have an account? <a href="{{ route('login') }}">Login</a></p>
+            <div class="mt-4 text-center">
+                <p class="small text-secondary mb-0">Sudah punya akun? <a href="{{ route('login') }}" class="login-link">Login disini</a></p>
+            </div>
         </div>
     </div>
+
 </body>
 </html>

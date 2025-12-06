@@ -13,9 +13,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <style>
+        :root {
+            --nalendra-gold: #ffc107;
+            --nalendra-gold-hover: #e0a800;
+            --nalendra-dark: #212529;
+        }
+
         body {
             font-family: 'Instrument Sans', sans-serif;
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,20 +30,19 @@
             position: relative;
         }
 
-        /* Dekorasi Background (Sama seperti halaman Welcome) */
+        /* Dekorasi Background (Tema Kuning) */
         .bg-shape {
             position: absolute;
             border-radius: 50%;
             filter: blur(90px);
             z-index: -1;
-            opacity: 0.5;
+            opacity: 0.6;
         }
 
         .shape-1 {
             width: 400px;
             height: 400px;
-            background: #4f46e5;
-            /* Indigo */
+            background: var(--nalendra-gold); /* Kuning */
             top: -10%;
             left: -10%;
         }
@@ -45,41 +50,44 @@
         .shape-2 {
             width: 350px;
             height: 350px;
-            background: #ec4899;
-            /* Pink */
+            background: #fd7e14; /* Oranye lembut sebagai aksen */
             bottom: -10%;
             right: -10%;
         }
 
         /* Card Login */
         .login-card {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.8);
             border-radius: 20px;
             padding: 40px;
             width: 100%;
             max-width: 420px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid var(--nalendra-gold); /* Aksen garis atas */
         }
 
         .brand-logo {
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, #4f46e5, #818cf8);
-            color: white;
+            /* Gradasi Kuning */
+            background: linear-gradient(135deg, #ffc107, #ffca2c);
+            color: #000; /* Ikon warna hitam agar kontras */
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
             margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3);
         }
 
         .title-text {
-            font-weight: 700;
+            font-weight: 800;
             color: #111827;
             margin-bottom: 5px;
+            letter-spacing: -0.5px;
         }
 
         .subtitle-text {
@@ -107,42 +115,51 @@
 
         .form-control:focus {
             background-color: #fff;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            border-color: var(--nalendra-gold);
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.2); /* Glow Kuning */
         }
 
+        /* Tombol Kuning Nalendra */
         .btn-login {
-            background: #111827;
-            color: white;
+            background: var(--nalendra-gold);
+            color: #000;
             border: none;
             padding: 12px;
             border-radius: 10px;
-            font-weight: 600;
+            font-weight: 700;
             width: 100%;
             margin-top: 10px;
             transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(255, 193, 7, 0.2);
         }
 
         .btn-login:hover {
-            background: #000;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: var(--nalendra-gold-hover);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 193, 7, 0.3);
         }
 
+        /* Checkbox Kuning */
         .form-check-input:checked {
-            background-color: #4f46e5;
-            border-color: #4f46e5;
+            background-color: var(--nalendra-gold);
+            border-color: var(--nalendra-gold);
+        }
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+            border-color: var(--nalendra-gold);
         }
 
         .forgot-link {
             font-size: 13px;
-            color: #4f46e5;
+            color: #d9a406; /* Kuning Gelap */
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .forgot-link:hover {
             text-decoration: underline;
+            color: #b38600;
         }
     </style>
 </head>
@@ -177,10 +194,6 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <label for="password" class="form-label mb-0">Password</label>
-                        {{-- Opsi Lupa Password (Bisa dihapus jika tidak perlu) --}}
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="forgot-link">Lupa Password?</a>
-                        @endif
                     </div>
                     <input type="password" class="form-control @error('password') is-invalid @enderror" id="password"
                         name="password" placeholder="••••••••" required>

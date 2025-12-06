@@ -3,7 +3,7 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h6 class="fw-bold mb-0">Riwayat Setoran</h6>
-        <a href="{{ route('sales.setoran.index') }}" class="btn btn-primary btn-sm rounded-pill">
+        <a href="{{ route('seles2.setoran.index') }}" class="btn btn-primary btn-sm rounded-pill">
             <i class="bi bi-plus me-1"></i>Setor Baru
         </a>
     </div>

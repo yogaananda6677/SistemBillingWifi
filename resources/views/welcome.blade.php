@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Nalendra ISP') }}</title>
+    <title>Nalendra ISP</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
@@ -190,8 +190,14 @@
                 </span>
             </div>
 
-            <a href="{{ url('/home') }}" class="btn btn-custom btn-dashboard">
-                <i class="bi bi-speedometer2 me-2"></i> Buka Dashboard
+            @if (Auth::user()->role == 'admin')
+                <a href="{{ url('/dashboard/admin') }}" class="btn btn-custom btn-dashboard">
+                    <i class="bi bi-speedometer2 me-2"></i> Buka Dashboard
+                @else
+                    <a href="{{ url('/dashboard/sales') }}" class="btn btn-custom btn-dashboard">
+                        <i class="bi bi-speedometer2 me-2"></i> Buka Dashboard
+            @endif
+
             </a>
 
             <form method="POST" action="{{ route('logout') }}">

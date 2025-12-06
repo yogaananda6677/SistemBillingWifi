@@ -45,22 +45,6 @@
                             Tampilkan Rincian
                         </button>
                     </div>
-
-                    <div class="col-md-3 col-6 text-md-end">
-                        <div class="btn-group w-100">
-                            {{-- tombol export ikut bawa query + units[] --}}
-                            <button type="button"
-                                    class="btn btn-success btn-sm"
-                                    onclick="exportLaporan('excel')">
-                                Export Excel
-                            </button>
-                            <button type="button"
-                                    class="btn btn-outline-danger btn-sm"
-                                    onclick="exportLaporan('pdf')">
-                                Export PDF
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -164,178 +148,106 @@
         </div>
 
         {{-- RINCIAN UNTUK UNIT YANG DIPILIH --}}
-        @if(!empty($selectedUnits))
-            <div class="card">
-                <div class="card-header py-2">
-                    <span class="fw-semibold">Rincian Transaksi (unit terpilih)</span>
-                </div>
-                <div class="card-body">
-                    @foreach($rekap->whereIn('key', $selectedUnits) as $row)
-                        <div class="mb-4">
-                            <h6 class="fw-bold mb-2">{{ $row->label }}</h6>
+{{-- ========== RINCIAN SIMPLE TOTAL GABUNGAN UNTUK UNIT TERPILIH ========== --}}
+@if(!empty($selectedUnits))
+    @php
+        $selectedRows = $rekap->whereIn('key', $selectedUnits);
 
-                            {{-- Pendapatan --}}
-                            <div class="mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-semibold">Pembayaran</span>
-                                    <span class="small text-muted">
-                                        Total: Rp {{ number_format($row->pendapatan,0,',','.') }}
-                                    </span>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-striped align-middle mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Tanggal</th>
-                                                <th>No. Pembayaran</th>
-                                                <th>Pelanggan</th>
-                                                <th class="text-end">Nominal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($row->detail_pembayaran as $item)
-                                                <tr>
-                                                    <td>{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') : '-' }}</td>
-                                                    <td>{{ $item->no_pembayaran }}</td>
-                                                    <td>{{ $item->nama_pelanggan ?? '-' }}</td>
-                                                    <td class="text-end">
-                                                        Rp {{ number_format($item->nominal,0,',','.') }}
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="4" class="text-muted text-center">Tidak ada data.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+        $totalPendapatan  = $selectedRows->sum('pendapatan');
+        $totalKomisi      = $selectedRows->sum('total_komisi');
+        $totalPengeluaran = $selectedRows->sum('total_pengeluaran');
+        $totalSetoran     = $selectedRows->sum('total_setoran');
 
-                            {{-- Komisi (sales saja) --}}
-                            @if($row->jenis === 'sales')
-                                <div class="mb-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Komisi</span>
-                                        <span class="small text-muted">
-                                            Total: Rp {{ number_format($row->total_komisi,0,',','.') }}
-                                        </span>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-striped align-middle mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Tanggal Bayar</th>
-                                                    <th>No. Pembayaran</th>
-                                                    <th>Pelanggan</th>
-                                                    <th class="text-end">Jumlah</th>
-                                                    <th class="text-end">Nominal Komisi</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($row->detail_komisi as $item)
-                                                    <tr>
-                                                        <td>{{ $item->tanggal_bayar ? Carbon::parse($item->tanggal_bayar)->format('d/m/Y H:i') : '-' }}</td>
-                                                        <td>{{ $item->no_pembayaran }}</td>
-                                                        <td>{{ $item->nama_pelanggan ?? '-' }}</td>
-                                                        <td class="text-end">{{ $item->jumlah_komisi }}</td>
-                                                        <td class="text-end">
-                                                            Rp {{ number_format($item->nominal_komisi,0,',','.') }}
-                                                        </td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="5" class="text-muted text-center">Tidak ada data.</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+        // total bersih gabungan
+        $totalBersih      = $selectedRows->sum('total_bersih'); 
+        // atau bisa juga: $totalPendapatan - $totalKomisi - $totalPengeluaran
 
-                                {{-- Pengeluaran --}}
-                                <div class="mb-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Pengeluaran</span>
-                                        <span class="small text-muted">
-                                            Total: Rp {{ number_format($row->total_pengeluaran,0,',','.') }}
-                                        </span>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-striped align-middle mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Tanggal Approve</th>
-                                                    <th>Nama Pengeluaran</th>
-                                                    <th>Catatan</th>
-                                                    <th class="text-end">Nominal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($row->detail_pengeluaran as $item)
-                                                    <tr>
-                                                        <td>{{ $item->tanggal_approve ? Carbon::parse($item->tanggal_approve)->format('d/m/Y H:i') : '-' }}</td>
-                                                        <td>{{ $item->nama_pengeluaran }}</td>
-                                                        <td>{{ $item->catatan ?? '-' }}</td>
-                                                        <td class="text-end">
-                                                            Rp {{ number_format($item->nominal,0,',','.') }}
-                                                        </td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="4" class="text-muted text-center">Tidak ada data.</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+        // posisi setoran gabungan
+        // + = lebih setor, - = masih kurang
+        $selisihGabungan  = $totalSetoran - $totalBersih;
+        $isKurangSetor    = $selisihGabungan < 0;
+        $isLebihSetor     = $selisihGabungan > 0;
+        $nominalSelisih   = abs($selisihGabungan);
+    @endphp
 
-                                {{-- Setoran --}}
-                                <div class="mb-2">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="fw-semibold">Setoran</span>
-                                        <span class="small text-muted">
-                                            Total: Rp {{ number_format($row->total_setoran,0,',','.') }}
-                                        </span>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-striped align-middle mb-0">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Tanggal Setoran</th>
-                                                    <th>Admin Penerima</th>
-                                                    <th>Catatan</th>
-                                                    <th class="text-end">Nominal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($row->detail_setoran as $item)
-                                                    <tr>
-                                                        <td>{{ $item->tanggal_setoran ? Carbon::parse($item->tanggal_setoran)->format('d/m/Y H:i') : '-' }}</td>
-                                                        <td>{{ $item->nama_admin ?? '-' }}</td>
-                                                        <td>{{ $item->catatan ?? '-' }}</td>
-                                                        <td class="text-end">
-                                                            Rp {{ number_format($item->nominal,0,',','.') }}
-                                                        </td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="4" class="text-muted text-center">Tidak ada data.</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            @endif
+    <div class="card">
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Rincian Gabungan</span>
+            <small class="text-muted">
+                {{ $selectedRows->count() }} unit dipilih
+            </small>
+        </div>
 
-                            <hr>
-                        </div>
-                    @endforeach
-                </div>
+        <div class="card-body fs-6">
+
+            {{-- Rincian Dasar --}}
+            <div class="d-flex justify-content-between mb-2">
+                <span>Total Pemasukan</span>
+                <span class="fw-bold text-success">
+                    Rp {{ number_format($totalPendapatan, 0, ',', '.') }}
+                </span>
             </div>
-        @endif
+
+            <div class="d-flex justify-content-between mb-2">
+                <span>Total Komisi</span>
+                <span class="fw-bold text-danger">
+                    Rp {{ number_format($totalKomisi, 0, ',', '.') }}
+                </span>
+            </div>
+
+            <div class="d-flex justify-content-between mb-2">
+                <span>Total Pengeluaran</span>
+                <span class="fw-bold text-danger">
+                    Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
+                </span>
+            </div>
+
+            <hr class="my-2">
+
+            {{-- Total Bersih --}}
+            <div class="d-flex justify-content-between mb-2">
+                <span>Total Bersih<br>
+                    <small class="text-muted">
+                        (Pemasukan - Komisi - Pengeluaran)
+                    </small>
+                </span>
+                <span class="fw-bold {{ $totalBersih >= 0 ? 'text-success' : 'text-danger' }}">
+                    Rp {{ number_format($totalBersih, 0, ',', '.') }}
+                </span>
+            </div>
+
+            {{-- Sudah Disetor --}}
+            <div class="d-flex justify-content-between mb-2">
+                <span>Sudah Disetor</span>
+                <span class="fw-bold text-primary">
+                    Rp {{ number_format($totalSetoran, 0, ',', '.') }}
+                </span>
+            </div>
+
+            {{-- Uang Belum / Lebih Disetor --}}
+            <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                @if($isKurangSetor)
+                    <span class="fw-semibold text-muted">Uang Belum Disetor</span>
+                    <span class="fw-bold text-warning">
+                        Rp {{ number_format($nominalSelisih, 0, ',', '.') }}
+                    </span>
+                @elseif($isLebihSetor)
+                    <span class="fw-semibold text-muted">Lebih Setor</span>
+                    <span class="fw-bold text-success">
+                        Rp {{ number_format($nominalSelisih, 0, ',', '.') }}
+                    </span>
+                @else
+                    <span class="fw-semibold text-muted">Posisi Setoran</span>
+                    <span class="fw-bold text-muted">
+                        Rp 0 (pas)
+                    </span>
+                @endif
+            </div>
+
+        </div>
+    </div>
+@endif
+
 
     </form>
 </div>

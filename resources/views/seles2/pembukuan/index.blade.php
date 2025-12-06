@@ -64,28 +64,36 @@
                 </div>
             @else
                 {{-- LOOP PER AREA --}}
-                @foreach ($rekapPerArea as $idx => $area)
-                    @php
-                        // ambil data per area
-                        $pendapatanPelanggan = $area->total_pendapatan ?? 0;
-                        $komisi              = $area->total_komisi ?? 0;
-                        $pengeluaran         = $area->total_pengeluaran ?? 0;
-                        $total               = $area->pendapatan_bersih ?? ($pendapatanPelanggan - $komisi - $pengeluaran);
-                        $sudahSetor          = $area->total_setoran ?? 0;
-                        $wajibSetor          = $area->wajib_setor_bulan_ini ?? $total;
-                        $uangBelumSetor      = $area->uang_belum_disetor_bulan_ini ?? max($wajibSetor - $sudahSetor, 0);
+@foreach ($rekapPerArea as $idx => $area)
+@php
+    $pendapatanPelanggan = $area->total_pendapatan ?? 0;
+    $komisi              = $area->total_komisi ?? 0;
+    $pengeluaran         = $area->total_pengeluaran ?? 0;
 
-                        $pembayaranList      = $area->pembayaranList ?? collect();
-                        $komisiList          = $area->komisiList ?? collect();
-                        $pengeluaranList     = $area->pengeluaranList ?? collect();
-                        $setoranList         = $area->setoranList ?? collect();
+    // Pendapatan bersih BULAN INI
+    $total               = $area->pendapatan_bersih ?? ($pendapatanPelanggan - $komisi - $pengeluaran);
 
-                        // bikin ID modal unik per area
-                        $pendapatanModalId   = 'modalPendapatan-' . $area->id_area;
-                        $komisiModalId       = 'modalKomisi-' . $area->id_area;
-                        $pengeluaranModalId  = 'modalPengeluaran-' . $area->id_area;
-                        $setoranModalId      = 'modalSetoran-' . $area->id_area;
-                    @endphp
+    // Total setoran BULAN INI
+    $sudahSetor          = $area->total_setoran ?? 0;
+
+    // SELISIH BULAN INI: + = lebih setor, - = uang belum disetor
+    $selisihSetoran      = $sudahSetor - $total;
+    $isLebihSetor        = $selisihSetoran > 0;
+    $isKurangSetor       = $selisihSetoran < 0;
+    $nominalSelisih      = abs($selisihSetoran);
+
+    $pembayaranList      = $area->pembayaranList ?? collect();
+    $komisiList          = $area->komisiList ?? collect();
+    $pengeluaranList     = $area->pengeluaranList ?? collect();
+    $setoranList         = $area->setoranList ?? collect();
+
+    $pendapatanModalId   = 'modalPendapatan-' . $area->id_area;
+    $komisiModalId       = 'modalKomisi-' . $area->id_area;
+    $pengeluaranModalId  = 'modalPengeluaran-' . $area->id_area;
+    $setoranModalId      = 'modalSetoran-' . $area->id_area;
+@endphp
+
+
 
                     {{-- LABEL AREA --}}
                     <div class="section-label mb-1 mt-4 text-muted fw-bold small px-1">
@@ -174,18 +182,44 @@
 
                     <div class="card border-0 shadow-sm rounded-4 mb-3">
                         <div class="card-body p-3">
+{{-- Posisi setoran bulan ini --}}
+@if ($selisihSetoran !== 0)
+    @php
+        $alertBgClass  = $isLebihSetor
+            ? 'bg-success bg-opacity-10 border-success border-opacity-25'
+            : 'bg-warning bg-opacity-10 border-warning border-opacity-25';
 
-                            {{-- Alert Belum Setor --}}
-                            <div
-                                class="d-flex align-items-center justify-content-between p-3 bg-warning bg-opacity-10 border border-warning border-opacity-25 rounded-3 mb-3">
-                                <div>
-                                    <div class="small fw-bold text-warning-dark">Uang Belum Disetor</div>
-                                    <div class="tiny text-muted">Sisa di tangan Anda untuk area ini</div>
-                                </div>
-                                <div class="fw-bold text-warning-dark fs-5">
-                                    Rp {{ number_format($uangBelumSetor, 0, ',', '.') }}
-                                </div>
-                            </div>
+        $titleText     = $isLebihSetor ? 'Lebih Setor' : 'Uang Belum Disetor';
+        $subtitleText  = $isLebihSetor
+            ? 'Setoran bulan ini melebihi kewajiban bulan ini.'
+            : 'Sisa di tangan Anda untuk area ini (bulan ini).';
+
+        $nominalText   = number_format($nominalSelisih, 0, ',', '.');
+        $amountClass   = $isLebihSetor ? 'text-success' : 'text-warning-dark';
+    @endphp
+
+    <div class="d-flex align-items-center justify-content-between p-3 rounded-3 mb-3 border {{ $alertBgClass }}">
+        <div>
+            <div class="small fw-bold {{ $amountClass }}">{{ $titleText }}</div>
+            <div class="tiny text-muted">{{ $subtitleText }}</div>
+        </div>
+        <div class="fw-bold fs-5 {{ $amountClass }}">
+            Rp {{ $nominalText }}
+        </div>
+    </div>
+@else
+    <div
+        class="d-flex align-items-center justify-content-between p-3 bg-light border border-light rounded-3 mb-3">
+        <div>
+            <div class="small fw-bold text-muted">Posisi Setoran (Bulan Ini)</div>
+            <div class="tiny text-muted">Setoran bulan ini sudah pas dengan kewajiban.</div>
+        </div>
+        <div class="fw-bold text-muted fs-5">
+            Rp 0
+        </div>
+    </div>
+@endif
+
 
                             {{-- Sudah Setor --}}
                             <div class="d-flex align-items-center justify-content-between px-2 clickable hover-scale"

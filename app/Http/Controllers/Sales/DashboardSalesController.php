@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Pelanggan;
 use App\Models\Tagihan;
-
+use Illuminate\Support\Facades\DB;
 class DashboardSalesController extends Controller
 {
     public function index(Request $request)
@@ -117,60 +117,122 @@ class DashboardSalesController extends Controller
                 // Kalau belum jatuh tempo -> tidak dihitung sebagai belum bayar
             }
         }
-
         /**
          * 3. WAJIB SETOR PER SALES
+         *    - Kewajiban = pembayaran - komisi - pengeluaran
+         *    - Sudah setor = dari tabel setoran
          */
-        $tagihanLunasQueryHariIni = Tagihan::whereIn('status_tagihan', ['lunas', 'sudah lunas'])
-            ->whereDate('updated_at', $now->toDateString());
 
-        $tagihanLunasQueryBulanIni = Tagihan::whereIn('status_tagihan', ['lunas', 'sudah lunas'])
-            ->where('tahun', $now->year)
-            ->where('bulan', $now->month);
+        // ============== HARI INI ==============
+        // Pembayaran hari ini
+        $pembayaranHariIni = DB::table('pembayaran as p')
+            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('pl.id_sales', $salesId);
+            })
+            ->whereDate('p.tanggal_bayar', $now->toDateString())
+            ->sum('p.nominal');
 
-        if ($salesId) {
-            $tagihanLunasQueryHariIni->whereHas('langganan.pelanggan', function ($q) use ($salesId) {
-                $q->where('id_sales', $salesId);
-            });
+        // Komisi hari ini
+        $komisiHariIni = DB::table('transaksi_komisi as tk')
+            ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
+            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('pl.id_sales', $salesId);
+            })
+            ->whereDate('p.tanggal_bayar', $now->toDateString())
+            ->sum('tk.nominal_komisi');
 
-            $tagihanLunasQueryBulanIni->whereHas('langganan.pelanggan', function ($q) use ($salesId) {
-                $q->where('id_sales', $salesId);
-            });
-        }
+        // Pengeluaran hari ini
+        $pengeluaranHariIni = DB::table('pengeluaran as pg')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('pg.id_sales', $salesId);
+            })
+            ->where('pg.status_approve', 'approved')
+            ->whereDate('pg.tanggal_approve', $now->toDateString())
+            ->sum('pg.nominal');
 
-        $wajibSetorHariIni  = $tagihanLunasQueryHariIni->sum('total_tagihan');
-        $wajibSetorBulanIni = $tagihanLunasQueryBulanIni->sum('total_tagihan');
+        // Kewajiban setor hari ini
+        $wajibSetorHariIni = $pembayaranHariIni - $komisiHariIni - $pengeluaranHariIni;
 
-        $sudahSetorHariIni  = 0;
-        $sudahSetorBulanIni = 0;
+        // Setoran hari ini
+        $sudahSetorHariIni = DB::table('setoran as st')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('st.id_sales', $salesId);
+            })
+            ->whereDate('st.tanggal_setoran', $now->toDateString())
+            ->sum('st.nominal');
 
-        $pembayaranHariIni  = $wajibSetorHariIni;
-        $pembayaranBulanIni = $wajibSetorBulanIni;
+        // ============== BULAN INI ==============
+        // Pembayaran bulan ini
+        $pembayaranBulanIni = DB::table('pembayaran as p')
+            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('pl.id_sales', $salesId);
+            })
+            ->whereYear('p.tanggal_bayar', $now->year)
+            ->whereMonth('p.tanggal_bayar', $now->month)
+            ->sum('p.nominal');
 
-        $selectedMonth = $startDate->format('m');
-        $selectedYear  = $startDate->format('Y');
+        // Komisi bulan ini
+        $komisiBulanIni = DB::table('transaksi_komisi as tk')
+            ->join('pembayaran as p', 'p.id_pembayaran', '=', 'tk.id_pembayaran')
+            ->join('pelanggan as pl', 'pl.id_pelanggan', '=', 'p.id_pelanggan')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('pl.id_sales', $salesId);
+            })
+            ->whereYear('p.tanggal_bayar', $now->year)
+            ->whereMonth('p.tanggal_bayar', $now->month)
+            ->sum('tk.nominal_komisi');
 
-        return view('seles2.dashboard.index', [
-            'wajibSetorHariIni'   => $wajibSetorHariIni,
-            'sudahSetorHariIni'   => $sudahSetorHariIni,
-            'wajibSetorBulanIni'  => $wajibSetorBulanIni,
-            'sudahSetorBulanIni'  => $sudahSetorBulanIni,
+        // Pengeluaran bulan ini
+        $pengeluaranBulanIni = DB::table('pengeluaran as pg')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('pg.id_sales', $salesId);
+            })
+            ->where('pg.status_approve', 'approved')
+            ->whereYear('pg.tanggal_approve', $now->year)
+            ->whereMonth('pg.tanggal_approve', $now->month)
+            ->sum('pg.nominal');
 
-            'totalPelanggan'      => $totalPelanggan,
-            'totalAktif'          => $totalAktif,
-            'totalBaru'           => $totalBaru,
-            'totalBerhenti'       => $totalBerhenti,
-            'totalIsolir'         => $totalIsolir,
-            'totalSudahBayar'     => $totalSudahBayar,
-            'totalBelumBayar'     => $totalBelumBayar,
+        // Kewajiban setor bulan ini
+        $wajibSetorBulanIni = $pembayaranBulanIni - $komisiBulanIni - $pengeluaranBulanIni;
 
-            'pembayaranHariIni'   => $pembayaranHariIni,
-            'pembayaranBulanIni'  => $pembayaranBulanIni,
+        // Setoran bulan ini (pakai kolom tahun/bulan di tabel setoran)
+        $sudahSetorBulanIni = DB::table('setoran as st')
+            ->when($salesId, function ($q) use ($salesId) {
+                $q->where('st.id_sales', $salesId);
+            })
+            ->where('st.tahun', $now->year)
+            ->where('st.bulan', $now->month)
+            ->sum('st.nominal');
+// Untuk kebutuhan tampilan (filter bulan/tahun)
+$selectedMonth = $now->month;
+$selectedYear  = $now->year;
 
-            'startDate'           => $startDate,
-            'endDate'             => $endDate,
-            'selectedMonth'       => $selectedMonth,
-            'selectedYear'        => $selectedYear,
-        ]);
+return view('seles2.dashboard.index', [
+    'wajibSetorHariIni'   => $wajibSetorHariIni,
+    'sudahSetorHariIni'   => $sudahSetorHariIni,
+    'wajibSetorBulanIni'  => $wajibSetorBulanIni,
+    'sudahSetorBulanIni'  => $sudahSetorBulanIni,
+
+    'totalPelanggan'      => $totalPelanggan,
+    'totalAktif'          => $totalAktif,
+    'totalBaru'           => $totalBaru,
+    'totalBerhenti'       => $totalBerhenti,
+    'totalIsolir'         => $totalIsolir,
+    'totalSudahBayar'     => $totalSudahBayar,
+    'totalBelumBayar'     => $totalBelumBayar,
+
+    'pembayaranHariIni'   => $pembayaranHariIni,
+    'pembayaranBulanIni'  => $pembayaranBulanIni,
+
+    'startDate'           => $startDate,
+    'endDate'             => $endDate,
+
+    'selectedMonth'       => $selectedMonth,
+    'selectedYear'        => $selectedYear,
+]);
+
     }
 }

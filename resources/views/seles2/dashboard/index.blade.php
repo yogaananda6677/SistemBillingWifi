@@ -11,20 +11,6 @@
         </div>
 
         <div class="p-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                    <small class="text-muted d-block">Hari Ini</small>
-                    <div class="fw-bold fs-5">
-                        <!-- Rp {{ number_format($wajibSetorHariIni, 0, ',', '.') }} -->
-                    </div>
-                </div>
-                <div class="text-end">
-                    <small class="text-muted d-block">Sudah Setor</small>
-                    <div class="fw-bold text-success">
-                        <!-- Rp {{ number_format($sudahSetorHariIni, 0, ',', '.') }} -->
-                    </div>
-                </div>
-            </div>
 
             <hr class="my-2">
 
@@ -32,13 +18,13 @@
                 <div>
                     <small class="text-muted d-block">Wajib Setor Bulan Ini</small>
                     <div class="fw-semibold">
-                        <!-- Rp {{ number_format($wajibSetorBulanIni, 0, ',', '.') }} -->
+                        Rp {{ number_format($wajibSetorBulanIni, 0, ',', '.') }}
                     </div>
                 </div>
                 <div class="text-end">
                     <small class="text-muted d-block">Sudah Setor Bulan Ini</small>
                     <div class="fw-semibold text-success">
-                        <!-- Rp {{ number_format($sudahSetorBulanIni, 0, ',', '.') }} -->
+                        Rp {{ number_format($sudahSetorBulanIni, 0, ',', '.') }}
                     </div>
                 </div>
             </div>

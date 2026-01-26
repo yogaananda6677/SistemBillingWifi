@@ -154,7 +154,10 @@
         <div class="col-md-6">
             <div class="card-clean d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="label-k">PEMBAYARAN DITERIMA</span>
+                    <span class="label-k">
+                        PEMBAYARAN LUNAS ({{ $currentMonthName }} {{ $currentYear }})
+                    </span>
+
                     <div class="angka-besar text-success counter-anim">
                         {{ rupiah($totalPembayaranTerima) }}
                     </div>
@@ -167,7 +170,9 @@
         <div class="col-md-6">
             <div class="card-clean d-flex align-items-center justify-content-between">
                 <div>
-                    <span class="label-k">TAGIHAN TERLAMBAT</span>
+                    <span class="label-k">
+                        PEMBAYARAN TERLAMBAT ({{ $currentMonthName }} {{ $currentYear }})
+                    </span>
                     <div class="angka-besar text-danger counter-anim">
                         {{ rupiah($totalPembayaranTerlambat) }}
                     </div>

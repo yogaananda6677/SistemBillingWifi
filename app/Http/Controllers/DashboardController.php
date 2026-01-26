@@ -74,6 +74,8 @@ private function getStatusCounts(Carbon $startDate, Carbon $endDate): array
         $startDate = now()->startOfMonth();
         $endDate   = now()->endOfMonth();
     }
+    $selMonth = (int) $startDate->format('m');
+$selYear  = (int) $startDate->format('Y');
         // Nama bulan (Indonesia) buat label
         $monthNames = [
             '01' => 'Januari',
@@ -97,16 +99,21 @@ private function getStatusCounts(Carbon $startDate, Carbon $endDate): array
         // HITUNG DATA BERDASARKAN RENTANG BULAN
         // ============================================
 
-        // Total pembayaran diterima bulan ini (tagihan lunas & jatuh tempo di bulan terpilih)
-        $totalPembayaranTerima = Tagihan::where('status_tagihan', 'lunas')
-            ->whereBetween('jatuh_tempo', [$startDate, $endDate])
-            ->sum('total_tagihan');
+// LUNAS di bulan terpilih
+$totalPembayaranTerima = Tagihan::where('status_tagihan', 'lunas')
+    ->whereYear('jatuh_tempo', $selYear)
+    ->whereMonth('jatuh_tempo', $selMonth)
+    ->sum('total_tagihan');
 
-        // Total pembayaran terlambat bulan ini
-        $totalPembayaranTerlambat = Tagihan::where('status_tagihan', 'belum lunas')
-            ->whereBetween('jatuh_tempo', [$startDate, $endDate])
-            ->where('jatuh_tempo', '<', now())
-            ->sum('total_tagihan');
+// BELUM LUNAS & SUDAH JATUH TEMPO di bulan terpilih
+$totalPembayaranTerlambat = Tagihan::where('status_tagihan', 'belum lunas')
+    ->whereYear('jatuh_tempo', $selYear)
+    ->whereMonth('jatuh_tempo', $selMonth)
+    ->where('jatuh_tempo', '<', now())
+    ->sum('total_tagihan');
+
+
+
 
         // ============================================
         // DATA PELANGGAN (pakai helper getStatusCounts)
@@ -252,6 +259,8 @@ $salesProgress = $salesProgress->filter(fn ($row) => $row['total'] > 0)->values(
         // buat select di Blade:
         'selectedMonth'            => $bulanForm ?: $startDate->format('m'),
         'selectedYear'             => $tahunForm ?: $startDate->format('Y'),
+        'currentMonthName' => $currentMonthName,
+        'currentYear'      => $currentYear,
     ]);
 
     }

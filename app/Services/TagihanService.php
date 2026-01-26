@@ -4,7 +4,10 @@ namespace App\Services;
 
 use App\Models\Langganan;
 use App\Models\Tagihan;
+use App\Models\Paket;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
 
 class TagihanService
 {
@@ -100,15 +103,61 @@ class TagihanService
      */
     public function generateForAllActive(int $tahun, int $bulan): void
     {
-        Langganan::with('paket')
-            ->where('status_langganan', 'aktif')
-            ->chunkById(500, function ($chunk) use ($tahun, $bulan) {
-                foreach ($chunk as $langganan) {
-                    if ($this->bolehDibuatUntukBulan($langganan, $tahun, $bulan)) {
-                        // createdBecausePayment = false (default)
-                        $this->getOrCreateForMonth($langganan, $tahun, $bulan, false);
+        $periode = Carbon::create($tahun, $bulan, 1);
+
+        DB::transaction(function () use ($tahun, $bulan, $periode) {
+
+            Langganan::with('paket')
+                ->where('status_langganan', 'aktif')
+                ->chunkById(100, function ($langgananBatch) use ($tahun, $bulan, $periode) {
+
+                    foreach ($langgananBatch as $langganan) {
+
+                        // 1️⃣ CEGAH DOUBLE: skip kalau tagihan periode ini sudah ada
+                        $sudahAda = Tagihan::where('id_langganan', $langganan->id_langganan)
+                            ->where('tahun', $tahun)
+                            ->where('bulan', $bulan)
+                            ->exists();
+
+                        if ($sudahAda) {
+                            continue;
+                        }
+
+                        // 2️⃣ AMBIL TANGGAL MULAI LANGGANAN
+                        // kalau ada kemungkinan null, tambahin guard / default
+                        $tanggalMulai = Carbon::parse($langganan->tanggal_mulai);
+
+                        // ambil hari nya (1–31)
+                        $hariAktif = $tanggalMulai->day;
+
+                        // handle kasus bulan yg harinya lebih sedikit (Februari, dst)
+                        $daysInMonth = Carbon::create($tahun, $bulan, 1)->daysInMonth;
+                        $hariJatuhTempo = min($hariAktif, $daysInMonth);
+
+                        // 3️⃣ SET JATUH TEMPO SESUAI PERIODE & HARI AKTIF
+                        // kalau mau di akhir hari, bisa ->endOfDay()
+                        $jatuhTempo = Carbon::create($tahun, $bulan, $hariJatuhTempo, 0, 0, 0);
+
+                        // 4️⃣ HITUNG HARGA (paket + ppn)
+                        $paket = $langganan->paket;
+                        $hargaDasar = $paket->harga_dasar;
+                        $ppnNominal = (int) $paket->ppn_nominal; // atau hitung manual kalau mau fleksibel
+                        $totalTagihan = $paket->harga_total;    // di tabel paket sudah disimpan
+
+                        // 5️⃣ BUAT TAGIHAN
+                        Tagihan::create([
+                            'id_langganan'   => $langganan->id_langganan,
+                            'bulan'          => $bulan,
+                            'tahun'          => $tahun,
+                            'harga_dasar'    => $hargaDasar,
+                            'ppn_nominal'    => $ppnNominal,
+                            'total_tagihan'  => $totalTagihan,
+                            'status_tagihan' => 'belum lunas',
+                            'dibuat_otomatis_bayar' => 0,
+                            'jatuh_tempo'    => $jatuhTempo,
+                        ]);
                     }
-                }
-            });
+                });
+        });
     }
 }
